@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist);
+}
+
+:root {
+  --brand-primary: #2563eb;   /* blue-600 */
+  --brand-secondary: #f97316; /* orange-500 */
+}
+
+@layer base {
+  html {
+    font-size: 87.5%; /* 14px base — scales all rem-based Tailwind spacing & text ~12% smaller */
+  }
+
+  @media (min-width: 1280px) {
+    html {
+      font-size: 82%; /* slightly tighter on large desktop monitors */
+    }
+  }
+}
+
+body {
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
