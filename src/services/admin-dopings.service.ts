@@ -10,6 +10,12 @@ export interface ActiveDoping {
   startDate: string;
   endDate: string | null;
   isActive: boolean;
+  homepageShowcaseUntil?: Date | string | null;
+  categoryShowcaseUntil?: Date | string | null;
+  urgentShowcaseUntil?: Date | string | null;
+  topOfSearchUntil?: Date | string | null;
+  isUrgent?: boolean;
+  hasHighlightFrame?: boolean;
 }
 
 export interface DopingPackage {

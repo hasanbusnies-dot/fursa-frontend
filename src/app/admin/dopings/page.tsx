@@ -299,12 +299,15 @@ function ActiveDopingsTab() {
                   let endDate: string | null = null;
                   let isActive = false;
 
+                  const toStr = (v: Date | string | null | undefined): string | null =>
+                    v instanceof Date ? v.toISOString() : (v ?? null);
+
                   if (d.homepageShowcaseUntil && ts(d.homepageShowcaseUntil) > now) {
-                    typeName = 'Anasayfa Vitrini'; endDate = d.homepageShowcaseUntil; isActive = true;
-                  } else if ((raw.categoryShowcaseUntil as string) && ts(raw.categoryShowcaseUntil) > now) {
-                    typeName = 'Kategori Vitrini'; endDate = raw.categoryShowcaseUntil as string; isActive = true;
-                  } else if ((raw.topOfSearchUntil as string) && ts(raw.topOfSearchUntil) > now) {
-                    typeName = 'Üst Sıradayım'; endDate = raw.topOfSearchUntil as string; isActive = true;
+                    typeName = 'Anasayfa Vitrini'; endDate = toStr(d.homepageShowcaseUntil); isActive = true;
+                  } else if (d.categoryShowcaseUntil && ts(d.categoryShowcaseUntil) > now) {
+                    typeName = 'Kategori Vitrini'; endDate = toStr(d.categoryShowcaseUntil); isActive = true;
+                  } else if (d.topOfSearchUntil && ts(d.topOfSearchUntil) > now) {
+                    typeName = 'Üst Sıradayım'; endDate = toStr(d.topOfSearchUntil); isActive = true;
                   } else if (d.isUrgent) {
                     typeName = 'Acil Acil'; isActive = true;
                   } else if (d.hasHighlightFrame) {
