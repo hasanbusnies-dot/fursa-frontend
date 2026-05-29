@@ -510,6 +510,38 @@ const RENTAL_CARAVAN_DEPOSIT_TYPES = [
 
 const RENTAL_CARAVAN_INSURANCE = ['نعم', 'لا'] as const;
 
+const TOWABLE_CARAVAN_BRANDS = [
+  'Adria', 'Airstream', 'Bailey', 'Bürstner', 'Caravelair', 'Dethleffs',
+  'Elddis', 'Eriba', 'Fendt', 'Hobby', 'Hymer', 'Kabe', 'Knaus', 'LMC',
+  'Sterckeman', 'Tabbert', 'Weinsberg', 'Westfalia',
+  'تصنيع خاص',
+  'ماركات أخرى',
+] as const;
+
+const TOWABLE_CARAVAN_TYPES = [
+  'دمعة (Teardrop)',
+  'قابل للطي',
+  'أوف رود (للطرق الوعرة)',
+  'سقف قابل للرفع (Pop-Up)',
+  'قياسي (Standard)',
+  'تجاري (بوفيه / فود ترك)',
+] as const;
+
+const TOWABLE_BED_CAPACITIES = [
+  'لا يوجد', '1', '2', '3', '4', '5', '6', '7', '8 وما فوق',
+] as const;
+
+const TOWABLE_WEIGHT_OPTIONS = [
+  'أقل من 750 كغ',
+  'أكثر من 750 كغ',
+] as const;
+
+const TOWABLE_BOOL_OPTIONS = ['يوجد', 'لا يوجد'] as const;
+
+const TOWABLE_CONDITION_OPTIONS = ['جديد', 'مستعمل'] as const;
+
+const TOWABLE_EXCHANGE_OPTIONS = ['نعم', 'لا'] as const;
+
 const RENTAL_TOW_TRUCK_BRANDS = [
   'Bedford', 'BMC', 'Chevrolet', 'Chrysler', 'Citroën', 'DAF',
   'Dodge', 'Fiat', 'Ford', 'Gazelle', 'Hino', 'Hyundai', 'Isuzu',
@@ -565,6 +597,224 @@ const RENTAL_CLASSIC_BODY_TYPES = [
   'سيارة سياحية', 'سيارة دفع رباعي، جيب وبيكاب', 'دراجة نارية',
   'ليموزين', 'ميكروباص وباص', 'شاحنة خفيفة وشاحنة',
 ] as const;
+
+// ── Classic Cars (sale) ───────────────────────────────────────────────────────
+
+const CLASSIC_CAR_BRANDS = [
+  'Alfa Romeo', 'AMC', 'Anadol', 'Aston Martin', 'Austin', 'BMW', 'Buick',
+  'Cadillac', 'Chevrolet', 'Chrysler', 'Citroen', 'DeSoto', 'Dodge', 'Fiat',
+  'Ford', 'Gaz', 'Honda', 'Hotchkiss', 'Jaguar', 'Lada', 'Lincoln',
+  'Maserati', 'Mazda', 'Mercedes-Benz', 'Mercury', 'MG', 'Mini',
+  'Mitsubishi', 'Morris', 'Nash', 'Nissan', 'Oldsmobile', 'Opel',
+  'Peugeot', 'Plymouth', 'Pontiac', 'Porsche', 'Renault', 'Rolls Royce',
+  'Seat', 'Skoda', 'Tofaş', 'Toyota', 'Trabant', 'Triumph', 'Volkswagen',
+  'Volvo', 'Wartburg', 'ZAZ',
+] as const;
+
+const CLASSIC_CONDITION_OPTIONS = [
+  'مستعمل', 'مستورد جديد من الخارج', 'جديد',
+] as const;
+
+const CLASSIC_ENGINE_CAPACITIES = [
+  'حتى 1300 سم³', '1301 - 1600 سم³', '1601 - 1800 سم³', '1801 - 2000 سم³',
+  '2001 - 2500 سم³', '2501 - 3000 سم³', '3001 - 3500 سم³', '3501 - 4000 سم³',
+  '4001 سم³ فما فوق',
+] as const;
+
+const CLASSIC_ENGINE_POWERS = [
+  'حتى 100 حصان', '101 - 125 حصان', '126 - 150 حصان', '151 - 175 حصان',
+  '176 - 200 حصان', '201 - 225 حصان', '226 - 250 حصان', '251 - 275 حصان',
+  '276 - 300 حصان', '301 - 325 حصان', '326 - 350 حصان', '351 - 375 حصان',
+  '376 - 400 حصان', '401 - 425 حصان', '426 - 450 حصان', '451 - 475 حصان',
+  '476 - 500 حصان', '501 - 525 حصان', '526 - 550 حصان', '551 - 575 حصان',
+  '576 - 600 حصان', '601 حصان فما فوق',
+] as const;
+
+const CLASSIC_GEAR_OPTIONS = ['عادي', 'أوتوماتيك'] as const;
+
+const CLASSIC_BODY_TYPES = [
+  'كابريو (مكشوفة)', 'كوبيه بابين', 'هاتشباك 3 أبواب', 'هاتشباك 5 أبواب',
+  'سيدان', 'ستيشن واغن', 'فان / ميني فان',
+] as const;
+
+const CLASSIC_ORIGIN_OPTIONS = ['أمريكي', 'آسيوي', 'أوروبي', 'محلي'] as const;
+
+const CLASSIC_FUEL_TYPES = [
+  'بنزين', 'بنزين + غاز (LPG)', 'ديزل', 'غاز (LPG)',
+] as const;
+
+const CLASSIC_SELLER_OPTIONS  = ['من المالك', 'من معرض'] as const;
+const CLASSIC_EXCHANGE_OPTIONS = ['نعم', 'لا'] as const;
+
+// ── Classic SUVs (sale) ───────────────────────────────────────────────────────
+
+const CLASSIC_SUV_BRANDS = [
+  'Chevrolet', 'Dodge', 'Ford', 'GMC', 'International Harvester',
+  'Jeep', 'Land Rover', 'Mercedes-Benz', 'Nissan', 'Toyota',
+] as const;
+
+const CLASSIC_SUV_ENGINE_CAPACITIES = [
+  '1301 - 1600 سم³', '1601 - 1800 سم³', '1801 - 2000 سم³',
+  '2001 - 2500 سم³', '2501 - 3000 سم³', '3001 - 3500 سم³',
+  '3501 - 4000 سم³', '4001 سم³ فما فوق',
+] as const;
+
+const CLASSIC_DOOR_OPTIONS = ['2', '3', '5'] as const;
+
+// ── Classic Motorcycles (sale) ────────────────────────────────────────────────
+
+const CLASSIC_MOTO_BRANDS = [
+  'AJS', 'Arçelik', 'Ariel', 'BMW', 'BSA', 'Harley-Davidson',
+  'Honda', 'IZH', 'Jawa', 'Matchless', 'NSU', 'Peugeot', 'Suzuki',
+] as const;
+
+const CLASSIC_MOTO_TYPES = [
+  'دباب (ATV)',
+  'تشوبر / كروزر (Chopper / Cruiser)',
+  'موبيد / سكوتر صغير (Commuter / Moped)',
+  'دراجات جبلية / أوف رود (Cross / Off-road)',
+  'إندورو (Enduro)',
+  'نايکد / رودستر (Naked / Roadster)',
+  'سكوتر / ماكسي سكوتر (Scooter)',
+  'سبورت تورينغ (Sport Touring)',
+  'سوبر سبورت (Super Sport)',
+  'تورينغ - سياحية (Touring)',
+] as const;
+
+const CLASSIC_MOTO_CONDITION_OPTIONS = [
+  'مستعمل', 'مستورد جديد من الخارج', 'جديد',
+] as const;
+
+const CLASSIC_MOTO_ENGINE_CAPACITIES = [
+  'حتى 125 سم³', '126 - 250 سم³', '251 - 600 سم³',
+  '601 - 1000 سم³', '1001 - 1300 سم³', '1301 - 1500 سم³',
+  '1501 سم³ فما فوق',
+] as const;
+
+const CLASSIC_MOTO_SELLER_OPTIONS  = ['من المالك', 'من معرض دراجات نارية'] as const;
+const CLASSIC_MOTO_EXCHANGE_OPTIONS = ['نعم', 'لا'] as const;
+
+// ── Classic Commercial Vehicles (sale) ────────────────────────────────────────
+
+const CLASSIC_COMMERCIAL_BRANDS = [
+  'Austin', 'Chevrolet', 'Ford', 'International', 'Mercedes-Benz',
+  'Peugeot', 'Toyota', 'Volkswagen',
+] as const;
+
+const CLASSIC_COMMERCIAL_CONDITION_OPTIONS = [
+  'مستعمل', 'مستورد جديد من الخارج', 'جديد',
+] as const;
+
+const CLASSIC_COMMERCIAL_ENGINE_CAPACITIES = [
+  'حتى 1300 سم³', '1301 - 1600 سم³', '1601 - 1800 سم³', '1801 - 2000 سم³',
+  '2001 - 2500 سم³', '2501 - 3000 سم³', '3001 - 3500 سم³', '3501 - 4000 سم³',
+  '4001 - 4500 سم³', '4500 - 5000 سم³', '5001 سم³ فما فوق',
+] as const;
+
+const CLASSIC_COMMERCIAL_ENGINE_POWERS = [
+  'حتى 100 حصان', '101 - 125 حصان', '126 - 150 حصان', '151 - 175 حصان',
+  '176 - 200 حصان', '201 - 225 حصان', '226 - 250 حصان', '251 - 275 حصان',
+  '276 - 300 حصان', '301 - 325 حصان', '326 - 350 حصان', '351 - 375 حصان',
+  '376 - 400 حصان', '401 - 425 حصان', '426 - 450 حصان', '451 - 475 حصان',
+  '476 - 500 حصان', '501 حصان فما فوق',
+] as const;
+
+const CLASSIC_COMMERCIAL_GEAR_OPTIONS = ['عادي', 'أوتوماتيك'] as const;
+
+const CLASSIC_COMMERCIAL_FUEL_TYPES = [
+  'بنزين', 'بنزين + غاز (LPG)', 'ديزل', 'ديزل + غاز (LPG)',
+] as const;
+
+const CLASSIC_COMMERCIAL_SELLER_OPTIONS  = ['من المالك', 'من معرض'] as const;
+const CLASSIC_COMMERCIAL_EXCHANGE_OPTIONS = ['نعم', 'لا'] as const;
+
+// ── Air Vehicles ──────────────────────────────────────────────────────────────
+
+const HELICOPTER_BRANDS = [
+  'Airbus Helicopters', 'AgustaWestland', 'Bell', 'Enstrom', 'Guimbal',
+  'Leonardo', 'MD Helicopters', 'Robinson', 'Sikorsky', 'ماركات أخرى',
+] as const;
+
+const HELICOPTER_SELLER_OPTIONS  = ['من المالك', 'بوساطة شركة'] as const;
+const HELICOPTER_EXCHANGE_OPTIONS = ['نعم', 'لا'] as const;
+
+// ── Paramotor ─────────────────────────────────────────────────────────────────
+
+const PARAMOTOR_BRANDS = [
+  'Dudek', 'MacPara', 'Niviuk', 'Ozone', 'Swing', 'ماركات أخرى',
+] as const;
+
+const PARAMOTOR_SELLER_OPTIONS  = ['من المالك', 'بوساطة شركة'] as const;
+const PARAMOTOR_EXCHANGE_OPTIONS = ['نعم', 'لا'] as const;
+
+// ── Airplane ──────────────────────────────────────────────────────────────────
+
+const AIRPLANE_SELLER_OPTIONS  = ['من المالك', 'بوساطة شركة'] as const;
+const AIRPLANE_EXCHANGE_OPTIONS = ['نعم', 'لا'] as const;
+
+// ── Glider & Microlight ───────────────────────────────────────────────────────
+
+const GLIDER_SELLER_OPTIONS  = ['من المالك', 'بوساطة شركة'] as const;
+const GLIDER_EXCHANGE_OPTIONS = ['نعم', 'لا'] as const;
+
+// ── ATV ───────────────────────────────────────────────────────────────────────
+
+const ATV_BRANDS = [
+  'Access', 'Aeon', 'Aodes', 'Apachi', 'Arctic Cat', 'Arora', 'Asya Motor',
+  'BuMoto/Jinling', 'Can-Am', 'Cectek', 'CFmoto', 'Enbest', 'Falcon', 'Goes',
+  'Honda', 'Kanuni', 'Kawasaki', 'Kayo', 'Kral Motor', 'Kuba', 'Kymco',
+  'Linhai', 'Loncin', 'Mondial', 'Motoran', 'Musatti', 'Polaris', 'Pumarex',
+  'QJ Motor', 'Regal Raptor', 'Segway', 'Skyjet', 'SMC', 'Suzuki', 'SYM',
+  'TGB', 'Volta', 'Wawasaky', 'Yamaha', 'Yuki', 'ماركات أخرى',
+] as const;
+
+const ATV_YEARS = Array.from({ length: 44 }, (_, i) => (2026 - i).toString());
+
+const ATV_TYPE_OPTIONS = [
+  'أوف رود - للطرق الوعرة (Off-Road)',
+  'أون رود - للطرق المعبدة (On-Road)',
+] as const;
+
+const ATV_ENGINE_CAPACITY_OPTIONS = [
+  '50 سي سي', '100 سي سي', '150 سي سي', '178 سي سي', '180 سي سي',
+  '200 سي سي', '225 سي سي', '250 سي سي', '275 سي سي', '300 سي سي',
+  '325 سي سي', '350 سي سي', '400 سي سي', '500 سي سي', '570 سي سي',
+  '660 سي سي', '700 سي سي', '850 سي سي', '1000 سي سي',
+] as const;
+
+const ATV_CYLINDER_OPTIONS        = ['أسطوانة واحدة', 'أسطوانتين'] as const;
+const ATV_GEAR_OPTIONS            = ['عادي', 'أوتوماتيك'] as const;
+const ATV_DRIVETRAIN_OPTIONS      = ['4x2', '4x4', '6x6'] as const;
+const ATV_POWER_TRANSMISSION_OPTIONS = [
+  'قشاط / حزام (Kayış)',
+  'عمود دوران / كردان (Şaft)',
+  'جنزير / سلسلة (Zincir)',
+] as const;
+const ATV_CAPACITY_OPTIONS        = ['راكب واحد', 'راكبين'] as const;
+const ATV_BRAKE_OPTIONS           = ['ديسك / أقراص', 'طبلة / درام'] as const;
+const ATV_COOLING_OPTIONS         = ['تبريد هواء', 'تبريد ماء'] as const;
+const ATV_SELLER_OPTIONS          = ['من المالك', 'من معرض'] as const;
+const ATV_EXCHANGE_OPTIONS        = ['نعم', 'لا'] as const;
+
+// ── UTV ───────────────────────────────────────────────────────────────────────
+
+const UTV_BRANDS = [
+  'Aodes', 'Buggy', 'Can-Am', 'CFmoto', 'Kanuni', 'Kawasaki', 'Kuba',
+  'Mondial', 'Motolux', 'Polaris', 'Pumarex', 'Segway', 'X&Y', 'Yuki',
+] as const;
+
+const UTV_ENGINE_CAPACITY_OPTIONS = [
+  '150 سي سي', '180 سي سي', '200 سي سي', '225 سي سي', '250 سي سي',
+  '275 سي سي', '300 سي سي', '325 سي سي', '350 سي سي', '400 سي سي',
+  '500 سي سي', '570 سي سي', '600 سي سي', '660 سي سي', '700 سي سي',
+  '750 سي سي', '800 سي سي', '1000 سي سي',
+] as const;
+const UTV_GEAR_OPTIONS            = ['عادي', 'أوتوماتيك'] as const;
+const UTV_DRIVETRAIN_OPTIONS      = ['4x2', '4x4', '6x6', '8x8'] as const;
+const UTV_COOLING_OPTIONS         = ['تبريد هواء', 'تبريد ماء'] as const;
+const UTV_FUEL_OPTIONS            = ['بنزين', 'ديزل'] as const;
+const UTV_SELLER_OPTIONS          = ['من المالك', 'من معرض'] as const;
+const UTV_EXCHANGE_OPTIONS        = ['نعم', 'لا'] as const;
 
 const RENTAL_MINIVAN_BRANDS = [
   'Citroen', 'Dacia', 'Fiat', 'Ford', 'Gaz', 'Hyundai',
@@ -1122,6 +1372,66 @@ export interface FilterValues {
   damagedDamageCause: string;
   damagedSeller:      string;
   damagedMotoStatus:  string;
+  // towable-caravan-specific
+  towableType:        string;
+  towableBedCapacity: string;
+  towableWeight:      string;
+  towableMonoblock:   string;
+  towableMover:       string;
+  towableCondition:   string;
+  towableExchange:    string;
+  // classic-car/suv-specific
+  classicCondition:       string;
+  classicEngineCapacity:  string;
+  classicEnginePower:     string;
+  classicGear:            string;
+  classicBodyType:        string;
+  classicOrigin:          string;
+  classicFuel:            string;
+  classicSeller:          string;
+  classicExchange:        string;
+  classicDoors:           string;
+  // classic-motorcycle-specific
+  classicMotoType:        string;
+  classicMotoCondition:   string;
+  classicMotoEngineCapacity: string;
+  classicMotoSeller:      string;
+  classicMotoExchange:    string;
+  // classic-commercial-specific
+  classicCommercialCondition:       string;
+  classicCommercialEngineCapacity:  string;
+  classicCommercialEnginePower:     string;
+  classicCommercialGear:            string;
+  classicCommercialFuel:            string;
+  classicCommercialSeller:          string;
+  classicCommercialExchange:        string;
+  helicopterSeller:                 string;
+  helicopterExchange:               string;
+  paramotorSeller:                  string;
+  paramotorExchange:                string;
+  airplaneSeller:                   string;
+  airplaneExchange:                 string;
+  gliderSeller:                     string;
+  gliderExchange:                   string;
+  atvYear:                          string;
+  atvType:                          string;
+  atvEngineCapacity:                string;
+  atvCylinders:                     string;
+  atvGear:                          string;
+  atvDrivetrain:                    string;
+  atvPowerTransmission:             string;
+  atvCapacity:                      string;
+  atvBrakes:                        string;
+  atvCooling:                       string;
+  atvSeller:                        string;
+  atvExchange:                      string;
+  utvEngineCapacity:                string;
+  utvGear:                          string;
+  utvDrivetrain:                    string;
+  utvCooling:                       string;
+  utvFuel:                          string;
+  utvSeller:                        string;
+  utvExchange:                      string;
 }
 
 export const EMPTY_FILTERS: FilterValues = {
@@ -1175,6 +1485,25 @@ export const EMPTY_FILTERS: FilterValues = {
   damagedExchange: '', damagedYear: '', damagedGear: '', damagedFuel: '',
   damagedParkingFee: '', damagedSalesStatus: '', damagedDamageCause: '', damagedSeller: '',
   damagedMotoStatus: '',
+  towableType: '', towableBedCapacity: '', towableWeight: '',
+  towableMonoblock: '', towableMover: '', towableCondition: '', towableExchange: '',
+  classicCondition: '', classicEngineCapacity: '', classicEnginePower: '',
+  classicGear: '', classicBodyType: '', classicOrigin: '', classicFuel: '',
+  classicSeller: '', classicExchange: '', classicDoors: '',
+  classicMotoType: '', classicMotoCondition: '', classicMotoEngineCapacity: '',
+  classicMotoSeller: '', classicMotoExchange: '',
+  classicCommercialCondition: '', classicCommercialEngineCapacity: '',
+  classicCommercialEnginePower: '', classicCommercialGear: '',
+  classicCommercialFuel: '', classicCommercialSeller: '', classicCommercialExchange: '',
+  helicopterSeller: '', helicopterExchange: '',
+  paramotorSeller: '', paramotorExchange: '',
+  airplaneSeller: '', airplaneExchange: '',
+  gliderSeller: '', gliderExchange: '',
+  atvYear: '', atvType: '', atvEngineCapacity: '', atvCylinders: '',
+  atvGear: '', atvDrivetrain: '', atvPowerTransmission: '', atvCapacity: '',
+  atvBrakes: '', atvCooling: '', atvSeller: '', atvExchange: '',
+  utvEngineCapacity: '', utvGear: '', utvDrivetrain: '', utvCooling: '',
+  utvFuel: '', utvSeller: '', utvExchange: '',
 };
 
 export function hasActiveFilters(f: FilterValues): boolean {
@@ -1226,7 +1555,26 @@ export function hasActiveFilters(f: FilterValues): boolean {
     f.marineSellerType || f.marineCondition || f.marineExchange ||
     f.damagedExchange || f.damagedYear || f.damagedGear || f.damagedFuel ||
     f.damagedParkingFee || f.damagedSalesStatus || f.damagedDamageCause || f.damagedSeller ||
-    f.damagedMotoStatus
+    f.damagedMotoStatus ||
+    f.towableType || f.towableBedCapacity || f.towableWeight ||
+    f.towableMonoblock || f.towableMover || f.towableCondition || f.towableExchange ||
+    f.classicCondition || f.classicEngineCapacity || f.classicEnginePower ||
+    f.classicGear || f.classicBodyType || f.classicOrigin || f.classicFuel ||
+    f.classicSeller || f.classicExchange || f.classicDoors ||
+    f.classicMotoType || f.classicMotoCondition || f.classicMotoEngineCapacity ||
+    f.classicMotoSeller || f.classicMotoExchange ||
+    f.classicCommercialCondition || f.classicCommercialEngineCapacity ||
+    f.classicCommercialEnginePower || f.classicCommercialGear ||
+    f.classicCommercialFuel || f.classicCommercialSeller || f.classicCommercialExchange ||
+    f.helicopterSeller || f.helicopterExchange ||
+    f.paramotorSeller || f.paramotorExchange ||
+    f.airplaneSeller || f.airplaneExchange ||
+    f.gliderSeller || f.gliderExchange ||
+    f.atvYear || f.atvType || f.atvEngineCapacity || f.atvCylinders ||
+    f.atvGear || f.atvDrivetrain || f.atvPowerTransmission || f.atvCapacity ||
+    f.atvBrakes || f.atvCooling || f.atvSeller || f.atvExchange ||
+    f.utvEngineCapacity || f.utvGear || f.utvDrivetrain || f.utvCooling ||
+    f.utvFuel || f.utvSeller || f.utvExchange
   );
 }
 
@@ -1661,6 +2009,20 @@ export function FilterSidebar({ categories, applied, onApply }: FilterSidebarPro
   const isDamagedMotorcycle         = pathname.includes('/vehicles/damaged/motorcycles');
   const isDamagedMinivan            = pathname.includes('/vehicles/damaged/minivans');
   const isDamagedCommercial         = pathname.includes('/vehicles/damaged/commercial');
+  const isTowableCaravan            = pathname.includes('/vehicles/caravans/towable');
+  const isMotorhome                 = pathname.includes('/vehicles/caravans/motorhome');
+  const isClassicVehicle            = pathname.includes('/vehicles/classic') && !pathname.includes('/rentals/classic');
+  const isClassicCar                = pathname.includes('/vehicles/classic/cars');
+  const isClassicSuv                = pathname.includes('/vehicles/classic/suv');
+  const isClassicMotorcycle         = pathname.includes('/vehicles/classic/motorcycles');
+  const isClassicCommercial         = pathname.includes('/vehicles/classic/commercial');
+  const isAirVehicle                = pathname.includes('/vehicles/air') && !pathname.includes('/rentals/aircraft');
+  const isHelicopter                = pathname.includes('/vehicles/air/helicopter');
+  const isParamotor                 = pathname.includes('/vehicles/air/paramotor');
+  const isAirplane                  = pathname.includes('/vehicles/air/airplane');
+  const isGlider                    = pathname.includes('/vehicles/air/glider');
+  const isAtv                       = pathname.includes('/vehicles/atv');
+  const isUtv                       = pathname.includes('/vehicles/utv');
   const [draft, setDraft] = useState<FilterValues>(applied);
 
   function set<K extends keyof FilterValues>(key: K, value: FilterValues[K]) {
@@ -1755,6 +2117,42 @@ export function FilterSidebar({ categories, applied, onApply }: FilterSidebarPro
     catView = draft.make
       ? { kind: 'brand-selected', catName: 'دراجات نارية و ATV - للإيجار', brands: RENTAL_MOTORCYCLE_TYPES, make: draft.make }
       : { kind: 'brand-list',     catName: 'دراجات نارية و ATV - للإيجار', brands: RENTAL_MOTORCYCLE_TYPES };
+  } else if (pathname.includes('/vehicles/classic/cars')) {
+    catView = draft.make
+      ? { kind: 'brand-selected', catName: 'سيارات كلاسيكية', brands: CLASSIC_CAR_BRANDS, make: draft.make }
+      : { kind: 'brand-list',     catName: 'سيارات كلاسيكية', brands: CLASSIC_CAR_BRANDS };
+  } else if (pathname.includes('/vehicles/classic/suv')) {
+    catView = draft.make
+      ? { kind: 'brand-selected', catName: 'سيارات الدفع الرباعي كلاسيكية', brands: CLASSIC_SUV_BRANDS, make: draft.make }
+      : { kind: 'brand-list',     catName: 'سيارات الدفع الرباعي كلاسيكية', brands: CLASSIC_SUV_BRANDS };
+  } else if (pathname.includes('/vehicles/classic/motorcycles')) {
+    catView = draft.make
+      ? { kind: 'brand-selected', catName: 'دراجات نارية كلاسيكية', brands: CLASSIC_MOTO_BRANDS, make: draft.make }
+      : { kind: 'brand-list',     catName: 'دراجات نارية كلاسيكية', brands: CLASSIC_MOTO_BRANDS };
+  } else if (pathname.includes('/vehicles/classic/commercial')) {
+    catView = draft.make
+      ? { kind: 'brand-selected', catName: 'مركبات تجارية كلاسيكية', brands: CLASSIC_COMMERCIAL_BRANDS, make: draft.make }
+      : { kind: 'brand-list',     catName: 'مركبات تجارية كلاسيكية', brands: CLASSIC_COMMERCIAL_BRANDS };
+  } else if (pathname.includes('/vehicles/air/helicopter')) {
+    catView = draft.make
+      ? { kind: 'brand-selected', catName: 'مروحية (هليكوبتر)', brands: HELICOPTER_BRANDS, make: draft.make }
+      : { kind: 'brand-list',     catName: 'مروحية (هليكوبتر)', brands: HELICOPTER_BRANDS };
+  } else if (pathname.includes('/vehicles/air/paramotor')) {
+    catView = draft.make
+      ? { kind: 'brand-selected', catName: 'باراموتور', brands: PARAMOTOR_BRANDS, make: draft.make }
+      : { kind: 'brand-list',     catName: 'باراموتور', brands: PARAMOTOR_BRANDS };
+  } else if (pathname.includes('/vehicles/air/airplane')) {
+    catView = { kind: 'brand-list', catName: 'طائرة', brands: [] as const };
+  } else if (pathname.includes('/vehicles/air/glider')) {
+    catView = { kind: 'brand-list', catName: 'طائرة شراعية ومايكرولايت', brands: [] as const };
+  } else if (pathname.includes('/vehicles/atv')) {
+    catView = draft.make
+      ? { kind: 'brand-selected', catName: 'دبابات (ATV)', brands: ATV_BRANDS, make: draft.make }
+      : { kind: 'brand-list',     catName: 'دبابات (ATV)', brands: ATV_BRANDS };
+  } else if (pathname.includes('/vehicles/utv')) {
+    catView = draft.make
+      ? { kind: 'brand-selected', catName: 'يوتي في (UTV)', brands: UTV_BRANDS, make: draft.make }
+      : { kind: 'brand-list',     catName: 'يوتي في (UTV)', brands: UTV_BRANDS };
   } else if (pathname.includes('/vehicles/rentals/classic')) {
     catView = draft.make
       ? { kind: 'brand-selected', catName: 'سيارات كلاسيكية - للإيجار', brands: RENTAL_CLASSIC_BRANDS, make: draft.make }
@@ -1779,6 +2177,14 @@ export function FilterSidebar({ categories, applied, onApply }: FilterSidebarPro
     catView = draft.make
       ? { kind: 'brand-selected', catName: 'طائرات - للإيجار', brands: RENTAL_AIRCRAFT_TYPES, make: draft.make }
       : { kind: 'brand-list',     catName: 'طائرات - للإيجار', brands: RENTAL_AIRCRAFT_TYPES };
+  } else if (pathname.includes('/vehicles/caravans/towable')) {
+    catView = draft.make
+      ? { kind: 'brand-selected', catName: 'كرفان سحب (مقطورة)', brands: TOWABLE_CARAVAN_BRANDS, make: draft.make }
+      : { kind: 'brand-list',     catName: 'كرفان سحب (مقطورة)', brands: TOWABLE_CARAVAN_BRANDS };
+  } else if (pathname.includes('/vehicles/caravans/motorhome')) {
+    catView = draft.make
+      ? { kind: 'brand-selected', catName: 'عربة سكن بمحرك (موتورهوم)', brands: TOWABLE_CARAVAN_BRANDS, make: draft.make }
+      : { kind: 'brand-list',     catName: 'عربة سكن بمحرك (موتورهوم)', brands: TOWABLE_CARAVAN_BRANDS };
   } else if (pathname.includes('/vehicles/rentals/caravan')) {
     catView = draft.make
       ? { kind: 'brand-selected', catName: 'كرفانات وبيوت متنقلة - للإيجار', brands: RENTAL_CARAVAN_TYPES, make: draft.make }
@@ -1990,7 +2396,7 @@ export function FilterSidebar({ categories, applied, onApply }: FilterSidebarPro
             </>
           )}
 
-          {catView.kind === 'brand-list' && (
+          {catView.kind === 'brand-list' && !isParamotor && !isHelicopter && !isAirplane && !isGlider && (
             <div className="mb-6">
               {backToAll}
               <h3 className="font-bold text-lg mb-4 text-orange-500">{catView.catName}</h3>
@@ -2013,7 +2419,7 @@ export function FilterSidebar({ categories, applied, onApply }: FilterSidebarPro
             </div>
           )}
 
-          {catView.kind === 'brand-selected' && (
+          {catView.kind === 'brand-selected' && !isParamotor && !isHelicopter && !isAirplane && !isGlider && (
             <div className="mb-6">
               {backToAll}
               <h3 className="font-bold text-lg mb-4 text-orange-500">{catView.catName}</h3>
@@ -2106,7 +2512,7 @@ export function FilterSidebar({ categories, applied, onApply }: FilterSidebarPro
             </div>
           </Accordion>
 
-          {!isTrailer && !isSmallTrailer && !isBodywork && !isTowTruck && !isCommercialPlates && !isResidentialForSale && !isResidentialForRent && !isDailyRental && !isResidentialTransfer && !isCommercialForSale && !isCommercialForRent && !isCommercialTransferSale && !isCommercialTransferRent && !isLandShare && !isLandForSale && !isLandForRent && !isProjectsRoute && !isBuildingForSale && !isBuildingForRent && !isTimeshareForSale && !isTimeshareForRent && !isTouristFacilitySale && !isTouristFacilityRent && !isPoolsForRent && !isRentalCars && !isRentalSuv && !isRentalMinivan && !isRentalMotorcycles && !isRentalClassic && !isRentalBus && !isRentalTruck && !isRentalRecovery && !isRentalTowTruck && !isRentalAircraft && !isRentalCaravan && !isRentalElectric && !isMarineForSale && !isMarineForRent && !isDamagedCar && !isDamagedSuv && !isDamagedMotorcycle && !isDamagedMinivan && !isDamagedCommercial && (
+          {!isTrailer && !isSmallTrailer && !isBodywork && !isTowTruck && !isCommercialPlates && !isResidentialForSale && !isResidentialForRent && !isDailyRental && !isResidentialTransfer && !isCommercialForSale && !isCommercialForRent && !isCommercialTransferSale && !isCommercialTransferRent && !isLandShare && !isLandForSale && !isLandForRent && !isProjectsRoute && !isBuildingForSale && !isBuildingForRent && !isTimeshareForSale && !isTimeshareForRent && !isTouristFacilitySale && !isTouristFacilityRent && !isPoolsForRent && !isRentalCars && !isRentalSuv && !isRentalMinivan && !isRentalMotorcycles && !isRentalClassic && !isRentalBus && !isRentalTruck && !isRentalRecovery && !isRentalTowTruck && !isRentalAircraft && !isRentalCaravan && !isRentalElectric && !isMarineForSale && !isMarineForRent && !isDamagedCar && !isDamagedSuv && !isDamagedMotorcycle && !isDamagedMinivan && !isDamagedCommercial && !isTowableCaravan && !isMotorhome && !isClassicVehicle && !isAirVehicle && !isAtv && !isUtv && (
             <Accordion title="السنة" defaultOpen badge={draft.minYear || draft.maxYear ? 1 : undefined}>
               <RangeInputs
                 minVal={draft.minYear} maxVal={draft.maxYear}
@@ -2116,7 +2522,7 @@ export function FilterSidebar({ categories, applied, onApply }: FilterSidebarPro
             </Accordion>
           )}
 
-          {!isTrailer && !isSmallTrailer && !isBodywork && !isTowTruck && !isCommercialPlates && !isResidentialForSale && !isResidentialForRent && !isDailyRental && !isResidentialTransfer && !isCommercialForSale && !isCommercialForRent && !isCommercialTransferSale && !isCommercialTransferRent && !isLandShare && !isLandForSale && !isLandForRent && !isProjectsRoute && !isBuildingForSale && !isBuildingForRent && !isTimeshareForSale && !isTimeshareForRent && !isTouristFacilitySale && !isTouristFacilityRent && !isPoolsForRent && !isRentalCars && !isRentalSuv && !isRentalMinivan && !isRentalMotorcycles && !isRentalClassic && !isRentalBus && !isRentalTruck && !isRentalRecovery && !isRentalTowTruck && !isRentalAircraft && !isRentalCaravan && !isRentalElectric && !isMarineForSale && !isMarineForRent && !isDamagedCar && !isDamagedSuv && !isDamagedMotorcycle && !isDamagedMinivan && !isDamagedCommercial && (
+          {!isTrailer && !isSmallTrailer && !isBodywork && !isTowTruck && !isCommercialPlates && !isResidentialForSale && !isResidentialForRent && !isDailyRental && !isResidentialTransfer && !isCommercialForSale && !isCommercialForRent && !isCommercialTransferSale && !isCommercialTransferRent && !isLandShare && !isLandForSale && !isLandForRent && !isProjectsRoute && !isBuildingForSale && !isBuildingForRent && !isTimeshareForSale && !isTimeshareForRent && !isTouristFacilitySale && !isTouristFacilityRent && !isPoolsForRent && !isRentalCars && !isRentalSuv && !isRentalMinivan && !isRentalMotorcycles && !isRentalClassic && !isRentalBus && !isRentalTruck && !isRentalRecovery && !isRentalTowTruck && !isRentalAircraft && !isRentalCaravan && !isRentalElectric && !isMarineForSale && !isMarineForRent && !isDamagedCar && !isDamagedSuv && !isDamagedMotorcycle && !isDamagedMinivan && !isDamagedCommercial && !isTowableCaravan && !isMotorhome && !isClassicVehicle && !isAirVehicle && !isAtv && !isUtv && (
             <Accordion title="المسافة (كم)" defaultOpen={false} badge={draft.minMileage || draft.maxMileage ? 1 : undefined}>
               <RangeInputs
                 minVal={draft.minMileage} maxVal={draft.maxMileage}
@@ -3648,6 +4054,1096 @@ export function FilterSidebar({ categories, applied, onApply }: FilterSidebarPro
             </>
           )}
 
+          {/* ── Towable Caravan–specific filters ── */}
+          {isTowableCaravan && (
+            <>
+              <Accordion title="سنة الصنع (الموديل)" defaultOpen badge={draft.minYear || draft.maxYear ? 1 : undefined}>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={draft.minYear}
+                    onChange={(e) => set('minYear', e.target.value)}
+                    placeholder="أدنى حد"
+                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                  />
+                  <input
+                    type="number"
+                    value={draft.maxYear}
+                    onChange={(e) => set('maxYear', e.target.value)}
+                    placeholder="أقصى حد"
+                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                  />
+                </div>
+              </Accordion>
+
+              <Accordion title="النوع" defaultOpen={false} badge={draft.towableType ? 1 : undefined}>
+                <select
+                  value={draft.towableType}
+                  onChange={(e) => set('towableType', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {TOWABLE_CARAVAN_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="سعة الأسرّة" defaultOpen={false} badge={draft.towableBedCapacity ? 1 : undefined}>
+                <select
+                  value={draft.towableBedCapacity}
+                  onChange={(e) => set('towableBedCapacity', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {TOWABLE_BED_CAPACITIES.map((b) => <option key={b} value={b}>{b}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="الوزن" defaultOpen={false} badge={draft.towableWeight ? 1 : undefined}>
+                <select
+                  value={draft.towableWeight}
+                  onChange={(e) => set('towableWeight', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {TOWABLE_WEIGHT_OPTIONS.map((w) => <option key={w} value={w}>{w}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="هيكل مونوبلوك" defaultOpen={false} badge={draft.towableMonoblock ? 1 : undefined}>
+                <select
+                  value={draft.towableMonoblock}
+                  onChange={(e) => set('towableMonoblock', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {TOWABLE_BOOL_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="محرك تحريك (Mover)" defaultOpen={false} badge={draft.towableMover ? 1 : undefined}>
+                <select
+                  value={draft.towableMover}
+                  onChange={(e) => set('towableMover', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {TOWABLE_BOOL_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="حالة الكرفان" defaultOpen={false} badge={draft.towableCondition ? 1 : undefined}>
+                <select
+                  value={draft.towableCondition}
+                  onChange={(e) => set('towableCondition', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {TOWABLE_CONDITION_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="قابل للمقايضة / تبديل" defaultOpen={false} badge={draft.towableExchange ? 1 : undefined}>
+                <select
+                  value={draft.towableExchange}
+                  onChange={(e) => set('towableExchange', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {TOWABLE_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </Accordion>
+            </>
+          )}
+
+          {/* ── Classic Cars–specific filters ── */}
+          {isClassicCar && (
+            <>
+              <Accordion title="سنة الصنع" defaultOpen badge={draft.minYear || draft.maxYear ? 1 : undefined}>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={draft.minYear}
+                    onChange={(e) => set('minYear', e.target.value)}
+                    placeholder="أدنى حد"
+                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                  />
+                  <input
+                    type="number"
+                    value={draft.maxYear}
+                    onChange={(e) => set('maxYear', e.target.value)}
+                    placeholder="أقصى حد"
+                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                  />
+                </div>
+              </Accordion>
+
+              <Accordion title="الكيلومترات (كم)" defaultOpen={false} badge={draft.minMileage || draft.maxMileage ? 1 : undefined}>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={draft.minMileage}
+                    onChange={(e) => set('minMileage', e.target.value)}
+                    placeholder="أدنى حد"
+                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                  />
+                  <input
+                    type="number"
+                    value={draft.maxMileage}
+                    onChange={(e) => set('maxMileage', e.target.value)}
+                    placeholder="أقصى حد"
+                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                  />
+                </div>
+              </Accordion>
+
+              <Accordion title="اللون" defaultOpen={false} badge={draft.colors.length || undefined}>
+                <div className="max-h-44 overflow-y-auto pr-1">
+                  {CAR_COLORS.map((color) => (
+                    <CheckItem key={color} label={color}
+                      checked={draft.colors.includes(color)}
+                      onChange={() => toggle('colors', color)}
+                    />
+                  ))}
+                </div>
+              </Accordion>
+
+              <Accordion title="حالة المركبة" defaultOpen={false} badge={draft.classicCondition ? 1 : undefined}>
+                <select
+                  value={draft.classicCondition}
+                  onChange={(e) => set('classicCondition', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_CONDITION_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="سعة المحرك" defaultOpen={false} badge={draft.classicEngineCapacity ? 1 : undefined}>
+                <select
+                  value={draft.classicEngineCapacity}
+                  onChange={(e) => set('classicEngineCapacity', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_ENGINE_CAPACITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="قوة المحرك" defaultOpen={false} badge={draft.classicEnginePower ? 1 : undefined}>
+                <select
+                  value={draft.classicEnginePower}
+                  onChange={(e) => set('classicEnginePower', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_ENGINE_POWERS.map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="نوع الغيارات" defaultOpen={false} badge={draft.classicGear ? 1 : undefined}>
+                <select
+                  value={draft.classicGear}
+                  onChange={(e) => set('classicGear', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_GEAR_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="نوع الهيكل" defaultOpen={false} badge={draft.classicBodyType ? 1 : undefined}>
+                <select
+                  value={draft.classicBodyType}
+                  onChange={(e) => set('classicBodyType', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_BODY_TYPES.map((b) => <option key={b} value={b}>{b}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="المنشأ" defaultOpen={false} badge={draft.classicOrigin ? 1 : undefined}>
+                <select
+                  value={draft.classicOrigin}
+                  onChange={(e) => set('classicOrigin', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_ORIGIN_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="نوع الوقود" defaultOpen={false} badge={draft.classicFuel ? 1 : undefined}>
+                <select
+                  value={draft.classicFuel}
+                  onChange={(e) => set('classicFuel', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_FUEL_TYPES.map((f) => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="البائع / معروض من" defaultOpen={false} badge={draft.classicSeller ? 1 : undefined}>
+                <select
+                  value={draft.classicSeller}
+                  onChange={(e) => set('classicSeller', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="قابل للمقايضة / تبديل" defaultOpen={false} badge={draft.classicExchange ? 1 : undefined}>
+                <select
+                  value={draft.classicExchange}
+                  onChange={(e) => set('classicExchange', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </Accordion>
+            </>
+          )}
+
+          {/* ── Classic SUVs–specific filters ── */}
+          {isClassicSuv && (
+            <>
+              <Accordion title="سنة الصنع" defaultOpen badge={draft.minYear || draft.maxYear ? 1 : undefined}>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={draft.minYear}
+                    onChange={(e) => set('minYear', e.target.value)}
+                    placeholder="أدنى حد"
+                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                  />
+                  <input
+                    type="number"
+                    value={draft.maxYear}
+                    onChange={(e) => set('maxYear', e.target.value)}
+                    placeholder="أقصى حد"
+                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                  />
+                </div>
+              </Accordion>
+
+              <Accordion title="الكيلومترات (كم)" defaultOpen={false} badge={draft.minMileage || draft.maxMileage ? 1 : undefined}>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={draft.minMileage}
+                    onChange={(e) => set('minMileage', e.target.value)}
+                    placeholder="أدنى حد"
+                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                  />
+                  <input
+                    type="number"
+                    value={draft.maxMileage}
+                    onChange={(e) => set('maxMileage', e.target.value)}
+                    placeholder="أقصى حد"
+                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                  />
+                </div>
+              </Accordion>
+
+              <Accordion title="اللون" defaultOpen={false} badge={draft.colors.length || undefined}>
+                <div className="max-h-44 overflow-y-auto pr-1">
+                  {CAR_COLORS.map((color) => (
+                    <CheckItem key={color} label={color}
+                      checked={draft.colors.includes(color)}
+                      onChange={() => toggle('colors', color)}
+                    />
+                  ))}
+                </div>
+              </Accordion>
+
+              <Accordion title="حالة المركبة" defaultOpen={false} badge={draft.classicCondition ? 1 : undefined}>
+                <select
+                  value={draft.classicCondition}
+                  onChange={(e) => set('classicCondition', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_CONDITION_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="سعة المحرك" defaultOpen={false} badge={draft.classicEngineCapacity ? 1 : undefined}>
+                <select
+                  value={draft.classicEngineCapacity}
+                  onChange={(e) => set('classicEngineCapacity', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_SUV_ENGINE_CAPACITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="قوة المحرك" defaultOpen={false} badge={draft.classicEnginePower ? 1 : undefined}>
+                <select
+                  value={draft.classicEnginePower}
+                  onChange={(e) => set('classicEnginePower', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_ENGINE_POWERS.map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="نوع الغيارات" defaultOpen={false} badge={draft.classicGear ? 1 : undefined}>
+                <select
+                  value={draft.classicGear}
+                  onChange={(e) => set('classicGear', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_GEAR_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="عدد الأبواب" defaultOpen={false} badge={draft.classicDoors ? 1 : undefined}>
+                <select
+                  value={draft.classicDoors}
+                  onChange={(e) => set('classicDoors', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_DOOR_OPTIONS.map((d) => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="نوع الوقود" defaultOpen={false} badge={draft.classicFuel ? 1 : undefined}>
+                <select
+                  value={draft.classicFuel}
+                  onChange={(e) => set('classicFuel', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_FUEL_TYPES.map((f) => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="البائع / معروض من" defaultOpen={false} badge={draft.classicSeller ? 1 : undefined}>
+                <select
+                  value={draft.classicSeller}
+                  onChange={(e) => set('classicSeller', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="قابل للمقايضة / تبديل" defaultOpen={false} badge={draft.classicExchange ? 1 : undefined}>
+                <select
+                  value={draft.classicExchange}
+                  onChange={(e) => set('classicExchange', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </Accordion>
+            </>
+          )}
+
+          {/* ── Classic Motorcycles–specific filters ── */}
+          {isClassicMotorcycle && (
+            <>
+              <Accordion title="سنة الصنع" defaultOpen badge={draft.minYear || draft.maxYear ? 1 : undefined}>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={draft.minYear}
+                    onChange={(e) => set('minYear', e.target.value)}
+                    placeholder="أدنى حد"
+                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                  />
+                  <input
+                    type="number"
+                    value={draft.maxYear}
+                    onChange={(e) => set('maxYear', e.target.value)}
+                    placeholder="أقصى حد"
+                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                  />
+                </div>
+              </Accordion>
+
+              <Accordion title="الكيلومترات (كم)" defaultOpen={false} badge={draft.minMileage || draft.maxMileage ? 1 : undefined}>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={draft.minMileage}
+                    onChange={(e) => set('minMileage', e.target.value)}
+                    placeholder="أدنى حد"
+                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                  />
+                  <input
+                    type="number"
+                    value={draft.maxMileage}
+                    onChange={(e) => set('maxMileage', e.target.value)}
+                    placeholder="أقصى حد"
+                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                  />
+                </div>
+              </Accordion>
+
+              <Accordion title="اللون" defaultOpen={false} badge={draft.colors.length || undefined}>
+                <div className="max-h-44 overflow-y-auto pr-1">
+                  {CAR_COLORS.map((color) => (
+                    <CheckItem key={color} label={color}
+                      checked={draft.colors.includes(color)}
+                      onChange={() => toggle('colors', color)}
+                    />
+                  ))}
+                </div>
+              </Accordion>
+
+              <Accordion title="النوع" defaultOpen={false} badge={draft.classicMotoType ? 1 : undefined}>
+                <select
+                  value={draft.classicMotoType}
+                  onChange={(e) => set('classicMotoType', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_MOTO_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="حالة الدراجة" defaultOpen={false} badge={draft.classicMotoCondition ? 1 : undefined}>
+                <select
+                  value={draft.classicMotoCondition}
+                  onChange={(e) => set('classicMotoCondition', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_MOTO_CONDITION_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="سعة المحرك" defaultOpen={false} badge={draft.classicMotoEngineCapacity ? 1 : undefined}>
+                <select
+                  value={draft.classicMotoEngineCapacity}
+                  onChange={(e) => set('classicMotoEngineCapacity', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_MOTO_ENGINE_CAPACITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="البائع / معروض من" defaultOpen={false} badge={draft.classicMotoSeller ? 1 : undefined}>
+                <select
+                  value={draft.classicMotoSeller}
+                  onChange={(e) => set('classicMotoSeller', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_MOTO_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="قابل للمقايضة / تبديل" defaultOpen={false} badge={draft.classicMotoExchange ? 1 : undefined}>
+                <select
+                  value={draft.classicMotoExchange}
+                  onChange={(e) => set('classicMotoExchange', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_MOTO_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </Accordion>
+            </>
+          )}
+
+          {/* ── Classic Commercial Vehicles–specific filters ── */}
+          {isClassicCommercial && (
+            <>
+              <Accordion title="سنة الصنع" defaultOpen badge={draft.minYear || draft.maxYear ? 1 : undefined}>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={draft.minYear}
+                    onChange={(e) => set('minYear', e.target.value)}
+                    placeholder="أدنى حد"
+                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                  />
+                  <input
+                    type="number"
+                    value={draft.maxYear}
+                    onChange={(e) => set('maxYear', e.target.value)}
+                    placeholder="أقصى حد"
+                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                  />
+                </div>
+              </Accordion>
+
+              <Accordion title="الكيلومترات (كم)" defaultOpen={false} badge={draft.minMileage || draft.maxMileage ? 1 : undefined}>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={draft.minMileage}
+                    onChange={(e) => set('minMileage', e.target.value)}
+                    placeholder="أدنى حد"
+                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                  />
+                  <input
+                    type="number"
+                    value={draft.maxMileage}
+                    onChange={(e) => set('maxMileage', e.target.value)}
+                    placeholder="أقصى حد"
+                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                  />
+                </div>
+              </Accordion>
+
+              <Accordion title="اللون" defaultOpen={false} badge={draft.colors.length || undefined}>
+                <div className="max-h-44 overflow-y-auto pr-1">
+                  {CAR_COLORS.map((color) => (
+                    <CheckItem key={color} label={color}
+                      checked={draft.colors.includes(color)}
+                      onChange={() => toggle('colors', color)}
+                    />
+                  ))}
+                </div>
+              </Accordion>
+
+              <Accordion title="حالة المركبة" defaultOpen={false} badge={draft.classicCommercialCondition ? 1 : undefined}>
+                <select
+                  value={draft.classicCommercialCondition}
+                  onChange={(e) => set('classicCommercialCondition', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_COMMERCIAL_CONDITION_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="سعة المحرك" defaultOpen={false} badge={draft.classicCommercialEngineCapacity ? 1 : undefined}>
+                <select
+                  value={draft.classicCommercialEngineCapacity}
+                  onChange={(e) => set('classicCommercialEngineCapacity', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_COMMERCIAL_ENGINE_CAPACITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="قوة المحرك" defaultOpen={false} badge={draft.classicCommercialEnginePower ? 1 : undefined}>
+                <select
+                  value={draft.classicCommercialEnginePower}
+                  onChange={(e) => set('classicCommercialEnginePower', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_COMMERCIAL_ENGINE_POWERS.map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="نوع الغيارات" defaultOpen={false} badge={draft.classicCommercialGear ? 1 : undefined}>
+                <select
+                  value={draft.classicCommercialGear}
+                  onChange={(e) => set('classicCommercialGear', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_COMMERCIAL_GEAR_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="نوع الوقود" defaultOpen={false} badge={draft.classicCommercialFuel ? 1 : undefined}>
+                <select
+                  value={draft.classicCommercialFuel}
+                  onChange={(e) => set('classicCommercialFuel', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_COMMERCIAL_FUEL_TYPES.map((f) => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="البائع / معروض من" defaultOpen={false} badge={draft.classicCommercialSeller ? 1 : undefined}>
+                <select
+                  value={draft.classicCommercialSeller}
+                  onChange={(e) => set('classicCommercialSeller', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_COMMERCIAL_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="قابل للمقايضة / تبديل" defaultOpen={false} badge={draft.classicCommercialExchange ? 1 : undefined}>
+                <select
+                  value={draft.classicCommercialExchange}
+                  onChange={(e) => set('classicCommercialExchange', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {CLASSIC_COMMERCIAL_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </Accordion>
+            </>
+          )}
+
+          {/* ── Helicopter–specific filters ── */}
+          {isHelicopter && (
+            <>
+              <Accordion title="سنة الصنع" defaultOpen badge={draft.minYear || draft.maxYear ? 1 : undefined}>
+                <div className="flex gap-2">
+                  <input
+                    type="number" placeholder="من" value={draft.minYear}
+                    onChange={(e) => set('minYear', e.target.value)}
+                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                  />
+                  <input
+                    type="number" placeholder="إلى" value={draft.maxYear}
+                    onChange={(e) => set('maxYear', e.target.value)}
+                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                  />
+                </div>
+              </Accordion>
+
+              <Accordion title="البائع / معروض من" defaultOpen={false} badge={draft.helicopterSeller ? 1 : undefined}>
+                <select
+                  value={draft.helicopterSeller}
+                  onChange={(e) => set('helicopterSeller', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {HELICOPTER_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="قابل للمقايضة / تبديل" defaultOpen={false} badge={draft.helicopterExchange ? 1 : undefined}>
+                <select
+                  value={draft.helicopterExchange}
+                  onChange={(e) => set('helicopterExchange', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {HELICOPTER_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </Accordion>
+            </>
+          )}
+
+          {/* ── Paramotor–specific filters ── */}
+          {isParamotor && (
+            <>
+              <Accordion title="سنة الصنع" defaultOpen badge={draft.minYear || draft.maxYear ? 1 : undefined}>
+                <div className="flex gap-2">
+                  <input
+                    type="number" placeholder="من" value={draft.minYear}
+                    onChange={(e) => set('minYear', e.target.value)}
+                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                  />
+                  <input
+                    type="number" placeholder="إلى" value={draft.maxYear}
+                    onChange={(e) => set('maxYear', e.target.value)}
+                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                  />
+                </div>
+              </Accordion>
+
+              <Accordion title="البائع / معروض من" defaultOpen={false} badge={draft.paramotorSeller ? 1 : undefined}>
+                <select
+                  value={draft.paramotorSeller}
+                  onChange={(e) => set('paramotorSeller', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {PARAMOTOR_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="قابل للمقايضة / تبديل" defaultOpen={false} badge={draft.paramotorExchange ? 1 : undefined}>
+                <select
+                  value={draft.paramotorExchange}
+                  onChange={(e) => set('paramotorExchange', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {PARAMOTOR_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </Accordion>
+            </>
+          )}
+
+          {/* ── Airplane–specific filters ── */}
+          {isAirplane && (
+            <>
+              <Accordion title="سنة الصنع" defaultOpen badge={draft.minYear || draft.maxYear ? 1 : undefined}>
+                <div className="flex gap-2">
+                  <input
+                    type="number" placeholder="من" value={draft.minYear}
+                    onChange={(e) => set('minYear', e.target.value)}
+                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                  />
+                  <input
+                    type="number" placeholder="إلى" value={draft.maxYear}
+                    onChange={(e) => set('maxYear', e.target.value)}
+                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                  />
+                </div>
+              </Accordion>
+
+              <Accordion title="البائع / معروض من" defaultOpen={false} badge={draft.airplaneSeller ? 1 : undefined}>
+                <select
+                  value={draft.airplaneSeller}
+                  onChange={(e) => set('airplaneSeller', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {AIRPLANE_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="قابل للمقايضة / تبديل" defaultOpen={false} badge={draft.airplaneExchange ? 1 : undefined}>
+                <select
+                  value={draft.airplaneExchange}
+                  onChange={(e) => set('airplaneExchange', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {AIRPLANE_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </Accordion>
+            </>
+          )}
+
+          {/* ── Glider & Microlight–specific filters ── */}
+          {isGlider && (
+            <>
+              <Accordion title="سنة الصنع" defaultOpen badge={draft.minYear || draft.maxYear ? 1 : undefined}>
+                <div className="flex gap-2">
+                  <input
+                    type="number" placeholder="من" value={draft.minYear}
+                    onChange={(e) => set('minYear', e.target.value)}
+                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                  />
+                  <input
+                    type="number" placeholder="إلى" value={draft.maxYear}
+                    onChange={(e) => set('maxYear', e.target.value)}
+                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                  />
+                </div>
+              </Accordion>
+
+              <Accordion title="البائع / معروض من" defaultOpen={false} badge={draft.gliderSeller ? 1 : undefined}>
+                <select
+                  value={draft.gliderSeller}
+                  onChange={(e) => set('gliderSeller', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {GLIDER_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="قابل للمقايضة / تبديل" defaultOpen={false} badge={draft.gliderExchange ? 1 : undefined}>
+                <select
+                  value={draft.gliderExchange}
+                  onChange={(e) => set('gliderExchange', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {GLIDER_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </Accordion>
+            </>
+          )}
+
+          {/* ── ATV–specific filters ── */}
+          {isAtv && (
+            <>
+              <Accordion title="سنة الصنع" defaultOpen badge={draft.atvYear ? 1 : undefined}>
+                <select
+                  value={draft.atvYear}
+                  onChange={(e) => set('atvYear', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {ATV_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="المسافة (كم)" defaultOpen={false} badge={draft.minMileage || draft.maxMileage ? 1 : undefined}>
+                <div className="flex gap-2">
+                  <input
+                    type="number" placeholder="من" value={draft.minMileage}
+                    onChange={(e) => set('minMileage', e.target.value)}
+                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                  />
+                  <input
+                    type="number" placeholder="إلى" value={draft.maxMileage}
+                    onChange={(e) => set('maxMileage', e.target.value)}
+                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                  />
+                </div>
+              </Accordion>
+
+              <Accordion title="اللون" defaultOpen={false} badge={draft.colors.length || undefined}>
+                <div className="max-h-44 overflow-y-auto pr-1">
+                  {CAR_COLORS.map((color) => (
+                    <CheckItem key={color} label={color}
+                      checked={draft.colors.includes(color)}
+                      onChange={() => toggle('colors', color)}
+                    />
+                  ))}
+                </div>
+              </Accordion>
+
+              <Accordion title="النوع" defaultOpen={false} badge={draft.atvType ? 1 : undefined}>
+                <select
+                  value={draft.atvType}
+                  onChange={(e) => set('atvType', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {ATV_TYPE_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="سعة المحرك" defaultOpen={false} badge={draft.atvEngineCapacity ? 1 : undefined}>
+                <select
+                  value={draft.atvEngineCapacity}
+                  onChange={(e) => set('atvEngineCapacity', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {ATV_ENGINE_CAPACITY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="عدد الأسطوانات" defaultOpen={false} badge={draft.atvCylinders ? 1 : undefined}>
+                <select
+                  value={draft.atvCylinders}
+                  onChange={(e) => set('atvCylinders', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {ATV_CYLINDER_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="نوع الغيارات" defaultOpen={false} badge={draft.atvGear ? 1 : undefined}>
+                <select
+                  value={draft.atvGear}
+                  onChange={(e) => set('atvGear', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {ATV_GEAR_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="نظام الدفع" defaultOpen={false} badge={draft.atvDrivetrain ? 1 : undefined}>
+                <select
+                  value={draft.atvDrivetrain}
+                  onChange={(e) => set('atvDrivetrain', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {ATV_DRIVETRAIN_OPTIONS.map((d) => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="ناقل الحركة" defaultOpen={false} badge={draft.atvPowerTransmission ? 1 : undefined}>
+                <select
+                  value={draft.atvPowerTransmission}
+                  onChange={(e) => set('atvPowerTransmission', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {ATV_POWER_TRANSMISSION_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="سعة الركاب" defaultOpen={false} badge={draft.atvCapacity ? 1 : undefined}>
+                <select
+                  value={draft.atvCapacity}
+                  onChange={(e) => set('atvCapacity', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {ATV_CAPACITY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="الفرامل / المكابح" defaultOpen={false} badge={draft.atvBrakes ? 1 : undefined}>
+                <select
+                  value={draft.atvBrakes}
+                  onChange={(e) => set('atvBrakes', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {ATV_BRAKE_OPTIONS.map((b) => <option key={b} value={b}>{b}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="نظام التبريد" defaultOpen={false} badge={draft.atvCooling ? 1 : undefined}>
+                <select
+                  value={draft.atvCooling}
+                  onChange={(e) => set('atvCooling', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {ATV_COOLING_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="البائع / معروض من" defaultOpen={false} badge={draft.atvSeller ? 1 : undefined}>
+                <select
+                  value={draft.atvSeller}
+                  onChange={(e) => set('atvSeller', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {ATV_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="قابل للمقايضة / تبديل" defaultOpen={false} badge={draft.atvExchange ? 1 : undefined}>
+                <select
+                  value={draft.atvExchange}
+                  onChange={(e) => set('atvExchange', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {ATV_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </Accordion>
+            </>
+          )}
+
+          {/* ── UTV–specific filters ── */}
+          {isUtv && (
+            <>
+              <Accordion title="سنة الصنع" defaultOpen badge={draft.minYear || draft.maxYear ? 1 : undefined}>
+                <div className="flex gap-2">
+                  <input
+                    type="number" placeholder="من" value={draft.minYear}
+                    onChange={(e) => set('minYear', e.target.value)}
+                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                  />
+                  <input
+                    type="number" placeholder="إلى" value={draft.maxYear}
+                    onChange={(e) => set('maxYear', e.target.value)}
+                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                  />
+                </div>
+              </Accordion>
+
+              <Accordion title="المسافة (كم)" defaultOpen={false} badge={draft.minMileage || draft.maxMileage ? 1 : undefined}>
+                <div className="flex gap-2">
+                  <input
+                    type="number" placeholder="من" value={draft.minMileage}
+                    onChange={(e) => set('minMileage', e.target.value)}
+                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                  />
+                  <input
+                    type="number" placeholder="إلى" value={draft.maxMileage}
+                    onChange={(e) => set('maxMileage', e.target.value)}
+                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                  />
+                </div>
+              </Accordion>
+
+              <Accordion title="اللون" defaultOpen={false} badge={draft.colors.length || undefined}>
+                <div className="max-h-44 overflow-y-auto pr-1">
+                  {CAR_COLORS.map((color) => (
+                    <CheckItem key={color} label={color}
+                      checked={draft.colors.includes(color)}
+                      onChange={() => toggle('colors', color)}
+                    />
+                  ))}
+                </div>
+              </Accordion>
+
+              <Accordion title="سعة المحرك" defaultOpen={false} badge={draft.utvEngineCapacity ? 1 : undefined}>
+                <select
+                  value={draft.utvEngineCapacity}
+                  onChange={(e) => set('utvEngineCapacity', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {UTV_ENGINE_CAPACITY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="نوع الغيارات" defaultOpen={false} badge={draft.utvGear ? 1 : undefined}>
+                <select
+                  value={draft.utvGear}
+                  onChange={(e) => set('utvGear', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {UTV_GEAR_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="نظام الدفع" defaultOpen={false} badge={draft.utvDrivetrain ? 1 : undefined}>
+                <select
+                  value={draft.utvDrivetrain}
+                  onChange={(e) => set('utvDrivetrain', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {UTV_DRIVETRAIN_OPTIONS.map((d) => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="نظام التبريد" defaultOpen={false} badge={draft.utvCooling ? 1 : undefined}>
+                <select
+                  value={draft.utvCooling}
+                  onChange={(e) => set('utvCooling', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {UTV_COOLING_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="نوع الوقود" defaultOpen={false} badge={draft.utvFuel ? 1 : undefined}>
+                <select
+                  value={draft.utvFuel}
+                  onChange={(e) => set('utvFuel', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {UTV_FUEL_OPTIONS.map((f) => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="البائع / معروض من" defaultOpen={false} badge={draft.utvSeller ? 1 : undefined}>
+                <select
+                  value={draft.utvSeller}
+                  onChange={(e) => set('utvSeller', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {UTV_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </Accordion>
+
+              <Accordion title="قابل للمقايضة / تبديل" defaultOpen={false} badge={draft.utvExchange ? 1 : undefined}>
+                <select
+                  value={draft.utvExchange}
+                  onChange={(e) => set('utvExchange', e.target.value)}
+                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                >
+                  <option value="">الكل</option>
+                  {UTV_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </Accordion>
+            </>
+          )}
+
           {/* ── Marine For Sale–specific filters ── */}
           {isMarineForSale && (
             <>
@@ -3898,7 +5394,7 @@ export function FilterSidebar({ categories, applied, onApply }: FilterSidebarPro
           )}
 
           {/* ── Car / generic filters (hidden on specialist commercial and other vehicle pages) ── */}
-          {!isMotorcycle && !isElectric && !isMinivan && !isMinibus && !isBus && !isTruck && !isTractorTruck && !isTrailer && !isSmallTrailer && !isBodywork && !isTowTruck && !isCommercialPlates && !isResidentialForSale && !isResidentialForRent && !isDailyRental && !isResidentialTransfer && !isCommercialForSale && !isCommercialForRent && !isCommercialTransferSale && !isCommercialTransferRent && !isLandShare && !isLandForSale && !isLandForRent && !isProjectsRoute && !isBuildingForSale && !isBuildingForRent && !isTimeshareForSale && !isTimeshareForRent && !isTouristFacilitySale && !isTouristFacilityRent && !isPoolsForRent && !isRentalCars && !isRentalSuv && !isRentalMinivan && !isRentalMotorcycles && !isRentalClassic && !isRentalBus && !isRentalTruck && !isRentalRecovery && !isRentalTowTruck && !isRentalAircraft && !isRentalCaravan && !isRentalElectric && !isMarineForSale && !isMarineForRent && !isDamagedCar && !isDamagedSuv && !isDamagedMotorcycle && !isDamagedMinivan && !isDamagedCommercial && (
+          {!isMotorcycle && !isElectric && !isMinivan && !isMinibus && !isBus && !isTruck && !isTractorTruck && !isTrailer && !isSmallTrailer && !isBodywork && !isTowTruck && !isCommercialPlates && !isResidentialForSale && !isResidentialForRent && !isDailyRental && !isResidentialTransfer && !isCommercialForSale && !isCommercialForRent && !isCommercialTransferSale && !isCommercialTransferRent && !isLandShare && !isLandForSale && !isLandForRent && !isProjectsRoute && !isBuildingForSale && !isBuildingForRent && !isTimeshareForSale && !isTimeshareForRent && !isTouristFacilitySale && !isTouristFacilityRent && !isPoolsForRent && !isRentalCars && !isRentalSuv && !isRentalMinivan && !isRentalMotorcycles && !isRentalClassic && !isRentalBus && !isRentalTruck && !isRentalRecovery && !isRentalTowTruck && !isRentalAircraft && !isRentalCaravan && !isRentalElectric && !isMarineForSale && !isMarineForRent && !isDamagedCar && !isDamagedSuv && !isDamagedMotorcycle && !isDamagedMinivan && !isDamagedCommercial && !isTowableCaravan && !isMotorhome && !isClassicVehicle && !isAirVehicle && !isAtv && !isUtv && (
             <Accordion title="نوع الوقود" badge={draft.fuelTypes.length || undefined}>
               {FUEL_TYPE_OPTIONS.map((o) => (
                 <CheckItem key={o.value} label={o.label}
@@ -3909,7 +5405,7 @@ export function FilterSidebar({ categories, applied, onApply }: FilterSidebarPro
             </Accordion>
           )}
 
-          {!isMotorcycle && !isMinivan && !isMinibus && !isBus && !isTruck && !isTractorTruck && !isTrailer && !isSmallTrailer && !isBodywork && !isTowTruck && !isCommercialPlates && !isResidentialForSale && !isResidentialForRent && !isDailyRental && !isResidentialTransfer && !isCommercialForSale && !isCommercialForRent && !isCommercialTransferSale && !isCommercialTransferRent && !isLandShare && !isLandForSale && !isLandForRent && !isProjectsRoute && !isBuildingForSale && !isBuildingForRent && !isTimeshareForSale && !isTimeshareForRent && !isTouristFacilitySale && !isTouristFacilityRent && !isPoolsForRent && !isRentalCars && !isRentalSuv && !isRentalMinivan && !isRentalMotorcycles && !isRentalClassic && !isRentalBus && !isRentalTruck && !isRentalRecovery && !isRentalTowTruck && !isRentalAircraft && !isRentalCaravan && !isRentalElectric && !isMarineForSale && !isMarineForRent && !isDamagedCar && !isDamagedSuv && !isDamagedMotorcycle && !isDamagedMinivan && !isDamagedCommercial && (
+          {!isMotorcycle && !isMinivan && !isMinibus && !isBus && !isTruck && !isTractorTruck && !isTrailer && !isSmallTrailer && !isBodywork && !isTowTruck && !isCommercialPlates && !isResidentialForSale && !isResidentialForRent && !isDailyRental && !isResidentialTransfer && !isCommercialForSale && !isCommercialForRent && !isCommercialTransferSale && !isCommercialTransferRent && !isLandShare && !isLandForSale && !isLandForRent && !isProjectsRoute && !isBuildingForSale && !isBuildingForRent && !isTimeshareForSale && !isTimeshareForRent && !isTouristFacilitySale && !isTouristFacilityRent && !isPoolsForRent && !isRentalCars && !isRentalSuv && !isRentalMinivan && !isRentalMotorcycles && !isRentalClassic && !isRentalBus && !isRentalTruck && !isRentalRecovery && !isRentalTowTruck && !isRentalAircraft && !isRentalCaravan && !isRentalElectric && !isMarineForSale && !isMarineForRent && !isDamagedCar && !isDamagedSuv && !isDamagedMotorcycle && !isDamagedMinivan && !isDamagedCommercial && !isTowableCaravan && !isMotorhome && !isClassicVehicle && !isAirVehicle && !isAtv && !isUtv && (
             <>
               <Accordion title="ناقل الحركة" badge={draft.transmissions.length || undefined}>
                 {TRANSMISSION_OPTIONS.map((o) => (
@@ -3959,13 +5455,13 @@ export function FilterSidebar({ categories, applied, onApply }: FilterSidebarPro
           )}
 
           {/* ── Shared filters (all vehicle categories) ── */}
-          {!isMinibus && !isBus && !isTruck && !isTractorTruck && !isTrailer && !isSmallTrailer && !isBodywork && !isTowTruck && !isCommercialPlates && !isResidentialForSale && !isResidentialForRent && !isDailyRental && !isResidentialTransfer && !isCommercialForSale && !isCommercialForRent && !isCommercialTransferSale && !isCommercialTransferRent && !isLandShare && !isLandForSale && !isLandForRent && !isProjectsRoute && !isBuildingForSale && !isBuildingForRent && !isTimeshareForSale && !isTimeshareForRent && !isTouristFacilitySale && !isTouristFacilityRent && !isPoolsForRent && !isRentalCars && !isRentalSuv && !isRentalMinivan && !isRentalMotorcycles && !isRentalClassic && !isRentalBus && !isRentalTruck && !isRentalRecovery && !isRentalTowTruck && !isRentalAircraft && !isRentalCaravan && !isRentalElectric && !isMarineForSale && !isMarineForRent && !isDamagedCar && !isDamagedSuv && !isDamagedMotorcycle && !isDamagedMinivan && !isDamagedCommercial && (
+          {!isMinibus && !isBus && !isTruck && !isTractorTruck && !isTrailer && !isSmallTrailer && !isBodywork && !isTowTruck && !isCommercialPlates && !isResidentialForSale && !isResidentialForRent && !isDailyRental && !isResidentialTransfer && !isCommercialForSale && !isCommercialForRent && !isCommercialTransferSale && !isCommercialTransferRent && !isLandShare && !isLandForSale && !isLandForRent && !isProjectsRoute && !isBuildingForSale && !isBuildingForRent && !isTimeshareForSale && !isTimeshareForRent && !isTouristFacilitySale && !isTouristFacilityRent && !isPoolsForRent && !isRentalCars && !isRentalSuv && !isRentalMinivan && !isRentalMotorcycles && !isRentalClassic && !isRentalBus && !isRentalTruck && !isRentalRecovery && !isRentalTowTruck && !isRentalAircraft && !isRentalCaravan && !isRentalElectric && !isMarineForSale && !isMarineForRent && !isDamagedCar && !isDamagedSuv && !isDamagedMotorcycle && !isDamagedMinivan && !isDamagedCommercial && !isTowableCaravan && !isMotorhome && !isClassicVehicle && !isAirVehicle && !isAtv && !isUtv && (
             <Accordion title="كفالة" defaultOpen={false} badge={draft.warranty ? 1 : undefined}>
               <YesNoRadio value={draft.warranty} onChange={(v) => set('warranty', v)} />
             </Accordion>
           )}
 
-          {!isMinibus && !isBus && !isTruck && !isTractorTruck && !isTrailer && !isSmallTrailer && !isBodywork && !isTowTruck && !isCommercialPlates && !isResidentialForSale && !isResidentialForRent && !isDailyRental && !isResidentialTransfer && !isCommercialForSale && !isCommercialForRent && !isCommercialTransferSale && !isCommercialTransferRent && !isLandShare && !isLandForSale && !isLandForRent && !isProjectsRoute && !isBuildingForSale && !isBuildingForRent && !isTimeshareForSale && !isTimeshareForRent && !isTouristFacilitySale && !isTouristFacilityRent && !isPoolsForRent && !isRentalCars && !isRentalSuv && !isRentalMinivan && !isRentalMotorcycles && !isRentalClassic && !isRentalBus && !isRentalTruck && !isRentalRecovery && !isRentalTowTruck && !isRentalAircraft && !isRentalCaravan && !isRentalElectric && !isMarineForSale && !isMarineForRent && !isDamagedCar && !isDamagedSuv && !isDamagedMotorcycle && !isDamagedMinivan && !isDamagedCommercial && (
+          {!isMinibus && !isBus && !isTruck && !isTractorTruck && !isTrailer && !isSmallTrailer && !isBodywork && !isTowTruck && !isCommercialPlates && !isResidentialForSale && !isResidentialForRent && !isDailyRental && !isResidentialTransfer && !isCommercialForSale && !isCommercialForRent && !isCommercialTransferSale && !isCommercialTransferRent && !isLandShare && !isLandForSale && !isLandForRent && !isProjectsRoute && !isBuildingForSale && !isBuildingForRent && !isTimeshareForSale && !isTimeshareForRent && !isTouristFacilitySale && !isTouristFacilityRent && !isPoolsForRent && !isRentalCars && !isRentalSuv && !isRentalMinivan && !isRentalMotorcycles && !isRentalClassic && !isRentalBus && !isRentalTruck && !isRentalRecovery && !isRentalTowTruck && !isRentalAircraft && !isRentalCaravan && !isRentalElectric && !isMarineForSale && !isMarineForRent && !isDamagedCar && !isDamagedSuv && !isDamagedMotorcycle && !isDamagedMinivan && !isDamagedCommercial && !isTowableCaravan && !isMotorhome && !isClassicVehicle && !isAirVehicle && !isAtv && !isUtv && (
             <Accordion title="سجل حوادث جسيمة" defaultOpen={false} badge={draft.heavyDamage ? 1 : undefined}>
               <YesNoRadio value={draft.heavyDamage} onChange={(v) => set('heavyDamage', v)} />
             </Accordion>
@@ -4907,13 +6403,13 @@ export function FilterSidebar({ categories, applied, onApply }: FilterSidebarPro
             </>
           )}
 
-          {!isResidentialTransfer && !isLandShare && !isLandForRent && !isProjectsRoute && !isBuildingForSale && !isBuildingForRent && !isTimeshareForSale && !isTimeshareForRent && !isTouristFacilitySale && !isTouristFacilityRent && !isPoolsForRent && !isRentalCars && !isRentalSuv && !isRentalMinivan && !isRentalMotorcycles && !isRentalClassic && !isRentalBus && !isRentalTruck && !isRentalRecovery && !isRentalTowTruck && !isRentalAircraft && !isRentalCaravan && !isRentalElectric && !isMarineForSale && !isMarineForRent && !isDamagedCar && !isDamagedSuv && !isDamagedMotorcycle && !isDamagedMinivan && !isDamagedCommercial && (
+          {!isResidentialTransfer && !isLandShare && !isLandForRent && !isProjectsRoute && !isBuildingForSale && !isBuildingForRent && !isTimeshareForSale && !isTimeshareForRent && !isTouristFacilitySale && !isTouristFacilityRent && !isPoolsForRent && !isRentalCars && !isRentalSuv && !isRentalMinivan && !isRentalMotorcycles && !isRentalClassic && !isRentalBus && !isRentalTruck && !isRentalRecovery && !isRentalTowTruck && !isRentalAircraft && !isRentalCaravan && !isRentalElectric && !isMarineForSale && !isMarineForRent && !isDamagedCar && !isDamagedSuv && !isDamagedMotorcycle && !isDamagedMinivan && !isDamagedCommercial && !isTowableCaravan && !isMotorhome && !isClassicVehicle && !isAirVehicle && !isAtv && !isUtv && (
             <Accordion title="قابل للمقايضة" defaultOpen={false} badge={draft.tradeIn ? 1 : undefined}>
               <YesNoRadio value={draft.tradeIn} onChange={(v) => set('tradeIn', v)} />
             </Accordion>
           )}
 
-          {!isResidentialForSale && !isResidentialForRent && !isDailyRental && !isResidentialTransfer && !isLandShare && !isLandForSale && !isLandForRent && !isProjectsRoute && !isBuildingForSale && !isBuildingForRent && !isTimeshareForSale && !isTimeshareForRent && !isTouristFacilitySale && !isTouristFacilityRent && !isPoolsForRent && !isRentalCars && !isRentalSuv && !isRentalMinivan && !isRentalMotorcycles && !isRentalClassic && !isRentalBus && !isRentalTruck && !isRentalRecovery && !isRentalTowTruck && !isRentalAircraft && !isRentalCaravan && !isRentalElectric && !isMarineForSale && !isMarineForRent && !isDamagedCar && !isDamagedSuv && !isDamagedMotorcycle && !isDamagedMinivan && !isDamagedCommercial && (
+          {!isResidentialForSale && !isResidentialForRent && !isDailyRental && !isResidentialTransfer && !isLandShare && !isLandForSale && !isLandForRent && !isProjectsRoute && !isBuildingForSale && !isBuildingForRent && !isTimeshareForSale && !isTimeshareForRent && !isTouristFacilitySale && !isTouristFacilityRent && !isPoolsForRent && !isRentalCars && !isRentalSuv && !isRentalMinivan && !isRentalMotorcycles && !isRentalClassic && !isRentalBus && !isRentalTruck && !isRentalRecovery && !isRentalTowTruck && !isRentalAircraft && !isRentalCaravan && !isRentalElectric && !isMarineForSale && !isMarineForRent && !isDamagedCar && !isDamagedSuv && !isDamagedMotorcycle && !isDamagedMinivan && !isDamagedCommercial && !isTowableCaravan && !isMotorhome && !isClassicVehicle && !isAirVehicle && !isAtv && !isUtv && (
             <Accordion title="من" badge={draft.fromWhos.length || undefined}>
               {FROM_WHO_OPTIONS.map((o) => (
                 <CheckItem key={o.value} label={o.label}

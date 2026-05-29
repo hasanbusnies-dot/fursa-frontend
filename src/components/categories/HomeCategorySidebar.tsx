@@ -134,9 +134,31 @@ const SIDEBAR_CATEGORIES: RootCategory[] = [
           { title: 'مركبات تجارية',                        path: '/category/vehicles/damaged/commercial'  },
         ],
       },
-      { title: 'كرفانات',                       path: '/category/vehicles/caravans'     },
-      { title: 'سيارات كلاسيكية',               path: '/category/vehicles/classic'      },
-      { title: 'مركبات جوية',                   path: '/category/vehicles/aircraft'     },
+      {
+        title: 'كرفانات', path: '/category/vehicles/caravans',
+        children: [
+          { title: 'كرفان سحب (مقطورة)',          path: '/category/vehicles/caravans/towable'   },
+          { title: 'عربة سكن بمحرك (موتورهوم)',   path: '/category/vehicles/caravans/motorhome' },
+        ],
+      },
+      {
+        title: 'مركبات كلاسيكية', path: '/category/vehicles/classic',
+        children: [
+          { title: 'سيارات كلاسيكية',                    path: '/category/vehicles/classic/cars'        },
+          { title: 'سيارات الدفع الرباعي كلاسيكية',      path: '/category/vehicles/classic/suv'         },
+          { title: 'دراجات نارية كلاسيكية',              path: '/category/vehicles/classic/motorcycles' },
+          { title: 'مركبات تجارية كلاسيكية',             path: '/category/vehicles/classic/commercial'  },
+        ],
+      },
+      {
+        title: 'مركبات جوية', path: '/category/vehicles/air',
+        children: [
+          { title: 'مروحية (هليكوبتر)',              path: '/category/vehicles/air/helicopter' },
+          { title: 'باراموتور',                      path: '/category/vehicles/air/paramotor'  },
+          { title: 'طائرة',                          path: '/category/vehicles/air/airplane'   },
+          { title: 'طائرة شراعية ومايكرولايت',       path: '/category/vehicles/air/glider'     },
+        ],
+      },
       { title: 'دبابات (ATV)',                   path: '/category/vehicles/atv'          },
       { title: 'دبابات (UTV)',                   path: '/category/vehicles/utv'          },
       { title: 'سيارات ذوي الاحتياجات الخاصة',  path: '/category/vehicles/disabled'     },
@@ -280,7 +302,7 @@ const SIDEBAR_CATEGORIES: RootCategory[] = [
 
 // ── SubItem — renders a plain link or an expandable nested group ──────────────
 
-const ORANGE_PARENTS = new Set(['مركبات تجارية', 'مركبات للإيجار', 'مركبات بحرية', 'مركبات متضررة', 'عقارات سكنية', 'عقارات تجارية', 'أراضي', 'أبنية / عمارات', 'ملكية مشتركة (تايم شير)', 'منشآت سياحية']);
+const ORANGE_PARENTS = new Set(['مركبات تجارية', 'مركبات للإيجار', 'مركبات بحرية', 'مركبات متضررة', 'كرفانات', 'مركبات كلاسيكية', 'مركبات جوية', 'عقارات سكنية', 'عقارات تجارية', 'أراضي', 'أبنية / عمارات', 'ملكية مشتركة (تايم شير)', 'منشآت سياحية']);
 
 function SubItem({ sub, depth = 0 }: { sub: SubCategory; depth?: number }) {
   const pathname   = usePathname();

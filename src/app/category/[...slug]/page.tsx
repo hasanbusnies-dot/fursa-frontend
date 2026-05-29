@@ -51,6 +51,12 @@ const SLUG_AR: Record<string, string> = {
   'tow-truck': 'سيارة إنقاذ وسحب', 'commercial-plates': 'خطوط ولوحات تجارية',
   rentals: 'مركبات للإيجار', marine: 'مركبات بحرية', damaged: 'سيارات متضررة',
   caravans: 'كرفانات', caravan: 'كرفانات للإيجار', classic: 'سيارات كلاسيكية', aircraft: 'مركبات جوية',
+  air: 'مركبات جوية', helicopter: 'مروحية (هليكوبتر)', paramotor: 'باراموتور',
+  airplane: 'طائرة', glider: 'طائرة شراعية ومايكرولايت',
+  towable: 'كرفان سحب (مقطورة)', motorhome: 'عربة سكن بمحرك (موتورهوم)',
+  // classic sub-routes (slug alone is ambiguous — full-path overrides used instead)
+  'classic-cars': 'سيارات كلاسيكية', 'classic-suv': 'سيارات الدفع الرباعي كلاسيكية',
+  'classic-motorcycles': 'دراجات نارية كلاسيكية', 'classic-commercial': 'مركبات تجارية كلاسيكية',
   'bus-minibus': 'باصات وميكروباص للإيجار',
   'trucks':      'شاحنات للإيجار',
   atv: 'دبابات (ATV)', utv: 'دبابات (UTV)', disabled: 'سيارات ذوي الاحتياجات الخاصة',
@@ -113,6 +119,14 @@ const PATH_TITLE_OVERRIDES: Record<string, string> = {
   'vehicles/damaged/motorcycles': 'دراجات نارية متضررة',
   'vehicles/damaged/minivans':    'ميني فان وفان مغلق متضرر',
   'vehicles/damaged/commercial':  'مركبات تجارية متضررة',
+  'vehicles/classic/cars':        'سيارات كلاسيكية',
+  'vehicles/classic/suv':         'سيارات الدفع الرباعي كلاسيكية',
+  'vehicles/classic/motorcycles': 'دراجات نارية كلاسيكية',
+  'vehicles/classic/commercial':  'مركبات تجارية كلاسيكية',
+  'vehicles/air/helicopter':      'مروحية (هليكوبتر)',
+  'vehicles/air/paramotor':       'باراموتور',
+  'vehicles/air/airplane':        'طائرة',
+  'vehicles/air/glider':          'طائرة شراعية ومايكرولايت',
 };
 
 // ── Category tree helpers ─────────────────────────────────────────────────────
@@ -492,13 +506,10 @@ export default function CategoryPage() {
         break;
       }
 
-      // For /rentals/* deep routes the 'rentals' parent is far too broad —
-      // it includes every vehicle type (cars, bikes, etc.) for rent.
-      // If the most-specific slug didn't resolve to an exact backend match,
-      // fall back to FALLBACK_CATEGORIES for that slug so the backend
-      // receives an unknown ID and returns 0 results (empty state) rather
-      // than thousands of car listings.
-      if (isDeepRoute && slugArr.includes('rentals') && matchedAtIndex < slugArr.length - 1) {
+      // For /rentals/* deep routes the 'rentals' parent is far too broad — it
+      // includes every vehicle type for rent. Always use FALLBACK so the backend
+      // receives an unknown ID and returns 0 results instead of all rentals.
+      if (isDeepRoute && slugArr.includes('rentals')) {
         matched = null;
         for (let i = slugArr.length - 1; i >= 0; i--) {
           const fb = findCategoryBySlug(FALLBACK_CATEGORIES, slugArr[i]);
@@ -508,11 +519,46 @@ export default function CategoryPage() {
         }
       }
 
-      // Same guard for /damaged/* — the 'damaged' parent is too broad and would
-      // return all damaged listings regardless of vehicle type. Use the FALLBACK
-      // sub-category ID so the backend receives an unknown ID and returns 0
-      // results (empty state) rather than unrelated listings.
-      if (isDeepRoute && slugArr.includes('damaged') && matchedAtIndex < slugArr.length - 1) {
+      // Same guard for /damaged/* — always use FALLBACK so slugs like 'cars'
+      // don't resolve to the generic cars category and return all car listings.
+      if (isDeepRoute && slugArr.includes('damaged')) {
+        matched = null;
+        for (let i = slugArr.length - 1; i >= 0; i--) {
+          const fb = findCategoryBySlug(FALLBACK_CATEGORIES, slugArr[i]);
+          if (!fb || !fb.parentId) continue;
+          matched = fb;
+          break;
+        }
+      }
+
+      // Same guard for /classic/* — slugs like 'cars' and 'suv' would otherwise
+      // resolve to the generic cars/suv backend categories, returning unrelated
+      // modern car listings. Always force the FALLBACK sub-category ID.
+      if (isDeepRoute && slugArr.includes('classic') && !slugArr.includes('rentals')) {
+        matched = null;
+        for (let i = slugArr.length - 1; i >= 0; i--) {
+          const fb = findCategoryBySlug(FALLBACK_CATEGORIES, slugArr[i]);
+          if (!fb || !fb.parentId) continue;
+          matched = fb;
+          break;
+        }
+      }
+
+      // Same guard for /caravans/* — always force FALLBACK sub-category ID so
+      // the backend receives an unknown ID and returns 0 results.
+      if (isDeepRoute && slugArr.includes('caravans')) {
+        matched = null;
+        for (let i = slugArr.length - 1; i >= 0; i--) {
+          const fb = findCategoryBySlug(FALLBACK_CATEGORIES, slugArr[i]);
+          if (!fb || !fb.parentId) continue;
+          matched = fb;
+          break;
+        }
+      }
+
+      // Same guard for /air/* — slugs like 'airplane' or 'glider' must not
+      // resolve to unrelated backend categories. Always force FALLBACK ID.
+      if (isDeepRoute && slugArr.includes('air') && !slugArr.includes('rentals')) {
         matched = null;
         for (let i = slugArr.length - 1; i >= 0; i--) {
           const fb = findCategoryBySlug(FALLBACK_CATEGORIES, slugArr[i]);

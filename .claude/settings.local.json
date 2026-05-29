@@ -25,7 +25,10 @@
       "PowerShell(cd \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\forsa-frontend\"; npx tsc --noEmit 2>&1 | Where-Object { $_ -notmatch \"admin/dopings\" } | Select-Object -First 20)",
       "PowerShell(cd \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\forsa-frontend\"; npx tsc --noEmit 2>&1 | Where-Object { $_ -notmatch \"admin/dopings\" })",
       "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\forsa-frontend\" -Recurse -Directory | Where-Object { $_.Name -eq 'components' -or $_.Name -eq 'app' -or $_.Name -eq 'constants' -or $_.Name -eq 'data' } | Select-Object -ExpandProperty FullName)",
-      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\forsa-frontend\\\\src\" -Recurse -File | Where-Object { $_.Extension -match '\\\\.\\(ts|tsx|js|jsx\\)$' } | Select-Object -ExpandProperty FullName | Sort-Object)"
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\forsa-frontend\\\\src\" -Recurse -File | Where-Object { $_.Extension -match '\\\\.\\(ts|tsx|js|jsx\\)$' } | Select-Object -ExpandProperty FullName | Sort-Object)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\forsa-frontend\\\\src\" -Recurse -Directory | Where-Object { $_.Name -match \"constant|data|config\" })",
+      "Bash(xargs grep -l \"SIDEBAR_CATEGORIES\\\\|categories.*array\\\\|categories.*object\")",
+      "Bash(npx tsc *)"
     ]
   }
 }

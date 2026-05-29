@@ -45,9 +45,31 @@ export const FALLBACK_CATEGORIES: Category[] = [
           { id: 'fallback-2-9-5', parentId: 'fallback-2-9', name: 'مركبات تجارية متضررة',                      slug: 'vehicles/damaged/commercial'  },
         ],
       },
-      { id: 'fallback-2-10', parentId: 'fallback-2', name: 'كرفانات',                          slug: 'caravans'    },
-      { id: 'fallback-2-11', parentId: 'fallback-2', name: 'سيارات كلاسيكية',                  slug: 'classic'     },
-      { id: 'fallback-2-12', parentId: 'fallback-2', name: 'مركبات جوية',                      slug: 'aircraft'    },
+      {
+        id: 'fallback-2-10', parentId: 'fallback-2', name: 'كرفانات', slug: 'caravans',
+        children: [
+          { id: 'fallback-2-10-1', parentId: 'fallback-2-10', name: 'كرفان سحب (مقطورة)',          slug: 'vehicles/caravans/towable'   },
+          { id: 'fallback-2-10-2', parentId: 'fallback-2-10', name: 'عربة سكن بمحرك (موتورهوم)', slug: 'vehicles/caravans/motorhome' },
+        ],
+      },
+      {
+        id: 'fallback-2-11', parentId: 'fallback-2', name: 'مركبات كلاسيكية', slug: 'classic',
+        children: [
+          { id: 'fallback-2-11-1', parentId: 'fallback-2-11', name: 'سيارات كلاسيكية',                 slug: 'vehicles/classic/cars'        },
+          { id: 'fallback-2-11-2', parentId: 'fallback-2-11', name: 'سيارات الدفع الرباعي كلاسيكية',   slug: 'vehicles/classic/suv'         },
+          { id: 'fallback-2-11-3', parentId: 'fallback-2-11', name: 'دراجات نارية كلاسيكية',           slug: 'vehicles/classic/motorcycles' },
+          { id: 'fallback-2-11-4', parentId: 'fallback-2-11', name: 'مركبات تجارية كلاسيكية',          slug: 'vehicles/classic/commercial'  },
+        ],
+      },
+      {
+        id: 'fallback-2-12', parentId: 'fallback-2', name: 'مركبات جوية', slug: 'air',
+        children: [
+          { id: 'fallback-2-12-1', parentId: 'fallback-2-12', name: 'مروحية (هليكوبتر)',            slug: 'vehicles/air/helicopter' },
+          { id: 'fallback-2-12-2', parentId: 'fallback-2-12', name: 'باراموتور',                    slug: 'vehicles/air/paramotor'  },
+          { id: 'fallback-2-12-3', parentId: 'fallback-2-12', name: 'طائرة',                        slug: 'vehicles/air/airplane'   },
+          { id: 'fallback-2-12-4', parentId: 'fallback-2-12', name: 'طائرة شراعية ومايكرولايت',     slug: 'vehicles/air/glider'     },
+        ],
+      },
       { id: 'fallback-2-13', parentId: 'fallback-2', name: 'دبابات (ATV)',                      slug: 'atv'         },
       { id: 'fallback-2-14', parentId: 'fallback-2', name: 'دبابات (UTV)',                      slug: 'utv'         },
       { id: 'fallback-2-15', parentId: 'fallback-2', name: 'سيارات ذوي الاحتياجات الخاصة',     slug: 'disabled'    },

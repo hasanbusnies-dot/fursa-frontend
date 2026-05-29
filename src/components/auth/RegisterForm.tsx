@@ -17,6 +17,20 @@ import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
 
+const COUNTRY_CODES = [
+  { code: '+963', country: 'سوريا',     flag: '🇸🇾' },
+  { code: '+90',  country: 'تركيا',     flag: '🇹🇷' },
+  { code: '+961', country: 'لبنان',     flag: '🇱🇧' },
+  { code: '+962', country: 'الأردن',    flag: '🇯🇴' },
+  { code: '+964', country: 'العراق',    flag: '🇮🇶' },
+  { code: '+20',  country: 'مصر',       flag: '🇪🇬' },
+  { code: '+966', country: 'السعودية',  flag: '🇸🇦' },
+  { code: '+971', country: 'الإمارات', flag: '🇦🇪' },
+  { code: '+49',  country: 'ألمانيا',   flag: '🇩🇪' },
+  { code: '+46',  country: 'السويد',    flag: '🇸🇪' },
+  { code: '+31',  country: 'هولندا',    flag: '🇳🇱' },
+];
+
 type AccountType = 'INDIVIDUAL' | 'CORPORATE';
 
 const schema = z
@@ -54,10 +68,12 @@ const TABS: { type: AccountType; label: string; Icon: React.ElementType }[] = [
 export function RegisterForm() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
-  const [accountType,   setAccountType]   = useState<AccountType>('INDIVIDUAL');
-  const [showPassword,  setShowPassword]  = useState(false);
-  const [showConfirm,   setShowConfirm]   = useState(false);
-  const [serverError,   setServerError]   = useState<string | null>(null);
+  const [accountType,        setAccountType]        = useState<AccountType>('INDIVIDUAL');
+  const [showPassword,       setShowPassword]       = useState(false);
+  const [showConfirm,        setShowConfirm]        = useState(false);
+  const [serverError,        setServerError]        = useState<string | null>(null);
+  const [selectedCountryCode, setSelectedCountryCode] = useState('+963');
+  const [localPhone,          setLocalPhone]          = useState('');
 
   const {
     register,
@@ -85,7 +101,7 @@ export function RegisterForm() {
         lastName:  data.lastName,
         email:     data.email,
         password:  data.password,
-        phone:     data.phone,
+        phone:     `${selectedCountryCode}${data.phone}`,
       };
 
       const res =
@@ -226,14 +242,46 @@ export function RegisterForm() {
         {/* ── Phone ── */}
         <div>
           <Label htmlFor="phone" required>رقم الهاتف</Label>
-          <Input
-            id="phone"
-            type="tel"
-            autoComplete="tel"
-            placeholder="+963 9XX XXX XXXX"
-            error={!!errors.phone}
-            {...register('phone')}
-          />
+          <div
+            className={cn(
+              'flex items-center rounded-lg border bg-white transition-colors',
+              'focus-within:ring-2 focus-within:ring-orange-500 focus-within:border-orange-500',
+              errors.phone ? 'border-red-400' : 'border-gray-300'
+            )}
+            dir="ltr"
+          >
+            <select
+              value={selectedCountryCode}
+              onChange={(e) => {
+                setSelectedCountryCode(e.target.value);
+                setValue('phone', localPhone, { shouldValidate: !!localPhone });
+              }}
+              className="shrink-0 bg-gray-50 border-none outline-none py-2.5 ps-2 pe-1 text-sm text-gray-700 cursor-pointer rounded-s-lg"
+              aria-label="رمز الدولة"
+            >
+              {COUNTRY_CODES.map((item) => (
+                <option key={item.code} value={item.code}>
+                  {item.flag} {item.code}
+                </option>
+              ))}
+            </select>
+            <div className="w-px self-stretch bg-gray-200" />
+            <input
+              id="phone"
+              type="tel"
+              inputMode="numeric"
+              placeholder="9XX XXX XXXX"
+              autoComplete="tel-national"
+              dir="ltr"
+              value={localPhone}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, '');
+                setLocalPhone(digits);
+                setValue('phone', digits, { shouldValidate: true });
+              }}
+              className="w-full border-none outline-none py-2.5 px-3 text-sm bg-transparent text-gray-900 placeholder-gray-400"
+            />
+          </div>
           <FormError message={errors.phone?.message} />
         </div>
 
