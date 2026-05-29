@@ -753,13 +753,15 @@ function ListingsContent() {
             <Link
               key={href}
               href={href}
-              className="group flex items-center gap-2 px-5 py-3.5 text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-orange-500 transition-all whitespace-nowrap"
+              className="group hidden md:flex items-center gap-2 px-5 py-3.5 text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-orange-500 transition-all whitespace-nowrap"
             >
               <Icon className={`w-4 h-4 ${iconCls} transition-colors`} />
               {label}
             </Link>
           ))}
-          <RecommendationsPopover />
+          <span className="hidden md:contents">
+            <RecommendationsPopover />
+          </span>
           <ComparePopover />
         </div>
       </div>
