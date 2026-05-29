@@ -357,6 +357,7 @@ export default function MyListingsPage() {
             </div>
             <Link
               href="/listings/create"
+              prefetch={false}
               className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-2.5 rounded-xl transition-colors text-sm"
             >
               <Plus className="w-4 h-4" />
@@ -404,6 +405,7 @@ export default function MyListingsPage() {
               </div>
               <Link
                 href="/listings/create"
+                prefetch={false}
                 className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm"
               >
                 <Plus className="w-4 h-4" />

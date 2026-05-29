@@ -289,6 +289,7 @@ export function Header() {
             {/* Post Ad CTA — desktop only; mobile uses BottomNav */}
             <Link
               href="/listings/create"
+              prefetch={false}
               className="hidden md:flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
             >
               <PlusCircle className="w-4 h-4" />

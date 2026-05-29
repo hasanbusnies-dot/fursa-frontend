@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { listingsService } from '@/services/listings.service';
 import { ApiError } from '@/services/api';
+import { useAuth } from '@/hooks/use-auth';
 import { StepIndicator } from './StepIndicator';
 import { Step0CategorySelect } from './wizard/Step0CategorySelect';
 import { Step1VehicleInfo } from './wizard/Step1VehicleInfo';
@@ -34,8 +35,22 @@ export type ListingFormData = WizardFormData;
 
 export function CreateListingForm() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [step, setStep] = useState(1);
   const totalSteps = WIZARD_STEP_LABELS.length;
+
+  // ── Client-side auth guard ───────────────────────────────────────────────
+  // Replaces the proxy.ts middleware guard, which depended on a client-only
+  // cookie the server couldn't reliably see (caused a login → /listings/create
+  // redirect loop). `mounted` defers the decision until after hydration so the
+  // Zustand store has rehydrated and we don't redirect a logged-in user.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    if (mounted && !isAuthenticated) {
+      router.replace(`/login?redirect=${encodeURIComponent('/listings/create')}`);
+    }
+  }, [mounted, isAuthenticated, router]);
 
   // ── React-Hook-Form (all scalar fields) ───────────────────────────────────
   // Cast needed: z.preprocess() makes Zod's input type diverge from output type,
@@ -179,6 +194,11 @@ export function CreateListingForm() {
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
+  // Logged-out users are being redirected (above); render nothing to avoid a
+  // flash of the form. Pre-hydration (mounted=false) we still render the form so
+  // the server and first client render match.
+  if (mounted && !isAuthenticated) return null;
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4" dir="rtl">
       <div className="max-w-4xl mx-auto">

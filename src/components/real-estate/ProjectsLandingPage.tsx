@@ -174,6 +174,7 @@ function EmptyShowcase() {
       </div>
       <Link
         href="/listings/create"
+        prefetch={false}
         className="inline-flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors"
       >
         <PlusCircle className="w-4 h-4" />
@@ -357,6 +358,7 @@ export default function ProjectsLandingPage() {
           </div>
           <Link
             href="/listings/create"
+            prefetch={false}
             className="shrink-0 bg-white text-orange-600 font-extrabold text-sm px-6 py-3 rounded-xl hover:bg-orange-50 transition-colors shadow-lg shadow-orange-700/20 whitespace-nowrap"
           >
             أضف مشروعك الآن

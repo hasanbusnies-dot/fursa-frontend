@@ -132,6 +132,7 @@ export default function AccountDashboardPage() {
         {/* CTA card */}
         <Link
           href="/listings/create"
+          prefetch={false}
           className="group bg-gradient-to-br from-orange-500 to-pink-500 rounded-2xl p-5 hover:shadow-md hover:from-orange-600 hover:to-pink-600 transition-all"
         >
           <div className="flex items-start justify-between mb-3">

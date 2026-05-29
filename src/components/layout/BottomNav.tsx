@@ -39,6 +39,7 @@ export function BottomNav() {
         {/* Add Ad — elevated center button */}
         <Link
           href="/listings/create"
+          prefetch={false}
           className="flex flex-col items-center gap-1 -mt-5"
         >
           <div className="w-14 h-14 rounded-full bg-orange-500 shadow-[0_4px_14px_rgba(249,115,22,0.45)] flex items-center justify-center transition-transform active:scale-95">

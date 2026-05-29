@@ -52,7 +52,14 @@ export function LoginForm() {
       const { token, user } = await authService.login({ identifier: data.email, password: data.password });
       setAuth(user, token);
       toast.success(`أهلاً، ${user.profile?.firstName ?? user.email}!`);
-      router.push('/');
+      // Honor ?redirect= (set by the add-listing guard) so the user lands back
+      // where they came from. Only accept safe, relative in-app paths.
+      const redirectTo = new URLSearchParams(window.location.search).get('redirect');
+      const safeRedirect =
+        redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//')
+          ? redirectTo
+          : '/';
+      router.push(safeRedirect);
     } catch (err) {
       if (err instanceof ApiError && err.errors && Object.keys(err.errors).length > 0) {
         Object.entries(err.errors).forEach(([field, messages]) => {
