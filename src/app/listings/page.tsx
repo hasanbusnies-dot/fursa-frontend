@@ -1033,12 +1033,19 @@ function ListingsContent() {
                   {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                  <TableHeader />
-                  <div className="divide-y divide-gray-100">
-                    {Array.from({ length: 8 }).map((_, i) => <SkeletonTableRow key={i} />)}
+                <>
+                  {/* Mobile: card skeletons (matches grid view & category page) */}
+                  <div className="md:hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
                   </div>
-                </div>
+                  {/* Desktop: table skeleton */}
+                  <div className="hidden md:block bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                    <TableHeader />
+                    <div className="divide-y divide-gray-100">
+                      {Array.from({ length: 8 }).map((_, i) => <SkeletonTableRow key={i} />)}
+                    </div>
+                  </div>
+                </>
               )
             ) : displayListings.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-28 text-gray-400 gap-3">
@@ -1098,7 +1105,26 @@ function ListingsContent() {
               </>
             ) : (
               <>
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                {/* Mobile: card layout (matches grid view & category page) */}
+                <div className="md:hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[...displayListings].sort((a, b) => {
+                    const t = Date.now();
+                    const catA = applied.categoryId && !!a.categoryShowcaseUntil && new Date(a.categoryShowcaseUntil).getTime() > t ? 2 : 0;
+                    const catB = applied.categoryId && !!b.categoryShowcaseUntil && new Date(b.categoryShowcaseUntil).getTime() > t ? 2 : 0;
+                    const topA = !catA && !!a.topOfSearchUntil && new Date(a.topOfSearchUntil).getTime() > t ? 1 : 0;
+                    const topB = !catB && !!b.topOfSearchUntil && new Date(b.topOfSearchUntil).getTime() > t ? 1 : 0;
+                    return (catB + topB) - (catA + topA);
+                  }).map((listing) => (
+                    <ListingCard
+                      key={listing.id}
+                      listing={listing}
+                      showcaseContext={applied.categoryId ? 'category' : undefined}
+                      isHomepageView={false}
+                    />
+                  ))}
+                </div>
+                {/* Desktop: table layout (unchanged) */}
+                <div className="hidden md:block bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                   <TableHeader />
                   <div className="divide-y divide-gray-100">
                     {[...displayListings].sort((a, b) => {
