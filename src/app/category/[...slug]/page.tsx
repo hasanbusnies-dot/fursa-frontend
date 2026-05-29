@@ -970,12 +970,19 @@ export default function CategoryPage() {
                     {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
                   </div>
                 ) : (
-                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                    <TableHeader cols={tableCols} headers={tableHeaders} />
-                    <div className="divide-y divide-gray-100">
-                      {Array.from({ length: 8 }).map((_, i) => <SkeletonTableRow key={i} cols={tableCols} isRealEstate={isRealEstate} />)}
+                  <>
+                    {/* Mobile: card skeletons (matches grid view & listings page) */}
+                    <div className="md:hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
                     </div>
-                  </div>
+                    {/* Desktop: table skeleton */}
+                    <div className="hidden md:block bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                      <TableHeader cols={tableCols} headers={tableHeaders} />
+                      <div className="divide-y divide-gray-100">
+                        {Array.from({ length: 8 }).map((_, i) => <SkeletonTableRow key={i} cols={tableCols} isRealEstate={isRealEstate} />)}
+                      </div>
+                    </div>
+                  </>
                 )
               ) : displayListings.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-28 text-gray-400 gap-3">
@@ -1007,7 +1014,19 @@ export default function CategoryPage() {
                 </>
               ) : (
                 <>
-                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                  {/* Mobile: card layout (matches grid view & listings page) */}
+                  <div className="md:hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {displayListings.map((listing) => (
+                      <ListingCard
+                        key={listing.id}
+                        listing={listing}
+                        showcaseContext={resolvedCategoryId ? 'category' : undefined}
+                        isHomepageView={false}
+                      />
+                    ))}
+                  </div>
+                  {/* Desktop: table layout (unchanged) */}
+                  <div className="hidden md:block bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                     <TableHeader cols={tableCols} headers={tableHeaders} />
                     <div className="divide-y divide-gray-100">
                       {displayListings.map((listing) => (
