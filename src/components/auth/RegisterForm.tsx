@@ -39,7 +39,7 @@ const schema = z
     firstName:       z.string().min(2, 'الاسم الأول يجب أن يكون حرفين على الأقل'),
     lastName:        z.string().min(2, 'الاسم الأخير يجب أن يكون حرفين على الأقل'),
     email:           z.string().email('يرجى إدخال بريد إلكتروني صحيح'),
-    phone:           z.string().regex(/^[+\d\s().-]{7,20}$/, 'يرجى إدخال رقم هاتف صحيح'),
+    phone:           z.string().min(7, 'رقم الهاتف قصير جداً').max(15, 'رقم الهاتف طويل جداً').regex(/^\d+$/, 'يجب أن يحتوي رقم الهاتف على أرقام فقط'),
     password:        z.string().min(8, 'كلمة المرور يجب أن تكون 8 أحرف على الأقل'),
     confirmPassword: z.string(),
     companyName:     z.string().optional(),
