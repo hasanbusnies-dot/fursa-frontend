@@ -587,6 +587,13 @@ export default function CategoryPage() {
   const [sortBy,         setSortBy]         = useState('');
   const [sortOpen,       setSortOpen]       = useState(false);
   const [sidebarOpen,    setSidebarOpen]    = useState(false);
+  // Lock body scroll while the mobile full-screen filter overlay is open.
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [sidebarOpen]);
   const [saveModalOpen,  setSaveModalOpen]  = useState(false);
   const [page,           setPage]           = useState(1);
 
@@ -811,16 +818,16 @@ export default function CategoryPage() {
             </button>
           </div>
 
-          {/* ── Mobile drawer ── */}
+          {/* ── Mobile full-screen filter overlay ── */}
           {sidebarOpen && (
-            <div className="lg:hidden mb-5 bg-white rounded-2xl border border-gray-200 overflow-hidden" style={{ height: '72vh' }}>
-              <div className="flex items-center justify-between px-4 border-b border-gray-100" style={{ height: '44px' }}>
-                <p className="text-sm font-bold text-gray-800">الفلاتر</p>
-                <button type="button" onClick={() => setSidebarOpen(false)}>
-                  <X className="w-4 h-4 text-gray-400" />
+            <div className="lg:hidden fixed inset-0 z-[60] bg-white flex flex-col">
+              <div className="shrink-0 flex items-center justify-between px-4 h-14 border-b border-gray-200">
+                <p className="text-base font-bold text-gray-900">فلاتر</p>
+                <button type="button" onClick={() => setSidebarOpen(false)} aria-label="إغلاق">
+                  <X className="w-5 h-5 text-gray-500" />
                 </button>
               </div>
-              <div style={{ height: 'calc(72vh - 44px)' }}>
+              <div className="flex-1 min-h-0">
                 <FilterSidebar
                   key={resolvedCategoryId || 'loading'}
                   categories={categories}
