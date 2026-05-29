@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { messagesService } from '@/services/messages.service';
+import { shouldShowMobileTopBar } from './MobileTopBar';
 
 const CATEGORIES = [
   'كل الفئات',
@@ -105,8 +106,12 @@ export function Header() {
   if (['/login', '/register'].includes(pathname)) return null;
   if (pathname.startsWith('/m/')) return null;
 
+  // Option (B): on mobile inner pages, MobileTopBar is the top bar — hide the
+  // Header below md there. Desktop (md+) is unchanged.
+  const innerMobile = shouldShowMobileTopBar(pathname);
+
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+    <header className={`sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm${innerMobile ? ' hidden md:block' : ''}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* ── Main row ── */}

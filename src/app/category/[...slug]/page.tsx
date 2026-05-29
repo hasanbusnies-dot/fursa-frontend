@@ -12,6 +12,7 @@ import { listingsService } from '@/services/listings.service';
 import { categoriesService, FALLBACK_CATEGORIES } from '@/services/categories.service';
 import { savedSearchesService } from '@/services/saved-searches.service';
 import { ListingCard } from '@/components/listings/ListingCard';
+import { useMobileTitle } from '@/components/layout/MobileTopBar';
 import { FavoriteButton } from '@/components/listings/FavoriteButton';
 import { CompareButton } from '@/components/listings/CompareButton';
 import { FilterSidebar, EMPTY_FILTERS, hasActiveFilters } from '@/components/listings/FilterSidebar';
@@ -463,6 +464,8 @@ export default function CategoryPage() {
     ?? ((isRentalsRoute && RENTAL_DISPLAY_TITLES[lastSlug])
       ? RENTAL_DISPLAY_TITLES[lastSlug]
       : slugToAr(lastSlug));
+
+  useMobileTitle(pageTitle);
   const isRealEstate = slugArr[0] === 'real-estate';
   const isRentalSuv  = slugArr.includes('rentals') && slugArr.includes('suv-pickup');
   const tableCols    = isRealEstate ? REALESTATE_TABLE_COLS    : VEHICLE_TABLE_COLS;

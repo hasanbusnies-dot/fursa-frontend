@@ -20,6 +20,7 @@ import { FavoriteButton } from '@/components/listings/FavoriteButton';
 import { FavoriteSellerButton } from '@/components/listings/FavoriteSellerButton';
 import { CompareButton } from '@/components/listings/CompareButton';
 import { recommendationsService } from '@/services/recommendations.service';
+import { useMobileTitle } from '@/components/layout/MobileTopBar';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -1188,6 +1189,8 @@ export default function ListingDetailPage() {
       })
       .finally(() => setLoading(false));
   }, [id]);
+
+  useMobileTitle(listing?.title);
 
   if (loading)              return <ListingSkeleton />;
   if (notFound || !listing) return <ListingNotFound />;
