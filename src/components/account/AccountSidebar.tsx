@@ -74,16 +74,6 @@ const NAV: NavSection[] = [
         children: [
           { href: '/account/secure-payment/buying',   label: 'عمليات الشراء' },
           { href: '/account/secure-payment/selling',  label: 'عمليات البيع' },
-          {
-            label: 'إدارة التقييمات',
-            children: [
-              { href: '/account/secure-payment/reviews/bought', label: 'المنتجات التي اشتريتها' },
-              { href: '/account/secure-payment/reviews/sold',   label: 'المنتجات التي بعتها' },
-            ],
-          },
-          { href: '/account/secure-payment/addresses',    label: 'عناوين التوصيل والفواتير' },
-          { href: '/account/secure-payment/bank-info',    label: 'معلوماتي البنكية' },
-          { href: '/account/secure-payment/main-address', label: 'عنواني الرئيسي' },
         ],
       },
       { label: 'التجارة الإلكترونية الآمنة', icon: CreditCard },
@@ -95,7 +85,7 @@ const NAV: NavSection[] = [
     items: [
       { label: 'الإشعارات',   icon: Bell },
       { label: 'فحص السيارات', icon: Car },
-      { href: '/account/settings', label: 'حسابي والإعدادات', icon: Settings },
+      { label: 'حسابي والإعدادات', icon: Settings },
     ],
   },
 ];

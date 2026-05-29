@@ -10,6 +10,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { listingsService } from '@/services/listings.service';
 import { favoritesService } from '@/services/favorites.service';
 import { ListingCard } from '@/components/listings/ListingCard';
+import { AccountSidebar } from '@/components/account/AccountSidebar';
 import type { Listing } from '@/types';
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
@@ -98,7 +99,14 @@ export default function AccountDashboardPage() {
   const firstName = user?.profile?.firstName ?? user?.email?.split('@')[0] ?? '';
 
   return (
-    <div>
+    <>
+      {/* ── Mobile: full account menu list (reuses the desktop sidebar) ──── */}
+      <div className="lg:hidden">
+        <AccountSidebar />
+      </div>
+
+      {/* ── Desktop: dashboard overview (unchanged) ──────────────────────── */}
+      <div className="hidden lg:block">
 
       {/* ── Greeting ─────────────────────────────────────────────────────── */}
       <div className="mb-5">
@@ -193,6 +201,7 @@ export default function AccountDashboardPage() {
         )}
       </div>
 
-    </div>
+      </div>
+    </>
   );
 }
