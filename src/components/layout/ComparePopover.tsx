@@ -121,7 +121,7 @@ export function ComparePopover() {
       <button
         onClick={() => setIsOpen((o) => !o)}
         className={[
-          'flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all whitespace-nowrap',
+          'shrink-0 flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all whitespace-nowrap',
           isOpen
             ? 'text-gray-900 border-orange-500'
             : 'text-gray-500 hover:text-gray-900 border-transparent hover:border-orange-500',

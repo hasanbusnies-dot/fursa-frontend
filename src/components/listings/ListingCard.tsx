@@ -66,13 +66,13 @@ export function ListingCard({
       <Link
         href={`/listings/${listing.id}`}
         className={cn(
-          'group block bg-white rounded-xl overflow-hidden transition-all hover:shadow-md',
+          'group flex flex-row md:block bg-white rounded-xl overflow-hidden transition-all hover:shadow-md',
           isHomepageVitrin
             ? 'ring-2 ring-yellow-400 shadow-sm hover:ring-yellow-500'
             : 'border border-gray-200 hover:border-gray-300',
         )}
       >
-        <div className="relative h-44 w-full bg-gray-100 overflow-hidden">
+        <div className="relative h-28 w-28 shrink-0 md:h-44 md:w-full bg-gray-100 overflow-hidden">
           {primary?.url ? (
             <img src={primary.url} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
           ) : (
@@ -96,7 +96,7 @@ export function ListingCard({
             />
           </div>
         </div>
-        <div className="p-4 space-y-1.5">
+        <div className="flex-1 min-w-0 p-3 md:p-4 space-y-1.5">
           <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">{listing.title}</p>
           <p className="text-base font-bold text-blue-600">{formatPrice(listing.price, listing.currency)}</p>
           <div className="flex items-center justify-between text-xs text-gray-400 pt-0.5">
@@ -120,7 +120,7 @@ export function ListingCard({
     <Link
       href={`/listings/${listing.id}`}
       className={cn(
-        'group block bg-white rounded-xl overflow-hidden transition-all hover:shadow-md',
+        'group flex flex-row md:block bg-white rounded-xl overflow-hidden transition-all hover:shadow-md',
         highlight
           ? 'ring-2 ring-orange-400 shadow-lg bg-orange-50/10 hover:ring-orange-500'
           : showVitrin
@@ -129,7 +129,7 @@ export function ListingCard({
       )}
     >
       {/* Image */}
-      <div className="relative h-44 w-full bg-gray-100 overflow-hidden">
+      <div className="relative h-28 w-28 shrink-0 md:h-44 md:w-full bg-gray-100 overflow-hidden">
         {primary?.url ? (
           <img
             src={primary.url}
@@ -169,7 +169,7 @@ export function ListingCard({
       </div>
 
       {/* Info */}
-      <div className="p-4 space-y-1.5">
+      <div className="flex-1 min-w-0 p-3 md:p-4 space-y-1.5">
         <p className={cn(
           'text-sm leading-snug line-clamp-2',
           highlight ? 'font-extrabold text-black' : 'font-semibold text-gray-900',

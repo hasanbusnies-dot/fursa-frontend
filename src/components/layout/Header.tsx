@@ -103,6 +103,7 @@ export function Header() {
   const closeUserDropdown = () => setDropdownOpen(false);
 
   if (['/login', '/register'].includes(pathname)) return null;
+  if (pathname.startsWith('/m/')) return null;
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
@@ -285,10 +286,10 @@ export function Header() {
               </div>
             )}
 
-            {/* Post Ad CTA */}
+            {/* Post Ad CTA — desktop only; mobile uses BottomNav */}
             <Link
               href="/listings/create"
-              className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+              className="hidden md:flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
             >
               <PlusCircle className="w-4 h-4" />
               أضف إعلان

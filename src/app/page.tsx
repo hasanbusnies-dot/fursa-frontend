@@ -1,5 +1,6 @@
 import { RecentAds } from '@/components/listings/RecentAds';
 import { HomeCategorySidebar } from '@/components/categories/HomeCategorySidebar';
+import { MobileCategoryList } from '@/components/categories/MobileCategoryList';
 import { HeroSection } from '@/components/home/HeroSection';
 
 export default function HomePage() {
@@ -18,6 +19,7 @@ export default function HomePage() {
 
           {/* Recent ads feed */}
           <main className="flex-1 min-w-0">
+            <MobileCategoryList />
             <RecentAds sectionClassName="pb-8" />
           </main>
 

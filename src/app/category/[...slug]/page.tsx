@@ -577,6 +577,13 @@ export default function CategoryPage() {
 
   // ── UI state ────────────────────────────────────────────────────────────────
   const [viewMode,       setViewMode]       = useState<'grid' | 'list'>('list');
+
+  // On mobile (<768 px) default to grid — list/table view is desktop-only
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setViewMode('grid');
+    }
+  }, []);
   const [sortBy,         setSortBy]         = useState('');
   const [sortOpen,       setSortOpen]       = useState(false);
   const [sidebarOpen,    setSidebarOpen]    = useState(false);
@@ -748,7 +755,7 @@ export default function CategoryPage() {
       {/* ── Quick-links sub-header ── */}
       <nav className="w-full bg-white border-b border-gray-200 shadow-sm">
         <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center">
+          <div className="flex items-center overflow-x-auto no-scrollbar pe-2">
             {([
               { href: '/account/favorites',      Icon: Star,     label: 'إعلاناتي المفضلة',  iconCls: 'text-orange-400' },
               { href: '/account/saved-searches', Icon: Bookmark, label: 'أبحاثي المحفوظة',   iconCls: 'text-orange-400' },
@@ -756,7 +763,7 @@ export default function CategoryPage() {
               <Link
                 key={href}
                 href={href}
-                className="group flex items-center gap-2 px-5 py-3.5 text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-orange-500 transition-all whitespace-nowrap"
+                className="group shrink-0 flex items-center gap-2 px-5 py-3.5 text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-orange-500 transition-all whitespace-nowrap"
               >
                 <Icon className={`w-4 h-4 ${iconCls}`} />
                 {label}
