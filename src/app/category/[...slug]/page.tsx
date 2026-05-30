@@ -231,9 +231,9 @@ function SkeletonTableRow({ cols, isRealEstate }: { cols: string; isRealEstate?:
 function ListingRow({ listing, activeCategoryId, cols, isRealEstate }: { listing: Listing; activeCategoryId?: string; cols: string; isRealEstate?: boolean }) {
   const router  = useRouter();
   const primary = listing.images?.find((img) => img.isPrimary) ?? listing.images?.[0];
-  const urgent  = listing.isUrgent === true;
-  const highlight = listing.hasHighlightFrame === true;
   const now = Date.now();
+  const urgent  = !!listing.urgentUntil   && new Date(listing.urgentUntil).getTime()   > now;
+  const highlight = !!listing.highlightUntil && new Date(listing.highlightUntil).getTime() > now;
   const showVitrin =
     !!activeCategoryId && !!listing.categoryShowcaseUntil &&
     new Date(listing.categoryShowcaseUntil).getTime() > now;

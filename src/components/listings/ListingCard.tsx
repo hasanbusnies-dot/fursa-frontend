@@ -116,8 +116,8 @@ export function ListingCard({
   }
 
   // ── Default view: all doping flags apply (search / filter pages) ─────────────
-  const urgent    = listing.isUrgent === true;
-  const highlight = listing.hasHighlightFrame === true;
+  const urgent    = !!listing.urgentUntil   && new Date(listing.urgentUntil).getTime()   > now;
+  const highlight = !!listing.highlightUntil && new Date(listing.highlightUntil).getTime() > now;
   const showVitrin =
     showcaseContext === 'category' &&
     !!listing.categoryShowcaseUntil &&

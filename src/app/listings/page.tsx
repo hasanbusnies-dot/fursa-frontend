@@ -230,10 +230,9 @@ function SkeletonTableRow() {
 function ListingRow({ listing, activeCategoryId }: { listing: Listing; activeCategoryId?: string }) {
   const router    = useRouter();
   const primary   = listing.images?.find((img) => img.isPrimary) ?? listing.images?.[0];
-  const urgent    = listing.isUrgent === true;
-  const highlight = listing.hasHighlightFrame === true;
-
   const now = Date.now();
+  const urgent    = !!listing.urgentUntil   && new Date(listing.urgentUntil).getTime()   > now;
+  const highlight = !!listing.highlightUntil && new Date(listing.highlightUntil).getTime() > now;
   // VİTRİN badge: Kategori Vitrini only when browsing that exact category
   const showVitrin =
     !!activeCategoryId &&
@@ -435,7 +434,7 @@ function applyShowcaseFilter(items: Listing[], showcase: string): Listing[] {
   const now = Date.now();
   const H   = 3_600_000;
   return items.filter((listing) => {
-    if (showcase === 'urgent_showcase') return listing.isUrgent === true;
+    if (showcase === 'urgent_showcase') return !!listing.urgentUntil && new Date(listing.urgentUntil).getTime() > now;
     const hoursSinceCreated = (now - new Date(listing.createdAt).getTime()) / H;
     if (showcase === 'last_48h')  return hoursSinceCreated <= 48;
     if (showcase === 'one_week')  return hoursSinceCreated <= 24 * 7;

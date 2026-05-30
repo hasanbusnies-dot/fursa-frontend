@@ -99,6 +99,8 @@ export interface Listing {
   // Doping / monetisation fields — each operates in its own domain
   isUrgent?: boolean;
   hasHighlightFrame?: boolean;
+  urgentUntil?: string | null;             // Acil — time-windowed (gates عاجل badge)
+  highlightUntil?: string | null;          // Öne Çıkan çerçeve — time-windowed
   homepageShowcaseUntil?: string | null;   // Anasayfa Vitrini
   categoryShowcaseUntil?: string | null;   // Kategori Vitrini
   topOfSearchUntil?: string | null;        // Üst Sıradayım
