@@ -576,7 +576,7 @@ function tr(v: string | undefined | null): string {
 
 // ── Ad Specs Table ────────────────────────────────────────────────────────────
 
-function AdSpecsTable({ listing }: { listing: Listing }) {
+function AdSpecsTable({ listing, compact = false }: { listing: Listing; compact?: boolean }) {
   const vd  = listing.vehicleDetails as any;
   const raw = listing as any;
 
@@ -612,6 +612,23 @@ function AdSpecsTable({ listing }: { listing: Listing }) {
     { label: 'قابل للمقايضة',       value: boolVal(vd?.tradeIn) },
     { label: 'المعلن',              value: tr(vd?.fromWho) },
   ];
+
+  // Mobile-only clean layout: aligned key/value rows (label start, value end),
+  // no fixed-width column or vertical divider — graceful wrapping on narrow screens.
+  if (compact) {
+    return (
+      <div className="divide-y divide-gray-100">
+        {rows.map((row) => (
+          <div key={row.label} className="flex items-start justify-between gap-3 px-4 py-3 text-sm">
+            <span className="text-gray-500 shrink-0">{row.label}</span>
+            <span className={`font-medium text-end ${row.value === NA ? 'text-gray-300' : 'text-gray-900'}`}>
+              {row.value}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="divide-y divide-gray-100">
@@ -1195,79 +1212,141 @@ export default function ListingDetailPage() {
   if (loading)              return <ListingSkeleton />;
   if (notFound || !listing) return <ListingNotFound />;
 
+  // Single seed for Q&A so both the desktop and mobile trees mount QASection
+  // without triggering a duplicate fetch (the effect early-returns when
+  // initialQuestions is provided — see QASection).
+  const seededQuestions = listing.questions ?? [];
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-8 py-6">
 
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-1.5 text-sm text-gray-400 mb-4 flex-wrap">
-          <Link href="/" className="flex items-center gap-1 hover:text-blue-600 transition-colors">
-            <Home className="w-3.5 h-3.5" />
-            الرئيسية
-          </Link>
-          <span>/</span>
-          {listing.category && (
-            <>
-              <Link
-                href={`/listings?categoryId=${listing.category.id ?? ''}`}
-                className="hover:text-blue-600 transition-colors"
-              >
-                {listing.category.name}
-              </Link>
-              <span>/</span>
-            </>
-          )}
-          <span className="text-gray-700 font-medium line-clamp-1">{listing.title}</span>
-        </nav>
+        {/* ══ Desktop (lg+) — unchanged 3-column layout ══ */}
+        <div className="hidden lg:block">
 
-        {/* Title */}
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-snug mb-4">
-          {listing.title}
-        </h1>
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-1.5 text-sm text-gray-400 mb-4 flex-wrap">
+            <Link href="/" className="flex items-center gap-1 hover:text-blue-600 transition-colors">
+              <Home className="w-3.5 h-3.5" />
+              الرئيسية
+            </Link>
+            <span>/</span>
+            {listing.category && (
+              <>
+                <Link
+                  href={`/listings?categoryId=${listing.category.id ?? ''}`}
+                  className="hover:text-blue-600 transition-colors"
+                >
+                  {listing.category.name}
+                </Link>
+                <span>/</span>
+              </>
+            )}
+            <span className="text-gray-700 font-medium line-clamp-1">{listing.title}</span>
+          </nav>
 
-        {/* Price bar */}
-        <div className="bg-white rounded-2xl border border-gray-200 px-6 py-4 mb-5 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-3xl font-extrabold text-blue-700 leading-none">
-            {formatPrice(listing.price, listing.currency)}
-          </p>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-sm text-gray-500">
-              <MapPin className="w-4 h-4 shrink-0" />
-              {listing.city}
+          {/* Title */}
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-snug mb-4">
+            {listing.title}
+          </h1>
+
+          {/* Price bar */}
+          <div className="bg-white rounded-2xl border border-gray-200 px-6 py-4 mb-5 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-3xl font-extrabold text-blue-700 leading-none">
+              {formatPrice(listing.price, listing.currency)}
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                <MapPin className="w-4 h-4 shrink-0" />
+                {listing.city}
+              </div>
+              <FavoriteButton listingId={listing.id} checkOnMount variant="detail" />
+              <CompareButton listing={listing} variant="detail" />
             </div>
-            <FavoriteButton listingId={listing.id} checkOnMount variant="detail" />
-            <CompareButton listing={listing} variant="detail" />
+          </div>
+
+          {/* Main grid — 12-col, 3-column desktop (RTL: gallery right · specs middle · seller left) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+            {/* RIGHT — Image Gallery + Tabs + Q&A (col-span-5) */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="bg-white rounded-2xl border border-gray-200 p-4">
+                <ImageGallery images={listing.images ?? []} />
+              </div>
+              <TabPanel listing={listing} />
+              <QASection listingId={listing.id} sellerId={listing.user?.id} initialQuestions={seededQuestions} />
+            </div>
+
+            {/* MIDDLE — Ad Specs Table (col-span-3) */}
+            <div className="lg:col-span-3">
+              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/80">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">تفاصيل الإعلان</p>
+                </div>
+                <AdSpecsTable listing={listing} />
+              </div>
+            </div>
+
+            {/* LEFT — Seller Box (col-span-4, sticky) */}
+            <div className="lg:col-span-4 lg:sticky lg:top-6">
+              <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                <SellerBox listing={listing} />
+              </div>
+            </div>
+
           </div>
         </div>
 
-        {/* Main grid — 12-col, 3-column desktop (RTL: gallery right · specs middle · seller left) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* ══ Mobile (<lg) — sahibinden-style linear order ══ */}
+        <div className="lg:hidden space-y-4">
 
-          {/* RIGHT — Image Gallery + Tabs + Q&A (col-span-5) */}
-          <div className="lg:col-span-5 space-y-4">
-            <div className="bg-white rounded-2xl border border-gray-200 p-4">
-              <ImageGallery images={listing.images ?? []} />
-            </div>
-            <TabPanel listing={listing} />
-            <QASection listingId={listing.id} sellerId={listing.user?.id} initialQuestions={listing.questions} />
-          </div>
+          {/* 1 — Image gallery (full-bleed, no card) */}
+          <ImageGallery images={listing.images ?? []} />
 
-          {/* MIDDLE — Ad Specs Table (col-span-3) */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/80">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">تفاصيل الإعلان</p>
-              </div>
-              <AdSpecsTable listing={listing} />
-            </div>
-          </div>
-
-          {/* LEFT — Seller Box (col-span-4, sticky) */}
-          <div className="lg:col-span-4 lg:sticky lg:top-6">
-            <div className="bg-white rounded-2xl border border-gray-200 p-6">
-              <SellerBox listing={listing} />
+          {/* 2 — Title + price + location + date */}
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 leading-snug mb-2">
+              {listing.title}
+            </h1>
+            <p className="text-2xl font-extrabold text-blue-700 leading-none mb-2.5">
+              {formatPrice(listing.price, listing.currency)}
+            </p>
+            <div className="flex items-center gap-4 text-sm text-gray-500">
+              <span className="flex items-center gap-1">
+                <MapPin className="w-4 h-4 shrink-0" />
+                {listing.city}
+              </span>
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 shrink-0" />
+                {formatDate(listing.createdAt)}
+              </span>
             </div>
           </div>
+
+          {/* 3 — Action buttons */}
+          <div className="flex items-center gap-3">
+            <FavoriteButton listingId={listing.id} checkOnMount variant="detail" />
+            <CompareButton listing={listing} variant="detail" />
+          </div>
+
+          {/* 4 — Tabs */}
+          <TabPanel listing={listing} />
+
+          {/* 5 — Detail table (clean compact layout) */}
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/80">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">تفاصيل الإعلان</p>
+            </div>
+            <AdSpecsTable listing={listing} compact />
+          </div>
+
+          {/* 6 — Seller info */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5">
+            <SellerBox listing={listing} />
+          </div>
+
+          {/* 7 — Q&A (last) */}
+          <QASection listingId={listing.id} sellerId={listing.user?.id} initialQuestions={seededQuestions} />
 
         </div>
       </div>
