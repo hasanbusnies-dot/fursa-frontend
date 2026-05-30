@@ -961,8 +961,9 @@ function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 
 
 // ── Tab Panel ─────────────────────────────────────────────────────────────────
 
-type TabId = 'description' | 'damage' | 'specs' | 'location';
+type TabId = 'details' | 'description' | 'damage' | 'specs' | 'location';
 
+// Desktop: 4 tabs (detail table lives in a separate grid column).
 const TABS: { id: TabId; label: string }[] = [
   { id: 'description', label: 'الوصف' },
   { id: 'damage',      label: 'تقرير الأضرار والطلاء' },
@@ -970,8 +971,15 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'location',    label: 'الموقع' },
 ];
 
-function TabPanel({ listing, withDetailTable = false }: { listing: Listing; withDetailTable?: boolean }) {
-  const [activeTab, setActiveTab] = useState<TabId>('description');
+// Mobile (sahibinden-style): 3 tabs — tab 1 stacks table + damage + specs.
+const MOBILE_TABS: { id: TabId; label: string }[] = [
+  { id: 'details',     label: 'تفاصيل الإعلان' },
+  { id: 'description', label: 'الوصف' },
+  { id: 'location',    label: 'الموقع' },
+];
+
+function TabPanel({ listing, mobile = false }: { listing: Listing; mobile?: boolean }) {
+  const [activeTab, setActiveTab] = useState<TabId>(mobile ? 'details' : 'description');
   const vd  = listing.vehicleDetails as any;
   const raw = listing as any;
 
@@ -993,7 +1001,7 @@ function TabPanel({ listing, withDetailTable = false }: { listing: Listing; with
     <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
       {/* Tab bar */}
       <div className="flex bg-gray-50/80 border-b border-gray-200 overflow-x-auto">
-        {TABS.map((tab) => (
+        {(mobile ? MOBILE_TABS : TABS).map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -1010,24 +1018,38 @@ function TabPanel({ listing, withDetailTable = false }: { listing: Listing; with
 
       {/* Tab content */}
       <div className="px-6 py-5">
-        {activeTab === 'description' && (
-          withDetailTable ? (
-            <div className="space-y-5">
-              <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
-                {listing.description || <span className="text-gray-400 italic">لا يوجد وصف.</span>}
-              </p>
+        {activeTab === 'details' && (
+          <div className="space-y-6">
+            {/* (a) Key-value detail table — always shown */}
+            <section>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">تفاصيل الإعلان</p>
               <div className="rounded-xl border border-gray-200 overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50/80">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">تفاصيل الإعلان</p>
-                </div>
                 <AdSpecsTable listing={listing} compact />
               </div>
-            </div>
-          ) : (
-            <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
-              {listing.description || <span className="text-gray-400 italic">لا يوجد وصف.</span>}
-            </p>
-          )
+            </section>
+
+            {/* (b) Damage & paint report — only if data present */}
+            {damage && (
+              <section>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">تقرير الأضرار والطلاء</p>
+                <DamageMap damage={damage} />
+              </section>
+            )}
+
+            {/* (c) Equipment / technical specs — only if present */}
+            {techSpecs?.length ? (
+              <section>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">المواصفات الفنية</p>
+                <TechSpecsGrid specs={techSpecs} />
+              </section>
+            ) : null}
+          </div>
+        )}
+
+        {activeTab === 'description' && (
+          <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
+            {listing.description || <span className="text-gray-400 italic">لا يوجد وصف.</span>}
+          </p>
         )}
 
         {activeTab === 'damage' && (
@@ -1446,8 +1468,8 @@ export default function ListingDetailPage() {
             <SellerBox listing={listing} variant="identity" />
           </div>
 
-          {/* 5 — Tabs (الوصف tab embeds the compact detail table) */}
-          <TabPanel listing={listing} withDetailTable />
+          {/* 5 — Tabs (3-tab sahibinden layout; tab 1 stacks table + damage + specs) */}
+          <TabPanel listing={listing} mobile />
 
           {/* 6 — Q&A (last) */}
           <QASection listingId={listing.id} sellerId={listing.user?.id} initialQuestions={seededQuestions} />
