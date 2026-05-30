@@ -727,7 +727,7 @@ function OfferModal({ listing, onClose }: { listing: Listing; onClose: () => voi
 
 // ── Seller Box ────────────────────────────────────────────────────────────────
 
-function SellerBox({ listing }: { listing: Listing }) {
+function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 'full' | 'identity' | 'bar' }) {
   const router                        = useRouter();
   const { user, isAuthenticated }     = useAuthStore();
   const [chatLoading, setChatLoading] = useState(false);
@@ -761,6 +761,104 @@ function SellerBox({ listing }: { listing: Listing }) {
     } finally {
       setChatLoading(false);
     }
+  }
+
+  // ── Mobile: identity-only block (name + follow seller), no contact buttons ──
+  if (variant === 'identity') {
+    return (
+      <div>
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">معلومات البائع</p>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center shrink-0 text-white font-bold text-lg">
+            {initial}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-gray-900 text-sm leading-snug flex items-center gap-1">
+              <span className="truncate">{name}</span>
+              {isCorporate && (
+                <BadgeCheck className="w-4 h-4 text-blue-500 shrink-0" aria-label="معرض موثّق" />
+              )}
+            </p>
+            {!isCorporate && listing.user?.email && (
+              <p className="text-xs text-gray-400 mt-0.5 truncate">{listing.user.email}</p>
+            )}
+            {isCorporate && listing.user?.id && (
+              <Link
+                href={`/listings?sellerId=${listing.user.id}`}
+                className="inline-flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 hover:underline mt-1 transition-colors"
+              >
+                <Store className="w-3 h-3 shrink-0" />
+                عرض كل إعلانات المعرض
+              </Link>
+            )}
+            {accountDate && (
+              <span className="flex items-center gap-1.5 text-xs text-gray-400 mt-1">
+                <Calendar className="w-3.5 h-3.5 shrink-0" />
+                عضو منذ {accountDate}
+              </span>
+            )}
+          </div>
+          {!isOwner && listing.user?.id && (
+            <FavoriteSellerButton sellerId={listing.user.id} variant="icon" />
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Mobile: sticky-bar actions (call / message / offer) ──
+  if (variant === 'bar') {
+    return (
+      <>
+        {offerOpen && (
+          <OfferModal listing={listing} onClose={() => setOfferOpen(false)} />
+        )}
+        {isOwner ? (
+          <Link
+            href="/account/listings"
+            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 rounded-xl transition-colors text-sm"
+          >
+            <Settings className="w-4 h-4" />
+            إدارة الإعلان
+          </Link>
+        ) : (
+          <div className="flex items-stretch gap-2">
+            {phoneVisible && phone ? (
+              <a
+                href={`tel:${phone}`}
+                className="flex-1 flex items-center justify-center gap-1.5 bg-gray-100 hover:bg-gray-200 active:bg-gray-200 text-gray-900 font-semibold py-2.5 rounded-xl transition-colors text-[13px] leading-tight text-center"
+              >
+                <Phone className="w-4 h-4 text-gray-600 shrink-0" />
+                اتصال
+              </a>
+            ) : (
+              <span className="flex-1 flex items-center justify-center gap-1.5 bg-gray-50 border border-dashed border-gray-200 text-gray-400 py-2.5 rounded-xl text-[13px] leading-tight text-center select-none">
+                <Phone className="w-4 h-4 shrink-0" />
+                لا يوجد رقم
+              </span>
+            )}
+            <button
+              onClick={handleSendMessage}
+              disabled={chatLoading}
+              className="flex-1 flex items-center justify-center gap-1.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 disabled:opacity-60 text-white font-semibold py-2.5 rounded-xl transition-colors text-[13px] leading-tight text-center"
+            >
+              <MessageSquare className="w-4 h-4 shrink-0" />
+              {chatLoading ? 'جارٍ الفتح…' : 'إرسال رسالة'}
+            </button>
+            <button
+              onClick={() => {
+                if (!isAuthenticated) { router.push('/login'); return; }
+                setOfferOpen(true);
+              }}
+              className="flex-1 flex items-center justify-center gap-1.5 border border-orange-300 bg-orange-50 hover:bg-orange-100 text-orange-600 font-semibold py-2.5 rounded-xl transition-colors text-[13px] leading-tight text-center"
+            >
+              <Tag className="w-4 h-4 shrink-0" />
+              تقديم عرض
+            </button>
+          </div>
+        )}
+      </>
+    );
   }
 
   return (
@@ -872,7 +970,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'location',    label: 'الموقع' },
 ];
 
-function TabPanel({ listing }: { listing: Listing }) {
+function TabPanel({ listing, withDetailTable = false }: { listing: Listing; withDetailTable?: boolean }) {
   const [activeTab, setActiveTab] = useState<TabId>('description');
   const vd  = listing.vehicleDetails as any;
   const raw = listing as any;
@@ -913,9 +1011,23 @@ function TabPanel({ listing }: { listing: Listing }) {
       {/* Tab content */}
       <div className="px-6 py-5">
         {activeTab === 'description' && (
-          <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
-            {listing.description || <span className="text-gray-400 italic">لا يوجد وصف.</span>}
-          </p>
+          withDetailTable ? (
+            <div className="space-y-5">
+              <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
+                {listing.description || <span className="text-gray-400 italic">لا يوجد وصف.</span>}
+              </p>
+              <div className="rounded-xl border border-gray-200 overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50/80">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">تفاصيل الإعلان</p>
+                </div>
+                <AdSpecsTable listing={listing} compact />
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
+              {listing.description || <span className="text-gray-400 italic">لا يوجد وصف.</span>}
+            </p>
+          )
         )}
 
         {activeTab === 'damage' && (
@@ -1298,12 +1410,18 @@ export default function ListingDetailPage() {
         </div>
 
         {/* ══ Mobile (<lg) — sahibinden-style linear order ══ */}
-        <div className="lg:hidden space-y-4">
+        <div className="lg:hidden space-y-4 pb-32">
 
-          {/* 1 — Image gallery (full-bleed, no card) */}
+          {/* 1 — Favorite + Compare (moved above the gallery) */}
+          <div className="flex items-center gap-3">
+            <FavoriteButton listingId={listing.id} checkOnMount variant="detail" />
+            <CompareButton listing={listing} variant="detail" />
+          </div>
+
+          {/* 2 — Image gallery (full-bleed, no card) */}
           <ImageGallery images={listing.images ?? []} />
 
-          {/* 2 — Title + price + location + date */}
+          {/* 3 — Title + price + location + date */}
           <div>
             <h1 className="text-xl font-bold text-gray-900 leading-snug mb-2">
               {listing.title}
@@ -1323,31 +1441,22 @@ export default function ListingDetailPage() {
             </div>
           </div>
 
-          {/* 3 — Action buttons */}
-          <div className="flex items-center gap-3">
-            <FavoriteButton listingId={listing.id} checkOnMount variant="detail" />
-            <CompareButton listing={listing} variant="detail" />
-          </div>
-
-          {/* 4 — Tabs */}
-          <TabPanel listing={listing} />
-
-          {/* 5 — Detail table (clean compact layout) */}
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/80">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">تفاصيل الإعلان</p>
-            </div>
-            <AdSpecsTable listing={listing} compact />
-          </div>
-
-          {/* 6 — Seller info */}
+          {/* 4 — Seller identity (name + follow seller) */}
           <div className="bg-white rounded-2xl border border-gray-200 p-5">
-            <SellerBox listing={listing} />
+            <SellerBox listing={listing} variant="identity" />
           </div>
 
-          {/* 7 — Q&A (last) */}
+          {/* 5 — Tabs (الوصف tab embeds the compact detail table) */}
+          <TabPanel listing={listing} withDetailTable />
+
+          {/* 6 — Q&A (last) */}
           <QASection listingId={listing.id} sellerId={listing.user?.id} initialQuestions={seededQuestions} />
 
+        </div>
+
+        {/* ══ Mobile sticky action bar — call / message / offer ══ */}
+        <div className="lg:hidden fixed inset-x-0 bottom-16 md:bottom-0 z-[60] bg-white border-t border-gray-200 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] px-4 py-2.5">
+          <SellerBox listing={listing} variant="bar" />
         </div>
       </div>
     </div>
