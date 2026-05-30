@@ -273,7 +273,7 @@ function ListingRow({ listing, activeCategoryId, cols, isRealEstate }: { listing
           )}
           <div className="absolute top-0.5 left-0.5 flex flex-col gap-0.5">
             {showVitrin && <span className="bg-yellow-400 text-yellow-900 text-[8px] font-extrabold px-1 py-px rounded leading-none">★</span>}
-            {urgent && <span className="animate-pulse bg-red-500 text-white text-[8px] font-extrabold px-1 py-px rounded leading-none">🔥</span>}
+            {urgent && <span className="animate-pulse bg-red-500 text-white text-[8px] font-extrabold px-1 py-px rounded leading-none">🚨</span>}
           </div>
         </div>
       </div>
@@ -1025,6 +1025,7 @@ export default function CategoryPage() {
                         listing={listing}
                         showcaseContext={resolvedCategoryId ? 'category' : undefined}
                         isHomepageView={false}
+                        buttonsPlacement="side"
                       />
                     ))}
                   </div>

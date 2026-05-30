@@ -43,6 +43,12 @@ interface ListingCardProps {
    * Kategori Vitrini badge shows for categoryShowcaseUntil listings.
    */
   showcaseContext?: 'category';
+  /**
+   * 'overlay' (default) = favorite/compare buttons absolutely positioned over
+   * the image. 'side' = buttons rendered in the info area, opposite the image
+   * (used by the category-page mobile list view so the image stays clean).
+   */
+  buttonsPlacement?: 'overlay' | 'side';
 }
 
 export function ListingCard({
@@ -52,6 +58,7 @@ export function ListingCard({
   showCompare = true,
   isHomepageView = false,
   showcaseContext,
+  buttonsPlacement = 'overlay',
 }: ListingCardProps) {
   const primary = listing.images?.find((img) => img.isPrimary) ?? listing.images?.[0];
   const now     = Date.now();
@@ -116,6 +123,32 @@ export function ListingCard({
     !!listing.categoryShowcaseUntil &&
     new Date(listing.categoryShowcaseUntil).getTime() > now;
 
+  // Shared title/price/meta markup — reused by both the overlay and side layouts
+  // so the overlay (default) DOM stays byte-identical.
+  const infoContent = (
+    <>
+      <p className={cn(
+        'text-sm leading-snug line-clamp-2',
+        highlight ? 'font-extrabold text-black' : 'font-semibold text-gray-900',
+      )}>
+        {listing.title}
+      </p>
+      <p className="text-base font-bold text-blue-600">
+        {formatPrice(listing.price, listing.currency)}
+      </p>
+      <div className="flex items-center justify-between text-xs text-gray-400 pt-0.5">
+        <span className="flex items-center gap-1">
+          <MapPin className="w-3 h-3" />
+          {listing.city}
+        </span>
+        <span className="flex items-center gap-1">
+          <Clock className="w-3 h-3" />
+          {timeAgo(listing.createdAt)}
+        </span>
+      </div>
+    </>
+  );
+
   return (
     <Link
       href={`/listings/${listing.id}`}
@@ -151,45 +184,47 @@ export function ListingCard({
           )}
           {urgent && (
             <div className="animate-pulse bg-red-500 text-white text-[11px] font-extrabold px-2 py-0.5 rounded shadow-md flex items-center gap-1 tracking-wide">
-              🔥 ACİL
+              🚨 عاجل
             </div>
           )}
         </div>
 
-        {/* Action buttons */}
-        <div className="absolute top-2 right-2 z-10 flex flex-col gap-1.5">
-          <FavoriteButton
-            listingId={listing.id}
-            initialFavorited={initialFavorited}
-            variant="card"
-            onToggle={(fav) => onFavoriteToggle?.(listing.id, fav)}
-          />
-          {showCompare && <CompareButton listing={listing} variant="card" />}
-        </div>
+        {/* Action buttons (overlay placement) */}
+        {buttonsPlacement === 'overlay' && (
+          <div className="absolute top-2 right-2 z-10 flex flex-col gap-1.5">
+            <FavoriteButton
+              listingId={listing.id}
+              initialFavorited={initialFavorited}
+              variant="card"
+              onToggle={(fav) => onFavoriteToggle?.(listing.id, fav)}
+            />
+            {showCompare && <CompareButton listing={listing} variant="card" />}
+          </div>
+        )}
       </div>
 
       {/* Info */}
-      <div className="flex-1 min-w-0 p-3 md:p-4 space-y-1.5">
-        <p className={cn(
-          'text-sm leading-snug line-clamp-2',
-          highlight ? 'font-extrabold text-black' : 'font-semibold text-gray-900',
-        )}>
-          {listing.title}
-        </p>
-        <p className="text-base font-bold text-blue-600">
-          {formatPrice(listing.price, listing.currency)}
-        </p>
-        <div className="flex items-center justify-between text-xs text-gray-400 pt-0.5">
-          <span className="flex items-center gap-1">
-            <MapPin className="w-3 h-3" />
-            {listing.city}
-          </span>
-          <span className="flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            {timeAgo(listing.createdAt)}
-          </span>
+      {buttonsPlacement === 'side' ? (
+        <div className="flex-1 min-w-0 p-3 md:p-4 flex items-start gap-2">
+          <div className="flex-1 min-w-0 space-y-1.5">
+            {infoContent}
+          </div>
+          <div className="flex flex-col gap-1.5 shrink-0">
+            <FavoriteButton
+              listingId={listing.id}
+              initialFavorited={initialFavorited}
+              variant="card"
+              onToggle={(fav) => onFavoriteToggle?.(listing.id, fav)}
+              className="border border-gray-200"
+            />
+            {showCompare && <CompareButton listing={listing} variant="card" className="border border-gray-200" />}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex-1 min-w-0 p-3 md:p-4 space-y-1.5">
+          {infoContent}
+        </div>
+      )}
     </Link>
   );
 }
