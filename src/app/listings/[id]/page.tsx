@@ -772,7 +772,7 @@ function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 
           <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center shrink-0 text-white font-bold text-lg">
             {initial}
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0">
             <p className="font-semibold text-gray-900 text-sm leading-snug flex items-center gap-1">
               <span className="truncate">{name}</span>
               {isCorporate && (
@@ -1476,8 +1476,8 @@ export default function ListingDetailPage() {
 
         </div>
 
-        {/* ══ Mobile sticky action bar — call / message / offer ══ */}
-        <div className="lg:hidden fixed inset-x-0 bottom-16 md:bottom-0 z-[60] bg-white border-t border-gray-200 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] px-4 py-2.5">
+        {/* ══ Mobile sticky action bar — transparent, floats above BottomNav ══ */}
+        <div className="lg:hidden fixed inset-x-0 bottom-[4.5rem] md:bottom-3 z-[60] px-4">
           <SellerBox listing={listing} variant="bar" />
         </div>
       </div>
