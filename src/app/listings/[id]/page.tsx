@@ -727,7 +727,7 @@ function OfferModal({ listing, onClose }: { listing: Listing; onClose: () => voi
 
 // ── Seller Box ────────────────────────────────────────────────────────────────
 
-function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 'full' | 'identity' | 'bar' }) {
+function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 'full' | 'identity' | 'line' | 'bar' }) {
   const router                        = useRouter();
   const { user, isAuthenticated }     = useAuthStore();
   const [chatLoading, setChatLoading] = useState(false);
@@ -802,6 +802,16 @@ function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 
             <FavoriteSellerButton sellerId={listing.user.id} variant="icon" />
           )}
         </div>
+      </div>
+    );
+  }
+
+  // ── Mobile: compact seller line (name + join date), no avatar/card/follow ──
+  if (variant === 'line') {
+    return (
+      <div className="flex flex-wrap items-center gap-x-2 text-xs text-gray-500">
+        <span className="font-semibold text-gray-700">{name}</span>
+        {accountDate && <span>· عضو منذ {accountDate}</span>}
       </div>
     );
   }
@@ -1317,6 +1327,7 @@ export default function ListingDetailPage() {
   const id     = params.id as string;
 
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const authUser        = useAuthStore((s) => s.user);
 
   const [listing,  setListing]  = useState<Listing | null>(null);
   const [loading,  setLoading]  = useState(true);
@@ -1434,16 +1445,22 @@ export default function ListingDetailPage() {
         {/* ══ Mobile (<lg) — sahibinden-style linear order ══ */}
         <div className="lg:hidden space-y-4 pb-32">
 
-          {/* 1 — Favorite + Compare (moved above the gallery) */}
+          {/* 1 — Favorite + Compare + Follow seller (moved above the gallery) */}
           <div className="flex items-center gap-3">
             <FavoriteButton listingId={listing.id} checkOnMount variant="detail" />
             <CompareButton listing={listing} variant="detail" />
+            {listing.user?.id && authUser?.id !== listing.user.id && (
+              <FavoriteSellerButton sellerId={listing.user.id} variant="icon" />
+            )}
           </div>
 
           {/* 2 — Image gallery (full-bleed, no card) */}
           <ImageGallery images={listing.images ?? []} />
 
-          {/* 3 — Title + price + location + date */}
+          {/* 3 — Seller name + join date (compact line, sahibinden-style) */}
+          <SellerBox listing={listing} variant="line" />
+
+          {/* 4 — Title + price + location + date */}
           <div>
             <h1 className="text-xl font-bold text-gray-900 leading-snug mb-2">
               {listing.title}
@@ -1463,11 +1480,6 @@ export default function ListingDetailPage() {
             </div>
           </div>
 
-          {/* 4 — Seller identity (name + follow seller) */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-5">
-            <SellerBox listing={listing} variant="identity" />
-          </div>
-
           {/* 5 — Tabs (3-tab sahibinden layout; tab 1 stacks table + damage + specs) */}
           <TabPanel listing={listing} mobile />
 
@@ -1477,7 +1489,7 @@ export default function ListingDetailPage() {
         </div>
 
         {/* ══ Mobile sticky action bar — transparent, floats above BottomNav ══ */}
-        <div className="lg:hidden fixed inset-x-0 bottom-[4.5rem] md:bottom-3 z-[60] px-4">
+        <div className="lg:hidden fixed inset-x-0 bottom-28 md:bottom-3 z-[60] px-4">
           <SellerBox listing={listing} variant="bar" />
         </div>
       </div>
