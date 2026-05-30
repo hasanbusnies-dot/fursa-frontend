@@ -1489,7 +1489,7 @@ export default function ListingDetailPage() {
         </div>
 
         {/* ══ Mobile sticky action bar — transparent, floats above BottomNav ══ */}
-        <div className="lg:hidden fixed inset-x-0 bottom-28 md:bottom-3 z-[60] px-4">
+        <div className="lg:hidden fixed inset-x-0 bottom-24 md:bottom-3 z-[60] px-4">
           <SellerBox listing={listing} variant="bar" />
         </div>
       </div>
