@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CAR_CATALOG } from '@/data/car-catalog';
 
 // ── Damage map ────────────────────────────────────────────────────────────────
 
@@ -100,13 +101,9 @@ export const SYRIAN_GOVERNORATES = [
   'إدلب', 'دير الزور', 'الرقة', 'درعا', 'السويداء', 'القنيطرة', 'ريف دمشق', 'الحسكة',
 ];
 
-export const VEHICLE_MAKES = [
-  'Audi', 'BMW', 'Chevrolet', 'Citroën', 'Dacia', 'Daewoo', 'Fiat', 'Ford',
-  'GAC', 'Geely', 'GMC', 'Honda', 'Hyundai', 'Isuzu', 'Jeep', 'Kia',
-  'Land Rover', 'Lexus', 'Mazda', 'Mercedes-Benz', 'Mitsubishi', 'Nissan',
-  'Opel', 'Peugeot', 'Porsche', 'Renault', 'Seat', 'Skoda', 'Subaru',
-  'Suzuki', 'Toyota', 'Volkswagen', 'Volvo', 'أخرى',
-] as const;
+// Derived from the shared static catalog so the form and the filter use the
+// same brand list. 'أخرى' (Other) is appended as a UI-only sentinel.
+export const VEHICLE_MAKES = [...CAR_CATALOG.map((c) => c.brand), 'أخرى'];
 
 export const CAR_COLORS = [
   'أبيض', 'فضي', 'رمادي', 'أسود', 'كحلي', 'أزرق', 'أحمر', 'خمري',

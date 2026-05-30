@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { AlertCircle } from 'lucide-react';
 import type { WizardFormData } from './schema';
+import { CAR_CATALOG } from '@/data/car-catalog';
 import {
   CAR_COLORS, VEHICLE_MAKES, FUEL_TYPE_OPTIONS, TRANSMISSION_OPTIONS,
   BODY_TYPE_OPTIONS, DRIVETRAIN_OPTIONS, FROM_WHO_OPTIONS,
@@ -41,6 +43,16 @@ export function Step1VehicleInfo({ form }: Props) {
   const warranty  = watch('warranty');
   const tradeIn   = watch('tradeIn');
 
+  // ── Make → Model dependency ──
+  const make  = watch('make');
+  const model = watch('model');
+  const brandModels = make ? (CAR_CATALOG.find((c) => c.brand === make)?.models ?? []) : [];
+  const [customModel, setCustomModel] = useState(false);
+  // Fall back to free-text when: 'أخرى' (Other) brand, brand has no catalog models,
+  // the user chose "not listed", or a prefilled model (edit flow) isn't in the list.
+  const useFreeTextModel =
+    make === 'أخرى' || brandModels.length === 0 || customModel || (!!model && !brandModels.includes(model));
+
   return (
     <div className="space-y-8">
       <div>
@@ -71,7 +83,12 @@ export function Step1VehicleInfo({ form }: Props) {
       {/* ── Make / Series / Model ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Field label="الماركة" required error={errors.make?.message}>
-          <select {...register('make')} className={inputCls(errors.make?.message)}>
+          <select
+            {...register('make', {
+              onChange: () => { setValue('model', '', { shouldValidate: true }); setCustomModel(false); },
+            })}
+            className={inputCls(errors.make?.message)}
+          >
             <option value="">اختر</option>
             {VEHICLE_MAKES.map((m) => (
               <option key={m} value={m}>{m}</option>
@@ -82,7 +99,34 @@ export function Step1VehicleInfo({ form }: Props) {
           <input {...register('series')} placeholder="مثال: Camry" className={inputCls(errors.series?.message)} />
         </Field>
         <Field label="الموديل" required error={errors.model?.message}>
-          <input {...register('model')} placeholder="مثال: 2.5 SE" className={inputCls(errors.model?.message)} />
+          {useFreeTextModel ? (
+            <>
+              <input {...register('model')} placeholder="مثال: 2.5 SE" className={inputCls(errors.model?.message)} />
+              {brandModels.length > 0 && make !== 'أخرى' && (
+                <button
+                  type="button"
+                  onClick={() => { setCustomModel(false); setValue('model', '', { shouldValidate: true }); }}
+                  className="mt-1 text-xs text-blue-600 hover:underline"
+                >
+                  اختر من القائمة
+                </button>
+              )}
+            </>
+          ) : (
+            <select
+              value={model ?? ''}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === '__custom__') { setCustomModel(true); setValue('model', '', { shouldValidate: true }); }
+                else setValue('model', v, { shouldValidate: true });
+              }}
+              className={inputCls(errors.model?.message)}
+            >
+              <option value="">اختر</option>
+              {brandModels.map((m) => <option key={m} value={m}>{m}</option>)}
+              <option value="__custom__">أخرى / غير مدرج</option>
+            </select>
+          )}
         </Field>
       </div>
 

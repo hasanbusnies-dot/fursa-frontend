@@ -11,20 +11,13 @@ import {
   FUEL_TYPE_OPTIONS, TRANSMISSION_OPTIONS, BODY_TYPE_OPTIONS,
   DRIVETRAIN_OPTIONS, FROM_WHO_OPTIONS, CAR_COLORS, SYRIAN_GOVERNORATES,
 } from '@/components/listings/wizard/schema';
+import { CAR_CATALOG } from '@/data/car-catalog';
 
 // ── Brand lists ───────────────────────────────────────────────────────────────
 
-const CAR_BRANDS = [
-  'Alfa Romeo', 'Aston Martin', 'Audi', 'Bentley', 'BMW',
-  'BYD', 'Chery', 'Chevrolet', 'Citroën', 'Dacia',
-  'Ferrari', 'Fiat', 'Ford', 'Honda', 'Hyundai',
-  'Isuzu', 'Jaguar', 'Jeep', 'Kia', 'Lamborghini',
-  'Land Rover', 'Lexus', 'Maserati', 'Mazda', 'Mercedes-Benz',
-  'MG', 'Mini', 'Mitsubishi', 'Nissan', 'Opel',
-  'Peugeot', 'Porsche', 'Renault', 'Rolls-Royce', 'Seat',
-  'Skoda', 'Subaru', 'Suzuki', 'Tesla', 'Toyota',
-  'Volkswagen', 'Volvo', 'أخرى',
-] as const;
+// Derived from the shared static catalog so the filter and the add-listing form
+// stay in sync. 'أخرى' (Other) is appended as a UI-only sentinel.
+const CAR_BRANDS = [...CAR_CATALOG.map((c) => c.brand), 'أخرى'];
 
 const ELECTRIC_BRANDS = [
   'Abarth', 'Aion', 'Alpine', 'Arora', 'Audi', 'BMW', 'BYD', 'Citroen',
