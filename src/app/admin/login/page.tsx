@@ -35,17 +35,17 @@ export default function AdminLoginPage() {
 
     try {
       // Step 1 — authenticate and store token so subsequent requests are authed
-      const { token, user: loginUser } = await authService.login({
+      const { token, refreshToken, user: loginUser } = await authService.login({
         identifier: data.email,
         password:   data.password,
       });
-      setAuth(loginUser, token);
+      setAuth(loginUser, token, refreshToken);
 
       // Step 2 — fetch fresh profile from DB to get the live role field
       let finalUser = loginUser;
       try {
         finalUser = await authService.getProfile();
-        setAuth(finalUser, token);
+        setAuth(finalUser, token, refreshToken);
       } catch {
         // /auth/me unavailable — proceed with role from login response
       }

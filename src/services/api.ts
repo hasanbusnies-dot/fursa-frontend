@@ -1,3 +1,5 @@
+import { refreshAccessToken } from './token-refresh';
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -64,8 +66,19 @@ function isAuthError(status: number, message: string): boolean {
   );
 }
 
-async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const token = getToken();
+// Auth endpoints (login / register / refresh) must never trigger a refresh-retry:
+// a 401 there is a real credential / refresh-token failure, not access-token expiry.
+function isAuthEndpoint(endpoint: string): boolean {
+  return endpoint.startsWith('/auth/');
+}
+
+async function request<T>(
+  endpoint: string,
+  options: RequestInit = {},
+  retried = false,
+  tokenOverride?: string,
+): Promise<T> {
+  const token = tokenOverride ?? getToken();
 
   const res = await fetch(`${BASE_URL}${endpoint}`, {
     ...options,
@@ -83,6 +96,23 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     };
     const message = body.message ?? `HTTP ${res.status}`;
     if (isAuthError(res.status, message)) {
+      // Auth endpoints: surface the server message ("Invalid credentials") — never
+      // refresh, never redirect.
+      if (isAuthEndpoint(endpoint)) {
+        throw new ApiError(message, body.errors);
+      }
+      // Access token expired: refresh once (single-flight) and retry with the new token.
+      if (!retried) {
+        let newToken: string;
+        try {
+          newToken = await refreshAccessToken();
+        } catch {
+          clearAuthAndRedirect();
+          throw new ApiError('Session expired. Please log in again.');
+        }
+        return request<T>(endpoint, options, true, newToken);
+      }
+      // Already retried with a fresh token and still 401 → give up.
       clearAuthAndRedirect();
       throw new ApiError('Session expired. Please log in again.');
     }
@@ -94,6 +124,47 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   const hasBody = res.status !== 204 && contentLength !== '0';
   if (!hasBody) return undefined as unknown as T;
 
+  return res.json() as Promise<T>;
+}
+
+// Multipart upload with the same refresh-once-retry behavior as request().
+async function uploadFormRequest<T>(
+  endpoint: string,
+  formData: FormData,
+  retried = false,
+  tokenOverride?: string,
+): Promise<T> {
+  const token = tokenOverride ?? getToken();
+  const res = await fetch(`${BASE_URL}${endpoint}`, {
+    method: 'POST',
+    headers: authHeader(token), // no Content-Type — browser sets multipart boundary
+    body: formData,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({})) as {
+      message?: string;
+      errors?: Record<string, string[]>;
+    };
+    const message = body.message ?? `HTTP ${res.status}`;
+    if (isAuthError(res.status, message)) {
+      if (isAuthEndpoint(endpoint)) {
+        throw new ApiError(message, body.errors);
+      }
+      if (!retried) {
+        let newToken: string;
+        try {
+          newToken = await refreshAccessToken();
+        } catch {
+          clearAuthAndRedirect();
+          throw new ApiError('Session expired. Please log in again.');
+        }
+        return uploadFormRequest<T>(endpoint, formData, true, newToken);
+      }
+      clearAuthAndRedirect();
+      throw new ApiError('Session expired. Please log in again.');
+    }
+    throw new ApiError(message, body.errors);
+  }
   return res.json() as Promise<T>;
 }
 
@@ -110,24 +181,6 @@ export const api = {
     request<T>(endpoint, { method: 'DELETE', ...options }),
 
   // Multipart upload — browser sets Content-Type + boundary automatically for FormData
-  uploadForm: async <T>(endpoint: string, formData: FormData): Promise<T> => {
-    const res = await fetch(`${BASE_URL}${endpoint}`, {
-      method: 'POST',
-      headers: authHeader(getToken()), // no Content-Type — browser sets multipart boundary
-      body: formData,
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({})) as {
-        message?: string;
-        errors?: Record<string, string[]>;
-      };
-      const message = body.message ?? `HTTP ${res.status}`;
-      if (isAuthError(res.status, message)) {
-        clearAuthAndRedirect();
-        throw new ApiError('Session expired. Please log in again.');
-      }
-      throw new ApiError(message, body.errors);
-    }
-    return res.json() as Promise<T>;
-  },
+  uploadForm: <T>(endpoint: string, formData: FormData): Promise<T> =>
+    uploadFormRequest<T>(endpoint, formData),
 };

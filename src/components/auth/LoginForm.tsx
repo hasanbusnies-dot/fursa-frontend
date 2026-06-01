@@ -49,8 +49,8 @@ export function LoginForm() {
   const onSubmit = async (data: FormData) => {
     setServerError(null);
     try {
-      const { token, user } = await authService.login({ identifier: data.email, password: data.password });
-      setAuth(user, token);
+      const { token, refreshToken, user } = await authService.login({ identifier: data.email, password: data.password });
+      setAuth(user, token, refreshToken);
       toast.success(`أهلاً، ${user.profile?.firstName ?? user.email}!`);
       // Honor ?redirect= (set by the add-listing guard) so the user lands back
       // where they came from. Only accept safe, relative in-app paths.

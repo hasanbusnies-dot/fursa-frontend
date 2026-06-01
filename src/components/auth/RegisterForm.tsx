@@ -113,7 +113,7 @@ export function RegisterForm() {
             })
           : await authService.registerIndividual(base);
 
-      setAuth(res.user, res.token);
+      setAuth(res.user, res.token, res.refreshToken);
       toast.success('تم إنشاء حسابك بنجاح! مرحباً بك في فرصة.');
       router.push('/');
       router.refresh();

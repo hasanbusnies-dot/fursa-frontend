@@ -21,6 +21,7 @@ export interface CorporateRegisterPayload extends IndividualRegisterPayload {
 
 export interface AuthResponse {
   token: string;
+  refreshToken: string;
   user: User;
 }
 
@@ -39,13 +40,14 @@ type RawAuthResponse = {
 
 function extractAuth(raw: RawAuthResponse): AuthResponse {
   const token = raw.data?.tokens?.accessToken;
+  const refreshToken = raw.data?.tokens?.refreshToken;
   const user  = raw.data?.user;
 
-  if (!token || !user) {
+  if (!token || !refreshToken || !user) {
     throw new Error('Invalid server response: missing token or user.');
   }
 
-  return { token, user };
+  return { token, refreshToken, user };
 }
 
 export const authService = {
