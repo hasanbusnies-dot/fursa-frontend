@@ -1,15 +1,77 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  ChevronRight, Send, ImageOff, Loader2, AlertCircle,
+  ChevronRight, Send, ImageOff, AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { messagesService } from '@/services/messages.service';
+import { getSocket, connectSocket } from '@/lib/socket';
 import { useAuthStore } from '@/store/auth.store';
 import type { ChatRoom, Message } from '@/types';
+
+// A message may be an optimistic placeholder that hasn't been confirmed by the server yet.
+type LocalMessage = Message & { pending?: boolean; failed?: boolean };
+
+// Raw payload from the socket `receive_message` event (note: conversationId, not roomId).
+interface SocketMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  content: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+function mapIncoming(raw: SocketMessage): LocalMessage {
+  return {
+    id: raw.id,
+    roomId: raw.conversationId,
+    senderId: raw.senderId,
+    content: raw.content,
+    isRead: raw.isRead,
+    createdAt:
+      typeof raw.createdAt === 'string' ? raw.createdAt : new Date(raw.createdAt).toISOString(),
+  };
+}
+
+// De-dupe an incoming real-time message against optimistic temps and replays.
+function reconcileIncoming(prev: LocalMessage[], raw: SocketMessage): LocalMessage[] {
+  const incoming = mapIncoming(raw);
+
+  // 1. Already have it by real id → ignore (duplicate echo, or overlap with a refetch).
+  if (prev.some((m) => m.id === incoming.id)) return prev;
+
+  // 2. Matches one of our pending optimistic temps (our own echo) → replace the temp in
+  //    place with the confirmed server message (real id/createdAt, drop `pending`).
+  const tempIdx = prev.findIndex(
+    (m) => m.pending && m.senderId === incoming.senderId && m.content === incoming.content,
+  );
+  if (tempIdx !== -1) {
+    const next = [...prev];
+    next[tempIdx] = incoming;
+    return next;
+  }
+
+  // 3. Brand-new message (from the other party) → append.
+  return [...prev, incoming];
+}
+
+// Merge a server history snapshot (ASC) — used for the initial load AND reconnect gap-fill.
+// Keeps unconfirmed temps + any socket message newer than this snapshot; de-dupes by id.
+function mergeHistory(prev: LocalMessage[], history: Message[]): LocalMessage[] {
+  const ids = new Set(history.map((h) => h.id));
+  const extras = prev.filter((m) => {
+    if (ids.has(m.id)) return false;
+    if (m.pending) {
+      return !history.some((h) => h.senderId === m.senderId && h.content === m.content);
+    }
+    return true; // a real socket message not yet in this snapshot → keep
+  });
+  return [...history, ...extras];
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -82,15 +144,15 @@ export default function ChatDetailPage() {
 
   const [mounted,  setMounted]  = useState(false);
   const [room,     setRoom]     = useState<ChatRoom | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<LocalMessage[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState<string | null>(null);
   const [draft,    setDraft]    = useState('');
-  const [sending,  setSending]  = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const bottomRef    = useRef<HTMLDivElement>(null);
   const inputRef     = useRef<HTMLInputElement>(null);
+  const joinedOnceRef = useRef(false); // false until this conversation's first socket join
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -109,7 +171,10 @@ export default function ChatDetailPage() {
       .then((roomData) => {
         if (cancelled) return;
         setRoom(roomData);
-        setMessages(Array.isArray(roomData.messages) ? roomData.messages : []);
+        // Merge (not replace) so a receive_message that landed before this HTTP load isn't lost.
+        setMessages((prev) =>
+          mergeHistory(prev, Array.isArray(roomData.messages) ? roomData.messages : []),
+        );
       })
       .catch(() => {
         if (cancelled) return;
@@ -119,20 +184,61 @@ export default function ChatDetailPage() {
     return () => { cancelled = true; };
   }, [mounted, isAuthenticated, roomId]);
 
-  // ── Polling for new messages every 5 s ────────────────────────────────────
-
-  const pollMessages = useCallback(async () => {
-    try {
-      const roomData = await messagesService.getRoom(roomId);
-      setMessages(Array.isArray(roomData.messages) ? roomData.messages : []);
-    } catch { /* silent — polling errors don't disrupt the UI */ }
-  }, [roomId]);
+  // ── Real-time: socket join + receive (replaces the old 5s poll) ─────────────
 
   useEffect(() => {
-    if (!mounted || !isAuthenticated || loading) return;
-    const id = setInterval(pollMessages, 5_000);
-    return () => clearInterval(id);
-  }, [mounted, isAuthenticated, loading, pollMessages]);
+    if (!mounted || !isAuthenticated || !roomId) return;
+
+    const socket = getSocket() ?? connectSocket();
+    joinedOnceRef.current = false; // reset per conversation
+
+    function joinAndMaybeGapFill() {
+      socket.emit('join_conversation', roomId);
+      if (joinedOnceRef.current) {
+        // RE-connect → refetch history (ASC, also re-marks read) and merge by id to fill
+        // any messages missed while we were disconnected.
+        messagesService
+          .getRoom(roomId)
+          .then((rd) =>
+            setMessages((prev) =>
+              mergeHistory(prev, Array.isArray(rd.messages) ? rd.messages : []),
+            ),
+          )
+          .catch(() => {});
+      }
+      joinedOnceRef.current = true;
+    }
+
+    function handleReceive(raw: SocketMessage) {
+      if (raw.conversationId !== roomId) return; // ignore stray events
+      setMessages((prev) => reconcileIncoming(prev, raw));
+    }
+
+    function handleSocketError({ message }: { message: string }) {
+      toast.error(message || 'تعذّر إرسال الرسالة. حاول مجدداً.');
+      // No correlation id in the contract → best-effort: fail the oldest still-pending temp.
+      setMessages((prev) => {
+        const idx = prev.findIndex((m) => m.pending);
+        if (idx === -1) return prev;
+        const next = [...prev];
+        next[idx] = { ...next[idx], pending: false, failed: true };
+        return next;
+      });
+    }
+
+    socket.on('connect', joinAndMaybeGapFill);
+    socket.on('receive_message', handleReceive);
+    socket.on('error', handleSocketError);
+
+    // Socket may already be connected (SocketManager connects on login) → join immediately.
+    if (socket.connected) joinAndMaybeGapFill();
+
+    return () => {
+      socket.off('connect', joinAndMaybeGapFill);
+      socket.off('receive_message', handleReceive);
+      socket.off('error', handleSocketError);
+    };
+  }, [mounted, isAuthenticated, roomId]);
 
   // ── Auto-scroll: only when near bottom (don't interrupt manual scrolling) ─
 
@@ -142,30 +248,59 @@ export default function ChatDetailPage() {
     return el.scrollHeight - el.scrollTop - el.clientHeight < 220;
   }
 
+  // Scroll only when the message COUNT actually grows (a genuinely new message),
+  // plus once on initial load. Polls that return the same list no longer scroll,
+  // because pollMessages keeps the same array reference and the count is unchanged.
+  const prevMsgCountRef = useRef(messages.length);
+
   useEffect(() => {
-    if (isNearBottom()) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages.length === 0) return;
+    const isInitialLoad = prevMsgCountRef.current === 0;
+    const hasNewMessage = messages.length > prevMsgCountRef.current;
+    prevMsgCountRef.current = messages.length;
+
+    if (isInitialLoad) {
+      bottomRef.current?.scrollIntoView();                       // jump to bottom on first load
+    } else if (hasNewMessage && isNearBottom()) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); // gentle for incoming messages
     }
   }, [messages]);
 
   // ── Send ──────────────────────────────────────────────────────────────────
 
-  async function handleSend() {
+  function handleSend() {
     const text = draft.trim();
-    if (!text || sending) return;
-    setSending(true);
-    try {
-      const newMsg = await messagesService.sendMessage(roomId, text);
-      setMessages((prev) => [...prev, newMsg]);
-      setDraft('');
-      // Always scroll after own send
-      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
-      inputRef.current?.focus();
-    } catch {
-      toast.error('تعذّر إرسال الرسالة. حاول مجدداً.');
-    } finally {
-      setSending(false);
+    if (!text) return;
+    if (text.length > 2000) {
+      toast.error('الرسالة طويلة جداً (الحد 2000 حرف).');
+      return;
     }
+
+    const socket = getSocket();
+    if (!socket || !socket.connected) {
+      toast.error('لا يوجد اتصال بالخادم. جارٍ إعادة المحاولة…');
+      return;
+    }
+
+    // Optimistic UI: show the message instantly with a temp id. The server echo
+    // (receive_message) reconciles it — replacing this temp with the real id/createdAt.
+    const tempId = `temp-${Date.now()}`;
+    const optimistic: LocalMessage = {
+      id: tempId,
+      content: text,
+      senderId: user?.id ?? '',
+      roomId,
+      createdAt: new Date().toISOString(),
+      pending: true,
+    };
+
+    setMessages((prev) => [...prev, optimistic]);
+    setDraft('');
+    // Always scroll after own send
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+    inputRef.current?.focus();
+
+    socket.emit('send_message', { conversationId: roomId, content: text });
   }
 
   // ── Guards ────────────────────────────────────────────────────────────────
@@ -197,7 +332,7 @@ export default function ChatDetailPage() {
   const listingTitle  = room.listing?.title ?? 'الإعلان';
 
   // Group messages by day for day-separator rendering
-  const groups: { day: string; msgs: Message[] }[] = [];
+  const groups: { day: string; msgs: LocalMessage[] }[] = [];
   for (const msg of messages) {
     const day  = formatDay(msg.createdAt);
     const last = groups[groups.length - 1];
@@ -286,11 +421,13 @@ export default function ChatDetailPage() {
                               ? 'bg-orange-500 text-white rounded-tl-sm ms-auto'
                               : 'bg-white border border-gray-200 text-gray-800 rounded-tr-sm shadow-sm me-auto'
                             }
+                            ${msg.pending ? 'opacity-60' : ''}
+                            ${msg.failed ? 'ring-1 ring-red-300' : ''}
                           `}
                         >
                           <p>{msg.content}</p>
                           <p className={`text-[10px] mt-0.5 text-start ${isMine ? 'text-orange-100' : 'text-gray-400'}`}>
-                            {formatTime(msg.createdAt)}
+                            {msg.failed ? 'لم تُرسل' : msg.pending ? 'يُرسل…' : formatTime(msg.createdAt)}
                           </p>
                         </div>
                       </div>
@@ -316,19 +453,15 @@ export default function ChatDetailPage() {
               if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
             }}
             placeholder="اكتب رسالتك…"
-            disabled={sending}
             className="flex-1 text-sm border border-gray-200 rounded-xl px-4 py-2.5 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-transparent placeholder:text-gray-300 disabled:opacity-60 transition"
           />
           <button
             onClick={handleSend}
-            disabled={!draft.trim() || sending}
+            disabled={!draft.trim()}
             aria-label="إرسال"
             className="w-10 h-10 rounded-xl bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white flex items-center justify-center transition-colors shrink-0"
           >
-            {sending
-              ? <Loader2 className="w-4 h-4 animate-spin" />
-              : <Send className="w-4 h-4" />
-            }
+            <Send className="w-4 h-4" />
           </button>
         </div>
       </div>

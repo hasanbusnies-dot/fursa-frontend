@@ -147,6 +147,7 @@ export interface Message {
   senderId: string;
   sender?: User;
   roomId: string;
+  isRead?: boolean;
   createdAt: string;
 }
 
