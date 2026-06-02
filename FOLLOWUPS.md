@@ -38,5 +38,22 @@ only the leader calls `/auth/refresh`; it broadcasts the new tokens; followers a
 broadcast instead of calling the endpoint. Eliminates the residual cross-tab rotation race
 entirely.
 
+## 4. "Message a seller" without a listing context — MEDIUM
+**Where:** `src/app/account/favorite-sellers/page.tsx:159` links to `/messages?to=${seller.id}`.
+
+**Problem:** the conversation model is keyed by **listing** —
+`messagesService.createOrGetRoom(listingId)` requires a `listingId`. The favorite-sellers
+entry only has a seller id, so there is no conversation to open. The old `/messages` view
+never handled the `?to=` param anyway (it only read `?roomId=`), and that view is now a
+redirect — so this link currently lands the user on the conversation **list**, not a chat.
+
+**Decision needed (product):** how should "message a seller" work with no listing? Options:
+- Open a seller-level (listing-agnostic) conversation — needs a backend change to support
+  conversations without a listing.
+- Or change the UX to require picking one of the seller's listings first.
+
+Until decided, the link is left as-is (it degrades to the messages list via the redirect).
+Deferred during the entry-point repointing (Option a) change.
+
 ---
 _Owner: messaging/auth refactor. Raised during the Socket.io migration groundwork._

@@ -755,7 +755,7 @@ function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 
     setChatLoading(true);
     try {
       const room = await messagesService.createOrGetRoom(listing.id);
-      router.push(`/messages?roomId=${room.id}`);
+      router.push(`/account/messages/${room.id}`);
     } catch (err) {
       console.error('[SellerBox] createOrGetRoom error:', err);
     } finally {

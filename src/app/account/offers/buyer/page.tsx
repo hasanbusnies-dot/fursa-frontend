@@ -386,7 +386,7 @@ export default function BuyerOffersPage() {
   async function handleMessage(listingId: string) {
     try {
       const room = await messagesService.createOrGetRoom(listingId);
-      router.push(`/messages?roomId=${room.id}`);
+      router.push(`/account/messages/${room.id}`);
     } catch {
       toast.error('تعذّر فتح المحادثة.');
     }
