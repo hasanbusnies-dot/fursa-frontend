@@ -16,6 +16,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   if (pathname.startsWith('/m/')) return null;
+  if (pathname.startsWith('/agent')) return null; // staff tool — uses its own in-panel tab bar
 
   return (
     <nav className="block md:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-gray-200 shadow-[0_-2px_12px_rgba(0,0,0,0.07)]">
