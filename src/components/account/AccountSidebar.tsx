@@ -77,7 +77,7 @@ const NAV: NavSection[] = [
         ],
       },
       { label: 'التجارة الإلكترونية الآمنة', icon: CreditCard },
-      { label: 'معاملاتي',                 icon: Wallet },
+      { href: '/account/wallet', label: 'محفظتي', icon: Wallet },
     ],
   },
   {

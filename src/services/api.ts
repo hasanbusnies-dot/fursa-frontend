@@ -3,7 +3,11 @@ import { refreshAccessToken } from './token-refresh';
 export class ApiError extends Error {
   constructor(
     message: string,
-    public readonly errors?: Record<string, string[]>
+    public readonly errors?: Record<string, string[]>,
+    // HTTP status of the failed response. Optional + last so existing call sites stay
+    // valid; lets callers branch exactly (e.g. status === 503) instead of matching
+    // on the message string.
+    public readonly status?: number,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -99,7 +103,7 @@ async function request<T>(
       // Auth endpoints: surface the server message ("Invalid credentials") — never
       // refresh, never redirect.
       if (isAuthEndpoint(endpoint)) {
-        throw new ApiError(message, body.errors);
+        throw new ApiError(message, body.errors, res.status);
       }
       // Access token expired: refresh once (single-flight) and retry with the new token.
       if (!retried) {
@@ -116,7 +120,7 @@ async function request<T>(
       clearAuthAndRedirect();
       throw new ApiError('Session expired. Please log in again.');
     }
-    throw new ApiError(message, body.errors);
+    throw new ApiError(message, body.errors, res.status);
   }
 
   // 204 No Content (and any other empty response) has no body to parse.
@@ -148,7 +152,7 @@ async function uploadFormRequest<T>(
     const message = body.message ?? `HTTP ${res.status}`;
     if (isAuthError(res.status, message)) {
       if (isAuthEndpoint(endpoint)) {
-        throw new ApiError(message, body.errors);
+        throw new ApiError(message, body.errors, res.status);
       }
       if (!retried) {
         let newToken: string;
@@ -163,7 +167,7 @@ async function uploadFormRequest<T>(
       clearAuthAndRedirect();
       throw new ApiError('Session expired. Please log in again.');
     }
-    throw new ApiError(message, body.errors);
+    throw new ApiError(message, body.errors, res.status);
   }
   return res.json() as Promise<T>;
 }
