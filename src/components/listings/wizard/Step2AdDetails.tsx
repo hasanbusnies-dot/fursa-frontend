@@ -109,6 +109,11 @@ export function Step2AdDetails({ form }: Props) {
               placeholder={currency === 'USD' ? '0.00' : '0'}
               min="0"
               step={currency === 'USD' ? '0.01' : '1'}
+              // A focused number input treats a mouse-wheel scroll as a spinner
+              // step, silently knocking the price down/up by one `step` (e.g.
+              // 200000 → 199999, or 45000 → 44999.99 in USD). Blur on wheel so
+              // scrolling the page never mutates the typed amount.
+              onWheel={(e) => e.currentTarget.blur()}
               className={`${inputCls(errors.price?.message)} ${currency === 'USD' ? 'ps-9' : ''}`}
             />
           </div>
