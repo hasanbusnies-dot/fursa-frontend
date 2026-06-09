@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { HandCoins, ReceiptText, LogOut, Loader2 } from 'lucide-react';
+import { HandCoins, ReceiptText, Store, PlusCircle, LogOut, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
 
@@ -11,8 +11,10 @@ import { cn } from '@/lib/utils';
 // shopping UI so field agents know they're in the staff tool.
 
 const TABS = [
-  { href: '/agent/collect',     label: 'تحصيل',     Icon: HandCoins   },
-  { href: '/agent/collections', label: 'سجل التحصيل', Icon: ReceiptText },
+  { href: '/agent/collect',         label: 'تحصيل',      Icon: HandCoins   },
+  { href: '/agent/collections',     label: 'سجل التحصيل', Icon: ReceiptText },
+  { href: '/agent/stores/register', label: 'متجر جديد',  Icon: PlusCircle  },
+  { href: '/agent/stores',          label: 'متاجري',     Icon: Store       },
 ] as const;
 
 export default function AgentLayout({ children }: { children: React.ReactNode }) {
@@ -83,8 +85,14 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
       {/* In-panel bottom tab bar — thumb reach for field use on phones */}
       <nav className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200 shadow-[0_-2px_12px_rgba(0,0,0,0.06)]">
         <div className="max-w-lg mx-auto flex items-stretch h-16">
-          {TABS.map(({ href, label, Icon }) => {
-            const active = pathname === href || pathname.startsWith(href + '/');
+          {/* Single active tab = the longest href that prefixes the current path. Avoids
+              both "/agent/stores" and "/agent/stores/register" lighting up at once. */}
+          {(() => {
+            const activeHref = TABS
+              .filter((t) => pathname === t.href || pathname.startsWith(t.href + '/'))
+              .reduce<string | null>((best, t) => (!best || t.href.length > best.length ? t.href : best), null);
+            return TABS.map(({ href, label, Icon }) => {
+            const active = href === activeHref;
             return (
               <Link
                 key={href}
@@ -98,7 +106,8 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                 <span className="text-[11px] font-semibold">{label}</span>
               </Link>
             );
-          })}
+          });
+          })()}
         </div>
       </nav>
     </div>
