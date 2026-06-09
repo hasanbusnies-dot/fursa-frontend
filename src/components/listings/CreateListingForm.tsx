@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { listingsService } from '@/services/listings.service';
+import { listingsService, type CreateListingPayload } from '@/services/listings.service';
 import { ApiError } from '@/services/api';
 import { useAuth } from '@/hooks/use-auth';
 import { StepIndicator } from './StepIndicator';
@@ -33,8 +33,24 @@ type SubmitPhase = 'idle' | 'uploading' | 'creating';
 // Backward-compat re-export so existing DetailsStep.tsx import doesn't break
 export type ListingFormData = WizardFormData;
 
-export function CreateListingForm() {
+export interface CreateListingFormProps {
+  /** Submit handler. Defaults to the regular POST /listings. The agent store flow
+   *  passes a store-scoped create (POST /agent/stores/:id/listings). May throw an
+   *  Error whose message is surfaced to the user. */
+  createListing?: (payload: CreateListingPayload) => Promise<unknown>;
+  /** Called after a successful create. Defaults to navigating home. */
+  onSuccess?: () => void;
+  /** Success toast text. */
+  successMessage?: string;
+}
+
+export function CreateListingForm({
+  createListing,
+  onSuccess,
+  successMessage = 'تم إرسال إعلانك للمراجعة بنجاح!',
+}: CreateListingFormProps = {}) {
   const router = useRouter();
+  const submitListing = createListing ?? listingsService.create;
   const { isAuthenticated } = useAuth();
   const [step, setStep] = useState(1);
   const totalSteps = WIZARD_STEP_LABELS.length;
@@ -150,7 +166,7 @@ export function CreateListingForm() {
       const hasVehicleDetails = true; // always include since make/model/year are required
 
       setSubmitPhase('creating');
-      await listingsService.create({
+      await submitListing({
         categoryId:    data.categoryId,
         title:         data.title,
         description:   data.description,
@@ -180,8 +196,9 @@ export function CreateListingForm() {
         acceptsOffers:   data.acceptsOffers ?? true,
       });
 
-      toast.success('تم إرسال إعلانك للمراجعة بنجاح!');
-      router.push('/');
+      toast.success(successMessage);
+      if (onSuccess) onSuccess();
+      else router.push('/');
     } catch (err) {
       toast.error(
         err instanceof ApiError || err instanceof Error
