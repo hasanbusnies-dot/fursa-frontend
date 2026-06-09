@@ -150,7 +150,6 @@ export default function ChatDetailPage() {
   const [draft,    setDraft]    = useState('');
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const bottomRef    = useRef<HTMLDivElement>(null);
   const inputRef     = useRef<HTMLInputElement>(null);
   const joinedOnceRef = useRef(false); // false until this conversation's first socket join
 
@@ -248,6 +247,14 @@ export default function ChatDetailPage() {
     return el.scrollHeight - el.scrollTop - el.clientHeight < 220;
   }
 
+  // Scroll ONLY the messages container — never the page. (scrollIntoView would scroll
+  // every scrollable ancestor, including the window.)
+  function scrollToBottom(smooth = false): void {
+    const el = containerRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
+  }
+
   // Scroll only when the message COUNT actually grows (a genuinely new message),
   // plus once on initial load. Polls that return the same list no longer scroll,
   // because pollMessages keeps the same array reference and the count is unchanged.
@@ -260,9 +267,9 @@ export default function ChatDetailPage() {
     prevMsgCountRef.current = messages.length;
 
     if (isInitialLoad) {
-      bottomRef.current?.scrollIntoView();                       // jump to bottom on first load
+      scrollToBottom();      // jump to bottom on first load
     } else if (hasNewMessage && isNearBottom()) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); // gentle for incoming messages
+      scrollToBottom(true);  // gentle scroll for genuinely new messages
     }
   }, [messages]);
 
@@ -296,8 +303,8 @@ export default function ChatDetailPage() {
 
     setMessages((prev) => [...prev, optimistic]);
     setDraft('');
-    // Always scroll after own send
-    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+    // Always scroll after own send (container only — never the page)
+    setTimeout(() => scrollToBottom(true), 50);
     inputRef.current?.focus();
 
     socket.emit('send_message', { conversationId: roomId, content: text });
@@ -387,7 +394,7 @@ export default function ChatDetailPage() {
       {/* ── Message history ── */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto px-4 py-4 bg-gray-50/40"
+        className="flex-1 min-h-0 overflow-y-auto px-4 py-4 bg-gray-50/40"
         dir="rtl"
       >
         {messages.length === 0 ? (
@@ -436,7 +443,6 @@ export default function ChatDetailPage() {
                 </div>
               </div>
             ))}
-            <div ref={bottomRef} />
           </div>
         )}
       </div>
