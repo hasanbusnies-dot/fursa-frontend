@@ -19,6 +19,7 @@ export interface TopupInput {
   currency: AgentCurrency;
   note?: string;
   idempotencyKey?: string;   // client-generated UUID — guards against double-credit
+  receipt?: File;            // photographed cash-receipt (multipart "receipt" part)
 }
 
 /** A single cash collection the agent recorded. */
@@ -100,10 +101,20 @@ export const agentService = {
     return unwrap<SellerCard>(res) as SellerCard;
   },
 
-  /** Record a cash collection and credit the seller's wallet (TOPUP_CASH). Propagates
-   *  ApiError: 403 insufficient role, 400 crediting staff. */
+  /** Record a cash collection and credit the seller's wallet (TOPUP_CASH). Sent as
+   *  multipart/form-data so the photographed receipt rides along under "receipt"
+   *  (optional server-side; the UI enforces capture). Propagates ApiError: 403
+   *  insufficient role, 400 crediting staff. */
   createTopup: async (input: TopupInput): Promise<TopupResult> => {
-    const res = await api.post<unknown>('/agent/topups', input);
+    const fd = new FormData();
+    fd.append('sellerUserId', input.sellerUserId);
+    fd.append('amount', input.amount);
+    fd.append('currency', input.currency);
+    if (input.note)           fd.append('note', input.note);
+    if (input.idempotencyKey) fd.append('idempotencyKey', input.idempotencyKey);
+    if (input.receipt)        fd.append('receipt', input.receipt);
+
+    const res = await api.uploadForm<unknown>('/agent/topups', fd);
     return unwrap<TopupResult>(res) as TopupResult;
   },
 
