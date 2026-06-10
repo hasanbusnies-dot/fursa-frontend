@@ -15,6 +15,7 @@ import { agentService } from '@/services/agent.service';
 import { ApiError } from '@/services/api';
 import { formatMoney } from '@/lib/money';
 import { cn } from '@/lib/utils';
+import { CameraCapture } from '@/components/CameraCapture';
 
 // Campaign / method pickers + the CASH two-step (fund owner USD wallet → charge).
 
@@ -38,6 +39,7 @@ export function MembershipChargeModal({
   const [campaign, setCampaign] = useState<MembershipCampaign>('FULL_PRICE');
   const [method, setMethod]     = useState<MembershipMethod>('ONLINE');
   const [phase, setPhase]       = useState<Phase>('idle');
+  const [receipt, setReceipt]   = useState<File | null>(null); // required for the CASH funding step
 
   const isFree = campaign === 'FIRST_MONTH_FREE';
   const busy = phase !== 'idle';
@@ -63,9 +65,14 @@ export function MembershipChargeModal({
 
   const submit = async () => {
     if (busy) return;
+    // CASH funds the owner's wallet via a topup, which now requires a receipt photo.
+    if (method === 'CASH' && !receipt) {
+      toast.error('يجب التقاط صورة إيصال الاستلام.');
+      return;
+    }
     try {
       if (method === 'CASH') {
-        // ── Step 1: fund the owner's USD wallet (TOPUP_CASH) ──
+        // ── Step 1: capture receipt → fund the owner's USD wallet (TOPUP_CASH) ──
         let ownerId = ownerUserIdOf(store);
         if (!ownerId) {
           const phone = store.ownerPhone ?? store.owner?.phone ?? null;
@@ -80,6 +87,7 @@ export function MembershipChargeModal({
           currency:       'USD',
           note:           'تمويل اشتراك العضوية',
           idempotencyKey: crypto.randomUUID(),
+          receipt:        receipt!,
         });
 
         // ── Step 2: charge the membership against that collection ──
@@ -200,11 +208,21 @@ export function MembershipChargeModal({
             <p className="text-[11px] text-slate-400 mt-1.5">{METHOD_META[method].hint}</p>
           </div>
 
-          {/* CASH two-step explainer */}
+          {/* CASH two-step explainer + required receipt capture */}
           {method === 'CASH' && (
-            <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2">
-              <Step n={1} label={`حصّل ${formatMoney(price, 'USD')} نقداً (شحن محفظة المالك)`} done={phase === 'charging'} active={phase === 'funding'} />
-              <Step n={2} label="فعّل الاشتراك" done={false} active={phase === 'charging'} />
+            <div className="space-y-3">
+              <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2">
+                <Step n={1} label={`حصّل ${formatMoney(price, 'USD')} نقداً وصوّر الإيصال (شحن محفظة المالك)`} done={phase === 'charging'} active={phase === 'funding'} />
+                <Step n={2} label="فعّل الاشتراك" done={false} active={phase === 'charging'} />
+              </div>
+              <CameraCapture
+                file={receipt}
+                onPick={setReceipt}
+                title="صورة إيصال الاستلام"
+                hint="صوّر إيصال استلام النقد من المالك. هذه الصورة إلزامية."
+                captureLabel="صوّر إيصال الاستلام"
+                previewAlt="معاينة صورة الإيصال"
+              />
             </div>
           )}
 
@@ -225,7 +243,7 @@ export function MembershipChargeModal({
 
           <button
             onClick={submit}
-            disabled={busy}
+            disabled={busy || (method === 'CASH' && !receipt)}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-teal-600 text-white text-sm font-bold hover:bg-teal-500 transition-colors disabled:opacity-50"
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <BadgeCheck className="w-4 h-4" />}

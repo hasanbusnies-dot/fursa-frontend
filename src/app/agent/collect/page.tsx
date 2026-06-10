@@ -16,6 +16,7 @@ import {
 import { ApiError } from '@/services/api';
 import { formatMoney } from '@/lib/money';
 import { cn } from '@/lib/utils';
+import { CameraCapture } from '@/components/CameraCapture';
 
 // Reuse the wallet's amount contract: up to 2 decimals, kept as a STRING.
 const AMOUNT_RE = /^\d+(\.\d{1,2})?$/;
@@ -73,6 +74,7 @@ export default function AgentCollectPage() {
   const [amount, setAmount]       = useState('');
   const [currency, setCurrency]   = useState<AgentCurrency>('SYP');
   const [note, setNote]           = useState('');
+  const [receipt, setReceipt]     = useState<File | null>(null);
   const [idemKey, setIdemKey]     = useState('');
   const [submitting, setSubmit]   = useState(false);
 
@@ -104,6 +106,7 @@ export default function AgentCollectPage() {
       setIdemKey(crypto.randomUUID());
       setAmount('');
       setNote('');
+      setReceipt(null);
       setCurrency('SYP');
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
@@ -123,10 +126,12 @@ export default function AgentCollectPage() {
   };
 
   // ── Submit collection ──
-  const valid = isPositiveAmount(amount);
+  // The receipt photo is required in the UI (the backend keeps it optional).
+  const valid = isPositiveAmount(amount) && receipt !== null;
 
   const submit = async () => {
-    if (!seller || !valid || submitting) return;
+    if (!seller || !isPositiveAmount(amount) || submitting) return;
+    if (!receipt) { toast.error('يجب التقاط صورة إيصال الاستلام.'); return; }
     setSubmit(true);
     try {
       const res = await agentService.createTopup({
@@ -135,6 +140,7 @@ export default function AgentCollectPage() {
         currency,
         note:           note.trim() || undefined,
         idempotencyKey: idemKey, // stable per session → a double-tap can't double-credit
+        receipt,
       });
       setResult(res);
       loadSummary(); // outstanding cash just went up
@@ -159,6 +165,7 @@ export default function AgentCollectPage() {
     setNotFound(false);
     setAmount('');
     setNote('');
+    setReceipt(null);
     setCurrency('SYP');
     setIdemKey('');
   };
@@ -346,6 +353,16 @@ export default function AgentCollectPage() {
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-900 text-start focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
               />
             </div>
+
+            {/* Receipt photo (camera-only, required before collecting) */}
+            <CameraCapture
+              file={receipt}
+              onPick={setReceipt}
+              title="صورة إيصال الاستلام"
+              hint="صوّر إيصال استلام النقد. هذه الصورة إلزامية لتأكيد التحصيل."
+              captureLabel="صوّر إيصال الاستلام"
+              previewAlt="معاينة صورة الإيصال"
+            />
 
             <button
               onClick={submit}
