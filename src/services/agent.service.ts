@@ -33,6 +33,9 @@ export interface Collection {
   settlementId: string | null; // null ⇒ unsettled (agent still holds this cash)
   note?: string | null;
   receiptUrl?: string | null;  // signed, 5-min-TTL receipt-photo URL (render on load, don't cache)
+  purpose: 'MEMBERSHIP' | 'WALLET_TOPUP'; // what the cash was collected for
+  storeName?: string;          // present only for MEMBERSHIP
+  storeId?: string;            // present only for MEMBERSHIP (for optional linking)
 }
 
 /** Result of a top-up: the recorded collection + the seller's new wallet balance.

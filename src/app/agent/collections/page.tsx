@@ -1,8 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   ReceiptText, ChevronLeft, ChevronRight, Inbox, RefreshCw, UserRound,
+  BadgeCheck, Wallet,
 } from 'lucide-react';
 import {
   agentService,
@@ -31,6 +33,35 @@ function SettlementChip({ settlementId }: { settlementId: string | null }) {
   return (
     <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-700">
       غير مُسوّى
+    </span>
+  );
+}
+
+// ── Purpose label ─────────────────────────────────────────────────────────────────
+
+function PurposeLabel({ c }: { c: Collection }) {
+  if (c.purpose === 'MEMBERSHIP') {
+    const inner = (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-violet-100 text-violet-700">
+        <BadgeCheck className="w-3.5 h-3.5 shrink-0" />
+        <span className="truncate">
+          اشتراك عضوية{c.storeName ? ` — ${c.storeName}` : ''}
+        </span>
+      </span>
+    );
+    if (c.storeId) {
+      return (
+        <Link href={`/agent/stores/${c.storeId}`} className="inline-flex max-w-full hover:opacity-80 transition-opacity">
+          {inner}
+        </Link>
+      );
+    }
+    return inner;
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-sky-100 text-sky-700">
+      <Wallet className="w-3.5 h-3.5 shrink-0" />
+      شحن محفظة
     </span>
   );
 }
@@ -122,6 +153,9 @@ export default function AgentCollectionsPage() {
                   <p className="text-sm font-extrabold text-teal-700">{formatMoney(c.amount, c.currency)}</p>
                   <div className="mt-1"><SettlementChip settlementId={c.settlementId} /></div>
                 </div>
+              </div>
+              <div className="mt-2.5">
+                <PurposeLabel c={c} />
               </div>
               {c.note && (
                 <p className="mt-2 text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-1.5 line-clamp-2">
