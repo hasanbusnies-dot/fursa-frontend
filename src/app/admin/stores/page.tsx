@@ -12,10 +12,12 @@ import { useAuthStore } from '@/store/auth.store';
 import {
   adminStoresService,
   contractUrlOf,
+  ownerPendingOf,
   type Store as StoreModel,
   type StoreStatus,
 } from '@/services/stores.service';
 import { ContractDoc } from '@/components/stores/ContractDoc';
+import { ResendSetupLinkButton } from '@/components/stores/ResendSetupLinkButton';
 import { cn } from '@/lib/utils';
 
 // ── Status + filter config ──────────────────────────────────────────────────────
@@ -192,6 +194,24 @@ function StoreCard({
           <div className="mt-3 flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 p-2.5">
             <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
             <p className="text-xs text-red-700">{store.rejectionReason}</p>
+          </div>
+        )}
+
+        {/* Owner-onboarding: resend the password-setup link while the owner is pending */}
+        {ownerPendingOf(store) && (
+          <div className="mt-3">
+            <ResendSetupLinkButton
+              onResend={() => adminStoresService.resendOwnerSetupLink(store.id)}
+              className="w-full py-2 border-gray-200 text-gray-600 hover:bg-gray-50"
+              labels={{
+                idle:          'Kurulum bağlantısını yeniden gönder',
+                sending:       'Gönderiliyor…',
+                sent:          'Bağlantı gönderildi',
+                success:       'Şifre belirleme bağlantısı sahibin e-postasına gönderildi.',
+                alreadyActive: 'Sahip hesabını zaten etkinleştirmiş.',
+                error:         'Bağlantı gönderilemedi. Tekrar deneyin.',
+              }}
+            />
           </div>
         )}
 

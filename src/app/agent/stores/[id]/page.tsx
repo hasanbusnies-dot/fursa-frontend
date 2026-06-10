@@ -11,12 +11,14 @@ import {
   agentStoresService,
   contractUrlOf,
   chargesOf,
+  ownerPendingOf,
   MEMBERSHIP_CAMPAIGNS,
   type StoreDetail,
   type StoreStatus,
   type MembershipCampaign,
 } from '@/services/stores.service';
 import { ContractDoc } from '@/components/stores/ContractDoc';
+import { ResendSetupLinkButton } from '@/components/stores/ResendSetupLinkButton';
 import { MembershipChargeModal } from '@/components/stores/MembershipChargeModal';
 import { formatMoney } from '@/lib/money';
 import { cn } from '@/lib/utils';
@@ -93,6 +95,7 @@ export default function AgentStoreDetailPage() {
   const membership = store.membership ?? null;
   const memberActive = membership?.badge === true;
   const charges = chargesOf(store);
+  const ownerPending = ownerPendingOf(store);
 
   return (
     <div className="space-y-4">
@@ -164,6 +167,27 @@ export default function AgentStoreDetailPage() {
             dir="rtl"
           />
         </div>
+
+        {/* Owner-onboarding: resend the password-setup link while the owner is pending */}
+        {ownerPending && (
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <p className="text-[11px] text-slate-400 mb-2">
+              لم يفعّل المالك حسابه بعد؟ أعد إرسال رابط تعيين كلمة المرور إلى بريده.
+            </p>
+            <ResendSetupLinkButton
+              onResend={() => agentStoresService.resendOwnerSetupLink(store.id)}
+              className="w-full py-2.5 border-teal-300 text-teal-700 hover:bg-teal-50"
+              labels={{
+                idle:          'إعادة إرسال رابط التفعيل',
+                sending:       'جارٍ الإرسال…',
+                sent:          'تم إرسال الرابط',
+                success:       'تم إرسال رابط تعيين كلمة المرور إلى بريد المالك.',
+                alreadyActive: 'المالك فعّل حسابه بالفعل.',
+                error:         'تعذّر إرسال الرابط. حاول مرة أخرى.',
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* Membership block */}

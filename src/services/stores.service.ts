@@ -89,6 +89,11 @@ export interface UpdateStatusInput {
   rejectionReason?: string; // required on REJECT (enforced by the UI + backend 400)
 }
 
+/** Response of resend-setup-link. 409 (owner already activated) is thrown as ApiError. */
+export interface ResendSetupLinkResult {
+  resent: boolean;
+}
+
 // ── Membership (AP-M3) ────────────────────────────────────────────────────────────
 
 export type MembershipCampaign = 'FULL_PRICE' | 'FIRST_MONTH_FREE' | 'DISCOUNT_33';
@@ -190,6 +195,26 @@ export function ownerUserIdOf(store: Store): string | null {
   return s.owner?.id ?? s.owner?.userId ?? s.ownerUserId ?? s.ownerId ?? null;
 }
 
+/** Whether the store owner still needs to set their password (account not yet
+ *  activated via the emailed link). The store/detail response may not expose this
+ *  yet — read defensively across likely keys and DEFAULT TO pending (show the resend
+ *  button) when unknown, relying on the resend endpoint's 409 to correct an
+ *  owner who has already activated. */
+export function ownerPendingOf(store: Store): boolean {
+  const s = store as Store & {
+    ownerActivated?: boolean;
+    ownerIsVerified?: boolean;
+    owner?: { isVerified?: boolean; activated?: boolean; passwordSetAt?: string | null } | null;
+  };
+  const activated =
+    s.owner?.isVerified ??
+    s.owner?.activated ??
+    s.ownerActivated ??
+    s.ownerIsVerified ??
+    (s.owner?.passwordSetAt != null ? true : undefined);
+  return typeof activated === 'boolean' ? !activated : true;
+}
+
 /** Pull the membership charge history out of whatever key the detail uses. */
 export function chargesOf(detail: StoreDetail): MembershipCharge[] {
   const d = detail as StoreDetail & {
@@ -245,6 +270,13 @@ export const agentStoresService = {
     return unwrap<StoreDetail>(res) as StoreDetail;
   },
 
+  /** Resend the owner's single-use password-setup link (agent, own store).
+   *  Propagates ApiError: 409 if the owner has already activated their account. */
+  resendOwnerSetupLink: async (id: string): Promise<ResendSetupLinkResult> => {
+    const res = await api.post<unknown>(`/agent/stores/${id}/owner/resend-setup-link`, {});
+    return (unwrap<ResendSetupLinkResult>(res) as ResendSetupLinkResult) ?? { resent: true };
+  },
+
   /** Create a listing on behalf of the store owner (AP-M3b). Same payload as the
    *  regular listing form; cap is the owner's (member-active ⇒ unlimited, else 403). */
   createListing: async (
@@ -275,5 +307,12 @@ export const adminStoresService = {
   updateStatus: async (id: string, input: UpdateStatusInput): Promise<Store> => {
     const res = await api.patch<unknown>(`/admin/stores/${id}/status`, input);
     return unwrap<Store>(res) as Store;
+  },
+
+  /** Resend the owner's single-use password-setup link (admin override).
+   *  Propagates ApiError: 409 if the owner has already activated their account. */
+  resendOwnerSetupLink: async (id: string): Promise<ResendSetupLinkResult> => {
+    const res = await api.post<unknown>(`/admin/stores/${id}/owner/resend-setup-link`, {});
+    return (unwrap<ResendSetupLinkResult>(res) as ResendSetupLinkResult) ?? { resent: true };
   },
 };
