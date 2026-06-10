@@ -9,6 +9,7 @@ import {
   type Collection,
   type PageMeta,
 } from '@/services/agent.service';
+import { ContractDoc } from '@/components/stores/ContractDoc';
 import { formatMoney } from '@/lib/money';
 
 function formatDateTime(s: string): string {
@@ -126,6 +127,18 @@ export default function AgentCollectionsPage() {
                 <p className="mt-2 text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-1.5 line-clamp-2">
                   {c.note}
                 </p>
+              )}
+              {c.receiptUrl && (
+                <div className="mt-2">
+                  <ContractDoc
+                    url={c.receiptUrl}
+                    label="عرض الإيصال"
+                    emptyLabel="لا يوجد إيصال"
+                    expiredLabel="انتهت صلاحية الرابط، أعد تحميل الصفحة."
+                    alt={`إيصال تحصيل ${c.sellerName}`}
+                    dir="rtl"
+                  />
+                </div>
               )}
             </div>
           ))}

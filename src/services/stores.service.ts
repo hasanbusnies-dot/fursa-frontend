@@ -108,6 +108,10 @@ export interface MembershipCharge {
   periodStart?: string | null;
   periodEnd?: string | null;
   createdAt: string;
+  // CASH charges carry the funding collection + its signed receipt-photo URL.
+  // receiptUrl is short-lived (5-min TTL) — render on load, never cache.
+  agentCashCollectionId?: string | null;
+  receiptUrl?: string | null;
 }
 
 /** Store detail = the store + its membership block + charge history. */

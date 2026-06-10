@@ -32,6 +32,7 @@ export interface Collection {
   collectedAt: string;
   settlementId: string | null; // null ⇒ unsettled (agent still holds this cash)
   note?: string | null;
+  receiptUrl?: string | null;  // signed, 5-min-TTL receipt-photo URL (render on load, don't cache)
 }
 
 /** Result of a top-up: the recorded collection + the seller's new wallet balance.

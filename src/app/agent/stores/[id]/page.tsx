@@ -231,21 +231,35 @@ export default function AgentStoreDetailPage() {
           <h2 className="text-sm font-bold text-slate-800 mb-3">سجل التحصيلات</h2>
           <div className="divide-y divide-slate-100">
             {charges.map((c) => (
-              <div key={c.id} className="py-2.5 flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-800">{campaignLabel(c.campaign)}</p>
-                  <p className="text-[11px] text-slate-400">
-                    {METHOD_LABEL[c.method ?? ''] ?? c.method ?? '—'} · {formatDate(c.createdAt)}
-                  </p>
-                  {(c.periodStart || c.periodEnd) && (
+              <div key={c.id} className="py-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-800">{campaignLabel(c.campaign)}</p>
                     <p className="text-[11px] text-slate-400">
-                      {formatDate(c.periodStart)} ← {formatDate(c.periodEnd)}
+                      {METHOD_LABEL[c.method ?? ''] ?? c.method ?? '—'} · {formatDate(c.createdAt)}
                     </p>
-                  )}
+                    {(c.periodStart || c.periodEnd) && (
+                      <p className="text-[11px] text-slate-400">
+                        {formatDate(c.periodStart)} ← {formatDate(c.periodEnd)}
+                      </p>
+                    )}
+                  </div>
+                  <span className="text-sm font-extrabold text-slate-900 shrink-0">
+                    {c.amount != null ? formatMoney(c.amount, c.currency ?? 'USD') : '—'}
+                  </span>
                 </div>
-                <span className="text-sm font-extrabold text-slate-900 shrink-0">
-                  {c.amount != null ? formatMoney(c.amount, c.currency ?? 'USD') : '—'}
-                </span>
+                {c.receiptUrl && (
+                  <div className="mt-2">
+                    <ContractDoc
+                      url={c.receiptUrl}
+                      label="عرض الإيصال"
+                      emptyLabel="لا يوجد إيصال"
+                      expiredLabel="انتهت صلاحية الرابط، أعد تحميل الصفحة."
+                      alt={`إيصال تحصيل ${store.name}`}
+                      dir="rtl"
+                    />
+                  </div>
+                )}
               </div>
             ))}
           </div>
