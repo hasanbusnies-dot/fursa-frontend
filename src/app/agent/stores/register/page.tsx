@@ -13,6 +13,9 @@ import {
 } from '@/services/stores.service';
 import { ApiError } from '@/services/api';
 
+// Zod v4 dropped ZodString.email() — validate with the same regex the consumer login uses.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // Company-type options (the dropdown is optional → leading blank choice).
 const COMPANY_TYPES: { value: CompanyType | ''; label: string }[] = [
   { value: '',                   label: 'نوع النشاط (اختياري)' },
@@ -34,6 +37,7 @@ export default function AgentStoreRegisterPage() {
   const [name, setName]               = useState('');
   const [ownerName, setOwnerName]     = useState('');
   const [ownerPhone, setOwnerPhone]   = useState('');
+  const [ownerEmail, setOwnerEmail]   = useState('');
   const [address, setAddress]         = useState('');
   const [city, setCity]               = useState('');
   const [governorate, setGovernorate] = useState('');
@@ -64,15 +68,19 @@ export default function AgentStoreRegisterPage() {
 
   const retake = () => { setPhoto(null); fileRef.current?.click(); };
 
+  const emailValid = EMAIL_RE.test(ownerEmail.trim());
+
   const valid =
     name.trim() !== '' &&
     ownerName.trim() !== '' &&
     ownerPhone.trim() !== '' &&
+    emailValid &&
     photo !== null;
 
   const submit = async () => {
     if (submitting) return;
     if (!photo) { toast.error('يجب التقاط صورة العقد الموقّع.'); return; }
+    if (!emailValid) { toast.error('يرجى إدخال بريد إلكتروني صحيح للمالك.'); return; }
     if (!valid) { toast.error('يرجى تعبئة اسم المتجر واسم المالك ورقم هاتفه.'); return; }
 
     setSubmitting(true);
@@ -81,14 +89,18 @@ export default function AgentStoreRegisterPage() {
         name: name.trim(),
         ownerName: ownerName.trim(),
         ownerPhone: ownerPhone.trim(),
+        ownerEmail: ownerEmail.trim(),
         address: address.trim() || undefined,
         city: city.trim() || undefined,
         governorate: governorate.trim() || undefined,
         companyType: companyType || undefined,
         contract: photo,
       };
-      await agentStoresService.registerStore(payload);
+      const store = await agentStoresService.registerStore(payload);
       toast.success('تم تسجيل المتجر — بانتظار موافقة الإدارة.');
+      if (store?.ownerOnboarded) {
+        toast.success('تم إرسال رابط تعيين كلمة المرور إلى البريد الإلكتروني للمالك.');
+      }
       router.push('/agent/stores');
     } catch (err) {
       if (err instanceof ApiError && err.status === 400) {
@@ -229,6 +241,23 @@ export default function AgentStoreRegisterPage() {
           <div>
             <label className="block text-xs font-semibold text-slate-500 mb-1.5">اسم المالك *</label>
             <input value={ownerName} onChange={(e) => setOwnerName(e.target.value)} placeholder="الاسم الكامل للمالك" className={inputCls} />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 mb-1.5">البريد الإلكتروني للمالك *</label>
+            <input
+              type="email"
+              inputMode="email"
+              dir="ltr"
+              value={ownerEmail}
+              onChange={(e) => setOwnerEmail(e.target.value)}
+              placeholder="owner@example.com"
+              className={inputCls}
+            />
+            <p className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+              سيصل المالك رابطاً لتعيين كلمة المرور وتفعيل حسابه.
+            </p>
           </div>
 
           <div>

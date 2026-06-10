@@ -44,6 +44,10 @@ export interface Store {
   rejectionReason?: string | null;
   createdAt: string;
 
+  // Set on the registration response: true ⇒ the backend emailed the owner a
+  // single-use 24h password-setup link (owner-onboarding, AP-M2.1).
+  ownerOnboarded?: boolean;
+
   // Documents (incl. the CONTRACT photo). Each `url` is a ready-to-use signed URL.
   // `contractUrlOf()` pulls the CONTRACT one. Same shape on every store endpoint.
   documents?: StoreDocument[];
@@ -58,6 +62,7 @@ export interface RegisterStoreInput {
   name: string;
   ownerName: string;
   ownerPhone: string;
+  ownerEmail: string; // REQUIRED — backend emails the owner a password-setup link
   address?: string;
   city?: string;
   governorate?: string;
@@ -205,6 +210,7 @@ export const agentStoresService = {
     fd.append('name', input.name);
     fd.append('ownerName', input.ownerName);
     fd.append('ownerPhone', input.ownerPhone);
+    fd.append('ownerEmail', input.ownerEmail); // required — drives owner-onboarding email
     if (input.address)     fd.append('address', input.address);
     if (input.city)        fd.append('city', input.city);
     if (input.governorate) fd.append('governorate', input.governorate);
