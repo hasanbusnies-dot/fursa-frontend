@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, FileText, Star, Bookmark, UserCheck,
   MessageSquare, HelpCircle, ShoppingCart, Shield, CreditCard,
-  Wallet, Bell, Car, Settings, ChevronDown, ChevronUp,
+  Wallet, Bell, Car, Settings, ChevronDown, ChevronUp, Store,
 } from 'lucide-react';
 
 // ── Nav definition ─────────────────────────────────────────────────────────────
@@ -33,6 +33,14 @@ const NAV: NavSection[] = [
   {
     items: [
       { href: '/account', label: 'الملخص', icon: LayoutDashboard, exact: true },
+    ],
+  },
+  // Owner store management (AP-M2.4) — only for CORPORATE owners; spliced out for
+  // everyone else in the component below.
+  {
+    title: 'متجري',
+    items: [
+      { href: '/account/store', label: 'إدارة المتجر', icon: Store },
     ],
   },
   {
@@ -118,6 +126,11 @@ export function AccountSidebar() {
 
   const initial = displayName.charAt(0).toUpperCase() || '?';
 
+  // The "متجري" section is owner-only — INDIVIDUAL consumers never see it.
+  const sections = user?.userType === 'CORPORATE'
+    ? NAV
+    : NAV.filter((s) => s.title !== 'متجري');
+
   return (
     <div className="flex flex-col gap-3">
 
@@ -136,7 +149,7 @@ export function AccountSidebar() {
 
       {/* ── Navigation ────────────────────────────────────────────────────── */}
       <nav className="bg-white rounded-2xl border border-gray-200 overflow-hidden divide-y divide-gray-100">
-        {NAV.map((section, si) => (
+        {sections.map((section, si) => (
           <div key={si}>
             {section.title && (
               <p className="px-4 pt-3 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider select-none">

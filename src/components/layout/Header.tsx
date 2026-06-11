@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   Search, PlusCircle, Menu, X, ChevronDown,
   User, LayoutDashboard, MessageSquare, FileText,
-  Star, Bookmark, UserCheck, LogOut,
+  Star, Bookmark, UserCheck, LogOut, Store,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { messagesService } from '@/services/messages.service';
@@ -263,6 +263,16 @@ export function Header() {
                         <FileText className="w-4 h-4 text-gray-400 shrink-0" />
                         إعلاناتي
                       </Link>
+                      {user?.userType === 'CORPORATE' && (
+                        <Link
+                          href="/account/store"
+                          onClick={closeUserDropdown}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          <Store className="w-4 h-4 text-gray-400 shrink-0" />
+                          متجري
+                        </Link>
+                      )}
                       <div className="my-1 border-t border-gray-100" />
                       <button
                         onClick={handleLogout}
@@ -353,6 +363,17 @@ export function Header() {
                 <FileText className="w-4 h-4 text-gray-400" />
                 إعلاناتي
               </Link>
+
+              {user.userType === 'CORPORATE' && (
+                <Link
+                  href="/account/store"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2.5 py-2.5 text-sm font-medium text-gray-700 hover:text-orange-600 transition-colors"
+                >
+                  <Store className="w-4 h-4 text-gray-400" />
+                  متجري
+                </Link>
+              )}
 
               <Link
                 href="/account/messages"
