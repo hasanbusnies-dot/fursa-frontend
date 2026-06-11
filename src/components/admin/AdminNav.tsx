@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutList, Megaphone, Zap, Store } from 'lucide-react';
+import { LayoutList, Megaphone, Zap, Store, CalendarClock } from 'lucide-react';
 
 const LINKS = [
-  { href: '/admin/listings',       label: 'İlan Yönetimi',   icon: LayoutList },
-  { href: '/admin/advertisements', label: 'Reklam Yönetimi', icon: Megaphone  },
-  { href: '/admin/dopings',        label: 'Doping Yönetimi', icon: Zap        },
-  { href: '/admin/stores',         label: 'Mağaza Onayları', icon: Store      },
+  { href: '/admin/listings',       label: 'İlan Yönetimi',   icon: LayoutList    },
+  { href: '/admin/advertisements', label: 'Reklam Yönetimi', icon: Megaphone     },
+  { href: '/admin/dopings',        label: 'Doping Yönetimi', icon: Zap           },
+  { href: '/admin/stores',         label: 'Mağaza Onayları', icon: Store         },
+  { href: '/admin/renewals',       label: 'Yenilemeler',     icon: CalendarClock },
 ];
 
 export function AdminNav() {

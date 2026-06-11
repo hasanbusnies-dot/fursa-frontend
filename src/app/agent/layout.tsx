@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { HandCoins, ReceiptText, Store, PlusCircle, LogOut, Loader2 } from 'lucide-react';
+import { HandCoins, ReceiptText, Store, PlusCircle, CalendarClock, LogOut, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
 
@@ -11,10 +11,11 @@ import { cn } from '@/lib/utils';
 // shopping UI so field agents know they're in the staff tool.
 
 const TABS = [
-  { href: '/agent/collect',         label: 'تحصيل',      Icon: HandCoins   },
-  { href: '/agent/collections',     label: 'سجل التحصيل', Icon: ReceiptText },
-  { href: '/agent/stores/register', label: 'متجر جديد',  Icon: PlusCircle  },
-  { href: '/agent/stores',          label: 'متاجري',     Icon: Store       },
+  { href: '/agent/collect',         label: 'تحصيل',      Icon: HandCoins     },
+  { href: '/agent/collections',     label: 'سجل التحصيل', Icon: ReceiptText   },
+  { href: '/agent/stores/register', label: 'متجر جديد',  Icon: PlusCircle    },
+  { href: '/agent/stores',          label: 'متاجري',     Icon: Store         },
+  { href: '/agent/renewals',        label: 'التجديدات',  Icon: CalendarClock },
 ] as const;
 
 export default function AgentLayout({ children }: { children: React.ReactNode }) {
