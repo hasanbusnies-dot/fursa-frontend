@@ -303,6 +303,14 @@ export const adminStoresService = {
     return parsePage(res, page, limit);
   },
 
+  /** Full store detail (admin view): status, contract, membership block, charge
+   *  history with signed CASH receipt URLs, registering agent. Same shape as the
+   *  agent detail endpoint. */
+  getStore: async (id: string): Promise<StoreDetail> => {
+    const res = await api.get<unknown>(`/admin/stores/${id}`);
+    return unwrap<StoreDetail>(res) as StoreDetail;
+  },
+
   /** Approve / reject a store. rejectionReason is required when status is REJECTED. */
   updateStatus: async (id: string, input: UpdateStatusInput): Promise<Store> => {
     const res = await api.patch<unknown>(`/admin/stores/${id}/status`, input);

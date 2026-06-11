@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Store, CheckCircle2, XCircle, Clock, Ban, AlertTriangle, Loader2, X,
-  UserRound, UserCog, Phone, MapPin, CalendarDays,
+  UserRound, UserCog, Phone, MapPin, CalendarDays, ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminNav } from '@/components/admin/AdminNav';
@@ -140,7 +141,12 @@ function StoreCard({
     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm flex flex-col">
       <div className="p-4 flex-1 flex flex-col">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-sm font-bold text-gray-900 truncate">{store.name}</h3>
+          <Link
+            href={`/admin/stores/${store.id}`}
+            className="text-sm font-bold text-gray-900 truncate hover:text-orange-600 transition-colors"
+          >
+            {store.name}
+          </Link>
           <span className={cn('shrink-0 inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full', meta.cls)}>
             <meta.Icon className="w-3 h-3" />
             {meta.label}
@@ -178,8 +184,9 @@ function StoreCard({
           </p>
         </div>
 
-        {/* Contract document — compact trigger → full-screen lightbox */}
-        <div className="mt-3">
+        {/* Contract document — compact trigger → full-screen lightbox. The detail link
+            sits beside it (ContractDoc's button must not nest inside an anchor). */}
+        <div className="mt-3 flex items-center justify-between gap-2">
           <ContractDoc
             url={photo}
             label="Sözleşmeyi Görüntüle"
@@ -188,6 +195,13 @@ function StoreCard({
             alt={`${store.name} sözleşmesi`}
             dir="ltr"
           />
+          <Link
+            href={`/admin/stores/${store.id}`}
+            className="inline-flex items-center gap-1 text-xs font-semibold text-orange-600 hover:text-orange-700 shrink-0"
+          >
+            Detay
+            <ChevronRight className="w-4 h-4" />
+          </Link>
         </div>
 
         {store.status === 'REJECTED' && store.rejectionReason && (

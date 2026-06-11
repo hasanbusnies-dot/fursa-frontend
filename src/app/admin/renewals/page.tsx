@@ -85,7 +85,7 @@ function RenewalRowCard({ r }: { r: RenewalRow }) {
 
   return (
     <Link
-      href="/admin/stores"
+      href={`/admin/stores/${r.storeId}`}
       className="block bg-white border border-gray-200 rounded-2xl p-4 hover:border-gray-300 hover:shadow-sm transition-all"
     >
       <div className="flex items-start justify-between gap-3">
