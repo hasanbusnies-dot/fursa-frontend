@@ -316,3 +316,31 @@ export const adminStoresService = {
     return (unwrap<ResendSetupLinkResult>(res) as ResendSetupLinkResult) ?? { resent: true };
   },
 };
+
+// ── Owner service (CORPORATE store owner, AP-M2.4) ─────────────────────────────────
+
+export interface OwnerChargeMembershipInput {
+  idempotencyKey: string; // client-generated UUID per attempt
+  paymentRef?: string;
+}
+
+export const ownerStoreService = {
+  /** The logged-in owner's own store: same detail shape as the agent endpoint
+   *  (status, membership block, charge history with signed receipts, documents).
+   *  Propagates ApiError(404) when the corporate user has no store. */
+  getStore: async (): Promise<StoreDetail> => {
+    const res = await api.get<unknown>('/owner/store');
+    return unwrap<StoreDetail>(res) as StoreDetail;
+  },
+
+  /** Self-serve membership payment: always FULL_PRICE / ONLINE, debited from the
+   *  owner's USD wallet (funded via the consumer online top-up). Propagates ApiError:
+   *  422 insufficient USD balance, 409 store not APPROVED, 403 wallet frozen. */
+  chargeMembership: async (input: OwnerChargeMembershipInput): Promise<StoreDetail> => {
+    const res = await api.post<unknown>('/owner/store/membership/charge', {
+      campaign: 'FULL_PRICE',
+      ...input,
+    });
+    return unwrap<StoreDetail>(res) as StoreDetail;
+  },
+};

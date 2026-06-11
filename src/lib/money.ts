@@ -57,3 +57,24 @@ export function formatMoney(value: string, currency?: Currency | string): string
 export function currencyLabel(currency: string): string {
   return (CURRENCY as Record<string, { symbol: string }>)[currency]?.symbol ?? currency;
 }
+
+/** Decimal-string value scaled to BigInt cents — exact at any magnitude, no floats.
+ *  (BigInt() calls, not literals — the tsconfig target predates ES2020.) */
+function toCents(value: string): bigint {
+  const trimmed = (value ?? '').trim();
+  if (trimmed === '' || trimmed === '-' || trimmed === '+') return BigInt(0);
+  const negative = trimmed.startsWith('-');
+  const [intRaw = '0', fracRaw = ''] = trimmed.replace(/^[+-]/, '').split('.');
+  const intClean = intRaw.replace(/\D/g, '') || '0';
+  const frac2 = (fracRaw.replace(/\D/g, '') + '00').slice(0, 2);
+  const cents = BigInt(intClean) * BigInt(100) + BigInt(frac2);
+  return negative ? -cents : cents;
+}
+
+/** Compare two decimal money strings exactly (-1 | 0 | 1), e.g. for "is the wallet
+ *  balance enough to cover this price?" — same no-Number() contract as formatAmount. */
+export function compareAmounts(a: string, b: string): -1 | 0 | 1 {
+  const ca = toCents(a);
+  const cb = toCents(b);
+  return ca < cb ? -1 : ca > cb ? 1 : 0;
+}
