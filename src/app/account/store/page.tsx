@@ -144,6 +144,7 @@ export default function OwnerStorePage() {
         <OwnerMembershipPayModal
           onClose={() => setPaying(false)}
           onCharged={(detail) => { setStore(detail); load(); }}
+          onRenewBlocked={load}
         />
       )}
 

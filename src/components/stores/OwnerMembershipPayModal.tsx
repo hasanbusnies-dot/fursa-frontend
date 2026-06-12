@@ -22,9 +22,13 @@ const INSUFFICIENT_MSG = 'رصيد المحفظة غير كافٍ — يرجى �
 export function OwnerMembershipPayModal({
   onClose,
   onCharged,
+  onRenewBlocked,
 }: {
   onClose: () => void;
   onCharged: (detail: StoreDetail) => void;
+  /** 409 safety net — the view was stale and the renew window isn't open yet.
+   *  Caller should refresh the store detail so the pay button reflects renewAllowed. */
+  onRenewBlocked?: () => void;
 }) {
   const price = MEMBERSHIP_CAMPAIGNS.FULL_PRICE.price; // '75' USD, money-STRING
 
@@ -63,7 +67,10 @@ export function OwnerMembershipPayModal({
       if (err instanceof ApiError && err.status === 422) {
         setError(INSUFFICIENT_MSG);
       } else if (err instanceof ApiError && err.status === 409) {
-        setError('متجرك غير معتمد بعد — لا يمكن تفعيل الاشتراك.');
+        // Stale view: the renew window isn't open yet (month-by-month rule).
+        toast.error('لا يمكن التجديد بعد — لم تفتح نافذة التجديد للاشتراك الحالي.');
+        onRenewBlocked?.();
+        onClose();
       } else if (err instanceof ApiError && err.status === 403) {
         setError('محفظتك مجمّدة حالياً. تواصل مع الدعم.');
       } else {

@@ -119,7 +119,11 @@ export function MembershipChargeModal({
         } else if (err.status === 403) {
           toast.error('الحساب مجمّد، لا يمكن إتمام العملية.');
         } else if (err.status === 409) {
-          toast.error('المتجر غير مُعتمد بعد.');
+          // Stale view: the renew window isn't open yet (month-by-month rule) or the
+          // store state changed. Refresh the detail so the button reflects renewAllowed.
+          toast.error('لا يمكن التجديد بعد — لم تفتح نافذة التجديد للاشتراك الحالي.');
+          onCharged();
+          onClose();
         } else {
           toast.error(err.message || 'تعذّر تفعيل الاشتراك. حاول مرة أخرى.');
         }
