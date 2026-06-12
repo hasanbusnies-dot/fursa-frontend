@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Store, AlertTriangle, MapPin, CalendarDays, BadgeCheck, ShieldX,
+  Store, AlertTriangle, MapPin, CalendarDays, CalendarClock, BadgeCheck, ShieldX,
   Clock, XCircle, Ban, ReceiptText, Inbox,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
@@ -127,6 +127,16 @@ export default function OwnerStorePage() {
   const membership = store.membership ?? null;
   const memberActive = membership?.badge === true;
   const charges = chargesOf(store);
+  // Renew gate: only the explicit false blocks (a charge would 409). Read off the
+  // flag directly — never derived from daysRemaining.
+  const renewBlocked = membership?.renewAllowed === false;
+
+  const renewWindowNote = (
+    <p className="mt-4 flex items-center justify-center gap-1.5 rounded-xl bg-gray-50 border border-gray-200 py-2.5 px-3 text-xs font-semibold text-gray-500">
+      <CalendarClock className="w-4 h-4 text-gray-400 shrink-0" />
+      يمكن التجديد في {formatDate(membership?.renewableFrom)}
+    </p>
+  );
 
   return (
     <div className="space-y-4">
@@ -248,26 +258,30 @@ export default function OwnerStorePage() {
                   <p className="text-sm font-bold text-gray-800">{campaignLabel(membership?.campaign)}</p>
                 </div>
               </div>
-              <button
-                onClick={() => setPaying(true)}
-                className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-orange-300 text-orange-700 text-sm font-bold hover:bg-orange-50 transition-colors"
-              >
-                <ReceiptText className="w-4 h-4" />
-                تجديد الاشتراك
-              </button>
+              {renewBlocked ? renewWindowNote : (
+                <button
+                  onClick={() => setPaying(true)}
+                  className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-orange-300 text-orange-700 text-sm font-bold hover:bg-orange-50 transition-colors"
+                >
+                  <ReceiptText className="w-4 h-4" />
+                  تجديد الاشتراك
+                </button>
+              )}
             </div>
           ) : (
             <div className="rounded-xl bg-gray-50 border border-gray-200 p-4 text-center">
               <ShieldX className="w-8 h-8 text-gray-300 mx-auto mb-2" />
               <p className="text-sm font-medium text-gray-600">العضوية غير مفعّلة</p>
               <p className="text-xs text-gray-400 mt-0.5">فعّل الاشتراك لإعلانات غير محدودة وشارة الموثوقية.</p>
-              <button
-                onClick={() => setPaying(true)}
-                className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600 transition-colors"
-              >
-                <BadgeCheck className="w-4 h-4" />
-                دفع الاشتراك ({formatMoney(MEMBERSHIP_CAMPAIGNS.FULL_PRICE.price, 'USD')}/شهر)
-              </button>
+              {renewBlocked ? renewWindowNote : (
+                <button
+                  onClick={() => setPaying(true)}
+                  className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600 transition-colors"
+                >
+                  <BadgeCheck className="w-4 h-4" />
+                  دفع الاشتراك ({formatMoney(MEMBERSHIP_CAMPAIGNS.FULL_PRICE.price, 'USD')}/شهر)
+                </button>
+              )}
             </div>
           )}
         </div>
