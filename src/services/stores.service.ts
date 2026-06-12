@@ -106,6 +106,12 @@ export interface Membership {
   daysRemaining?: number | null;
   campaign?: MembershipCampaign | null;
   badge?: boolean;                 // true ⇒ member-active (the "verified" badge)
+  // Month-by-month renewal rule: an ACTIVE membership is only renewable within its
+  // final N days (backend default 7). renewAllowed false ⇒ a charge would 409.
+  // NOTE: separate from the AP-M4 dashboard's UPCOMING state (≤14 days) — gate
+  // buttons on this flag only, never derive from daysRemaining.
+  renewAllowed?: boolean;
+  renewableFrom?: string | null;   // when the window opens; null when already renewable
 }
 
 /** A single membership charge in the store's history. Amounts are money STRINGS. */
