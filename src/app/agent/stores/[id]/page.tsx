@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Store, ChevronRight, Loader2, AlertTriangle, UserRound, Phone, MapPin,
-  CalendarDays, BadgeCheck, ShieldX, PlusCircle, ReceiptText,
+  CalendarDays, CalendarClock, BadgeCheck, ShieldX, PlusCircle, ReceiptText,
 } from 'lucide-react';
 import {
   agentStoresService,
@@ -96,6 +96,16 @@ export default function AgentStoreDetailPage() {
   const memberActive = membership?.badge === true;
   const charges = chargesOf(store);
   const ownerPending = ownerPendingOf(store);
+  // Renew gate: only the explicit false blocks (a charge would 409). Never derived
+  // from daysRemaining — the dashboard's UPCOMING window (14d) is wider than this one.
+  const renewBlocked = membership?.renewAllowed === false;
+
+  const renewWindowNote = (
+    <p className="mt-4 flex items-center justify-center gap-1.5 rounded-xl bg-slate-50 border border-slate-200 py-2.5 px-3 text-xs font-semibold text-slate-500">
+      <CalendarClock className="w-4 h-4 text-slate-400 shrink-0" />
+      يمكن التجديد بعد {formatDate(membership?.renewableFrom)}
+    </p>
+  );
 
   return (
     <div className="space-y-4">
@@ -219,7 +229,7 @@ export default function AgentStoreDetailPage() {
                 <p className="text-sm font-bold text-slate-800">{campaignLabel(membership?.campaign)}</p>
               </div>
             </div>
-            {isApproved && (
+            {isApproved && (renewBlocked ? renewWindowNote : (
               <button
                 onClick={() => setCharging(true)}
                 className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-teal-300 text-teal-700 text-sm font-bold hover:bg-teal-50 transition-colors"
@@ -227,14 +237,14 @@ export default function AgentStoreDetailPage() {
                 <ReceiptText className="w-4 h-4" />
                 تجديد / تحصيل الاشتراك
               </button>
-            )}
+            ))}
           </div>
         ) : (
           <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 text-center">
             <ShieldX className="w-8 h-8 text-slate-300 mx-auto mb-2" />
             <p className="text-sm font-medium text-slate-600">العضوية غير مفعّلة</p>
             <p className="text-xs text-slate-400 mt-0.5">فعّل الاشتراك لإعلانات غير محدودة وشارة الموثوقية.</p>
-            {isApproved ? (
+            {isApproved ? (renewBlocked ? renewWindowNote : (
               <button
                 onClick={() => setCharging(true)}
                 className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-teal-600 text-white text-sm font-bold hover:bg-teal-500 transition-colors"
@@ -242,7 +252,7 @@ export default function AgentStoreDetailPage() {
                 <BadgeCheck className="w-4 h-4" />
                 تحصيل الاشتراك
               </button>
-            ) : (
+            )) : (
               <p className="mt-3 text-[11px] text-amber-600">يجب اعتماد المتجر أولاً.</p>
             )}
           </div>
