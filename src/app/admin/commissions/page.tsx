@@ -113,6 +113,15 @@ export default function AdminCommissionsPage() {
   const rangeValid = fromInput !== '' && toInput !== '' && fromInput <= toInput;
   const applyRange = () => { if (rangeValid) setRange({ from: fromInput, to: toInput }); };
 
+  // Carry the current period/range into the agent-detail URL so the drill-down opens
+  // on exactly what the summary is showing.
+  const agentHref = useCallback((agentId: string): string => {
+    const qs = new URLSearchParams();
+    if (query?.period) qs.set('period', query.period);
+    else if (query?.from && query?.to) { qs.set('from', query.from); qs.set('to', query.to); }
+    return `/admin/commissions/${agentId}?${qs.toString()}`;
+  }, [query]);
+
   if (!mounted || !isAuthenticated || user?.userType !== 'ADMIN') return null;
 
   const agents = report?.agents ?? [];
@@ -269,8 +278,14 @@ export default function AdminCommissionsPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {agents.map((a) => (
-                    <tr key={a.agentId} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 font-semibold text-gray-800">{a.agentName}</td>
+                    <tr
+                      key={a.agentId}
+                      onClick={() => router.push(agentHref(a.agentId))}
+                      className="hover:bg-gray-50 transition-colors cursor-pointer"
+                    >
+                      <td className="px-4 py-3 font-semibold text-gray-800">
+                        <span className="text-blue-600 hover:text-blue-700">{a.agentName}</span>
+                      </td>
                       <td className="px-4 py-3 text-end tabular-nums text-gray-600">{a.qualifyingPayments}</td>
                       <td className="px-4 py-3 text-end tabular-nums text-gray-400">{a.threshold}</td>
                       <td className="px-4 py-3 text-end tabular-nums text-gray-600">{a.commissionablePayments}</td>

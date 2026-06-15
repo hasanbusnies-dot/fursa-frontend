@@ -34,3 +34,30 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Print: show ONLY the .print-area, regardless of where app chrome (Header,
+   MobileTopBar, Footer, BottomNav — all rendered in the root layout, outside any
+   page) lives in the tree. Hiding by visibility keeps fixed-position chrome from
+   reappearing; the printable container is lifted to the top of the page. Anything
+   tagged .no-print is removed outright as a belt-and-suspenders. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    /* keep background accents (emphasized total, threshold divider) on paper */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

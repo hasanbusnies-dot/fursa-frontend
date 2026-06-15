@@ -47,6 +47,34 @@ export interface CommissionsQuery {
   to?: string;
 }
 
+/** One membership charge credited to an agent in the period (ordered chargedAt ASC).
+ *  earnsCommission is false for the first `threshold` (base) charges, true after. */
+export interface CommissionPaymentRow {
+  chargeId: string;
+  storeId: string;
+  storeName: string;
+  chargedAt: string;
+  netAmountUsd: string;     // money-STRING
+  method: string;
+  campaign: string;
+  paidByOwnerSelf: boolean;
+  earnsCommission: boolean;
+}
+
+export interface CommissionAgentDetail {
+  agent: { id: string; name: string; phone?: string };
+  config: CommissionConfig;
+  period: CommissionPeriod;
+  summary: {
+    qualifyingPayments: number;
+    threshold: number;
+    commissionablePayments: number;
+    amountPerPaymentUsd: string; // money-STRING
+    commissionUsd: string;       // money-STRING — reconciles with the agent's summary row
+  };
+  payments: CommissionPaymentRow[];
+}
+
 // ── Helpers ─────────────────────────────────────────────────────────────────────
 
 /** Peel one ApiResponse {data} envelope (tolerate the value at root too). */
@@ -66,6 +94,16 @@ export const adminCommissionsService = {
     else if (q.from && q.to) { qs.set('from', q.from); qs.set('to', q.to); }
     const res = await api.get<unknown>(`/admin/commissions?${qs.toString()}`);
     return unwrap<CommissionsReport>(res);
+  },
+
+  /** One agent's payment-level breakdown for the period (same query shape as report).
+   *  detail.summary reconciles exactly with that agent's row in the summary report. */
+  agentDetail: async (agentId: string, q: CommissionsQuery): Promise<CommissionAgentDetail> => {
+    const qs = new URLSearchParams();
+    if (q.period) qs.set('period', q.period);
+    else if (q.from && q.to) { qs.set('from', q.from); qs.set('to', q.to); }
+    const res = await api.get<unknown>(`/admin/commissions/${agentId}?${qs.toString()}`);
+    return unwrap<CommissionAgentDetail>(res);
   },
 
   /** The current commission config (drives every report computed from now on). */
