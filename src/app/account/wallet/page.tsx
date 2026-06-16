@@ -20,6 +20,8 @@ import {
 } from '@/services/wallet.service';
 import { formatMoney, formatAmount } from '@/lib/money';
 import { cn } from '@/lib/utils';
+import { TransferTopupModal } from '@/components/wallet/TransferTopupModal';
+import { TransferHistory } from '@/components/wallet/TransferHistory';
 
 // ── Labels & helpers ────────────────────────────────────────────────────────────
 
@@ -292,7 +294,8 @@ export default function WalletPage() {
   const [page, setPage]             = useState(1);
   const [currencyFilter, setCF]     = useState<'ALL' | WalletCurrency>('ALL');
   const [typeFilter, setTF]         = useState<WalletTxType | 'ALL'>('ALL');
-  const [topupOpen, setTopupOpen]   = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transfersKey, setTransfersKey] = useState(0); // bump to reload TransferHistory
 
   // Auth gate
   useEffect(() => {
@@ -347,7 +350,7 @@ export default function WalletPage() {
             </div>
           </div>
           <button
-            onClick={() => setTopupOpen(true)}
+            onClick={() => setTransferOpen(true)}
             className="flex items-center gap-1.5 bg-gradient-to-l from-orange-500 to-pink-500 text-white text-sm font-bold px-4 py-2.5 rounded-xl hover:opacity-95 transition-opacity shrink-0"
           >
             <Plus className="w-4 h-4" />
@@ -402,6 +405,9 @@ export default function WalletPage() {
             </div>
           </div>
         )}
+
+        {/* Top-up requests (manual transfers) */}
+        <TransferHistory key={transfersKey} />
 
         {/* Transactions */}
         <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
@@ -510,7 +516,16 @@ export default function WalletPage() {
         </div>
       </div>
 
-      {topupOpen && <TopupModal onClose={() => { setTopupOpen(false); loadWallet(); loadTxns(); }} />}
+      {transferOpen && (
+        <TransferTopupModal
+          onClose={() => {
+            setTransferOpen(false);
+            loadWallet();
+            loadTxns();
+            setTransfersKey((k) => k + 1); // reflect the new request / any confirmation
+          }}
+        />
+      )}
     </>
   );
 }
