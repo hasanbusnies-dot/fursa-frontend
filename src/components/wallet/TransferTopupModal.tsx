@@ -60,6 +60,7 @@ export function TransferTopupModal({ onClose }: { onClose: () => void }) {
   // Initiate result
   const [initiating, setInitiating] = useState(false);
   const [transfer, setTransfer]     = useState<TransferInitiated | null>(null);
+  const [qrFailed, setQrFailed]     = useState(false); // hide a present-but-broken QR image
 
   // Claim
   const fileRef = useRef<HTMLInputElement>(null);
@@ -261,7 +262,22 @@ export function TransferTopupModal({ onClose }: { onClose: () => void }) {
                 <span className="text-lg font-extrabold" dir="ltr">{formatMoney(transfer.amount, transfer.currency)}</span>
               </div>
 
-              {/* Receiving account */}
+              {/* QR — shown prominently when the account has one (scannable in the
+                  Sham Cash app). Hidden cleanly when absent or if the image fails. */}
+              {transfer.qrUrl && !qrFailed && (
+                <div className="flex flex-col items-center gap-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={transfer.qrUrl}
+                    alt="رمز QR للتحويل"
+                    onError={() => setQrFailed(true)}
+                    className="w-48 h-48 rounded-2xl border border-gray-200 object-contain bg-white p-2 shadow-sm"
+                  />
+                  <p className="text-[11px] text-gray-400">امسح الرمز عبر تطبيق شام كاش</p>
+                </div>
+              )}
+
+              {/* Receiving account — below the QR */}
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">حوّل إلى هذا الحساب</label>
                 <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
@@ -269,18 +285,6 @@ export function TransferTopupModal({ onClose }: { onClose: () => void }) {
                   <CopyButton value={transfer.receivingAccount} />
                 </div>
               </div>
-
-              {/* QR */}
-              {transfer.qrUrl && (
-                <div className="flex justify-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={transfer.qrUrl}
-                    alt="رمز QR للتحويل"
-                    className="w-40 h-40 rounded-2xl border border-gray-200 object-contain bg-white"
-                  />
-                </div>
-              )}
 
               {/* Reference code — the key step */}
               <div className="rounded-xl border-2 border-orange-300 bg-orange-50 p-4">
