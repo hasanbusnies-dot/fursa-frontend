@@ -109,6 +109,7 @@ export interface VerificationBreakdown {
 export interface AgentOutstanding {
   agentId: string;
   agentName: string;
+  agentCode?: string | null; // 11-digit human-facing code (AgentProfile)
   agentPhone?: string | null;
   currency: string;
   outstanding: string;
@@ -137,25 +138,86 @@ export interface AgentCollection {
 
 export interface AgentCollectionsQuery {
   status?: CollectionVerificationStatus;
+  settled?: boolean;        // ?settled=true|false — filter by settlement state
+  settlementId?: string;    // collections belonging to a specific settlement
+  currency?: string;
   page?: number;
   limit?: number;
 }
 
+/** Agent identity header (name/phone null-tolerant for unknown ids). */
+export interface AgentIdentity {
+  agentId: string;          // UUID — routing only, not shown to the user
+  agentCode: string | null; // 11-digit human-facing code (AgentProfile)
+  agentName: string | null;
+  agentPhone: string | null;
+}
+
 export interface AgentCollectionsPage {
   data: AgentCollection[];
-  meta: PageMeta;
+  // meta.agent: whose collections these are (returned by the backend header).
+  meta: PageMeta & { agent?: AgentIdentity | null };
 }
 
 export interface Settlement {
   id: string;
   agentId?: string;
+  agentCode?: string | null; // 11-digit human-facing code (AgentProfile)
   agentName?: string | null;
+  agentPhone?: string | null;
   currency: string;
   amount?: string | null;
+  settledAt?: string | null;
+  receivedById?: string | null;
+  collectionCount?: number | null;
+  note?: string | null;
+  // Legacy fallbacks (pre-AP-M7c).
   total?: string | null;
   collectionsCount?: number | null;
+  createdAt?: string;
+}
+
+export interface SettlementsQuery extends AccountingQuery {
+  agentId?: string;
+  currency?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface SettlementsPage {
+  data: Settlement[];
+  meta: PageMeta;
+}
+
+/** One collection covered by a settlement (drill-down rows). */
+export interface SettlementCollection {
+  id: string;
+  sellerId?: string | null;
+  sellerName?: string | null;
+  amount: string;
+  currency: string;
+  collectedAt: string;
+  verificationStatus: CollectionVerificationStatus;
+  verifiedAt?: string | null;
+  receiptUrl?: string | null; // signed, time-limited
+}
+
+/** GET /settlements/:id — header + the collections it settled. */
+export interface SettlementDetail {
+  id: string;
+  agentId: string;
+  agentCode?: string | null; // 11-digit human-facing code (AgentProfile)
+  agentName?: string | null;
+  agentPhone?: string | null;
+  amount: string;
+  currency: string;
+  settledAt: string;
+  receivedById?: string | null;
+  receivedByName?: string | null;
+  receivedByPhone?: string | null;
   note?: string | null;
-  createdAt: string;
+  collectionCount?: number | null;
+  collections: SettlementCollection[];
 }
 
 export interface SettleInput {
@@ -288,6 +350,9 @@ export const accountingService = {
     const limit = q.limit ?? 50;
     const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (q.status) qs.set('status', q.status);
+    if (q.settled !== undefined) qs.set('settled', String(q.settled));
+    if (q.settlementId) qs.set('settlementId', q.settlementId);
+    if (q.currency) qs.set('currency', q.currency);
     const res = await api.get<unknown>(`/accounting/agents/${agentId}/collections?${qs.toString()}`);
     return parsePage<AgentCollection>(res, page, limit);
   },
@@ -308,8 +373,23 @@ export const accountingService = {
     return unwrap<Settlement>(res);
   },
 
-  listSettlements: async (): Promise<Settlement[]> => {
-    const res = await api.get<unknown>('/accounting/settlements');
-    return unwrapList<Settlement>(res);
+  /** Paginated settlement history (GET /settlements), filterable by agent/period/currency. */
+  settlementsHistory: async (q: SettlementsQuery = {}): Promise<SettlementsPage> => {
+    const page = q.page ?? 1;
+    const limit = q.limit ?? 20;
+    const qs = periodQs(q, {
+      agentId: q.agentId,
+      currency: q.currency,
+      page: String(page),
+      limit: String(limit),
+    });
+    const res = await api.get<unknown>(`/accounting/settlements${qs}`);
+    return parsePage<Settlement>(res, page, limit);
+  },
+
+  /** Settlement drill-down (GET /settlements/:id) — header + the collections it covered. */
+  getSettlement: async (id: string): Promise<SettlementDetail> => {
+    const res = await api.get<unknown>(`/accounting/settlements/${id}`);
+    return unwrap<SettlementDetail>(res);
   },
 };
