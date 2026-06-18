@@ -14,7 +14,7 @@ export interface User {
   email: string;
   phone?: string;
   avatar?: string;
-  userType: 'USER' | 'ADMIN' | 'CORPORATE' | 'FIELD_AGENT';
+  userType: 'USER' | 'ADMIN' | 'CORPORATE' | 'FIELD_AGENT' | 'ACCOUNTANT';
   profile: UserProfile;
   corporateProfile?: CorporateProfile;
   createdAt?: string;

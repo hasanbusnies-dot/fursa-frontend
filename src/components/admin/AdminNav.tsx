@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutList, Megaphone, Zap, Store, CalendarClock, Coins, ArrowLeftRight } from 'lucide-react';
+import { LayoutList, Megaphone, Zap, Store, CalendarClock, Coins, ArrowLeftRight, Calculator } from 'lucide-react';
 
 const LINKS = [
   { href: '/admin/listings',       label: 'İlan Yönetimi',     icon: LayoutList     },
@@ -12,6 +12,7 @@ const LINKS = [
   { href: '/admin/renewals',       label: 'Yenilemeler',       icon: CalendarClock  },
   { href: '/admin/commissions',    label: 'Komisyonlar',       icon: Coins          },
   { href: '/admin/transfers',      label: 'Transfer Onayları', icon: ArrowLeftRight },
+  { href: '/accounting',           label: 'Muhasebe',          icon: Calculator     },
 ];
 
 export function AdminNav() {
