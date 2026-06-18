@@ -5,15 +5,17 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   ChevronLeft, Loader2, AlertTriangle, Inbox, CheckCircle2, XCircle, X,
-  CalendarDays, UserRound,
+  CalendarDays, UserRound, Phone,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   accountingService,
   type AgentCollection,
+  type AgentIdentity,
   type CollectionVerificationStatus,
 } from '@/services/accounting.service';
 import { ContractDoc } from '@/components/stores/ContractDoc';
+import { CopyableId } from '@/components/accounting/CopyableId';
 import { ApiError } from '@/services/api';
 import { formatMoney } from '@/lib/money';
 import { cn } from '@/lib/utils';
@@ -25,11 +27,39 @@ const STATUS_FILTERS: { value: CollectionVerificationStatus | 'ALL'; label: stri
   { value: 'ALL',                  label: 'Tümü' },
 ];
 
+// Initial filter from the URL: audit entry (settlement-history link) passes ?status=all
+// → land on "Tümü"; a specific status is honoured; bare entry (verification list /
+// triage) → default to the pending queue.
+function initialStatusFromParam(raw: string | null): CollectionVerificationStatus | 'ALL' {
+  if (!raw) return 'PENDING_VERIFICATION';
+  const up = raw.toUpperCase();
+  if (up === 'ALL') return 'ALL';
+  if (up === 'VERIFIED' || up === 'REJECTED' || up === 'PENDING_VERIFICATION') {
+    return up as CollectionVerificationStatus;
+  }
+  return 'PENDING_VERIFICATION';
+}
+
 const STATUS_META: Record<string, { label: string; cls: string }> = {
   PENDING_VERIFICATION: { label: 'Bekliyor',   cls: 'bg-amber-100 text-amber-800' },
   VERIFIED:             { label: 'Doğrulandı',  cls: 'bg-green-100 text-green-700' },
   REJECTED:             { label: 'Reddedildi',  cls: 'bg-red-100 text-red-700'     },
 };
+
+const SETTLED_FILTERS: { value: 'ALL' | 'true' | 'false'; label: string }[] = [
+  { value: 'ALL',   label: 'Tümü' },
+  { value: 'true',  label: 'Mutabık' },
+  { value: 'false', label: 'Mutabakatsız' },
+];
+
+// Mirror of the agent-side SettlementChip — settled vs unsettled, Turkish accounting UI.
+function SettlementChip({ settlementId }: { settlementId?: string | null }) {
+  return settlementId ? (
+    <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-500">Mutabık</span>
+  ) : (
+    <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-700">Mutabakatsız</span>
+  );
+}
 
 function formatDateTime(s: string): string {
   const t = new Date(s);
@@ -100,7 +130,10 @@ function CollectionCard({
             </p>
           )}
         </div>
-        <span className={cn('shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full', meta.cls)}>{meta.label}</span>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <span className={cn('text-[11px] font-bold px-2.5 py-1 rounded-full', meta.cls)}>{meta.label}</span>
+          <SettlementChip settlementId={c.settlementId} />
+        </div>
       </div>
 
       <p className="mt-2 flex items-center gap-1.5 text-[11px] text-gray-400">
@@ -142,26 +175,39 @@ export default function AccountingAgentCollectionsPage() {
   const params = useParams<{ agentId: string }>();
   const agentId = params?.agentId;
 
+  const [mounted, setMounted] = useState(false);
   const [status, setStatus]   = useState<CollectionVerificationStatus | 'ALL'>('PENDING_VERIFICATION');
+  const [settled, setSettled] = useState<'ALL' | 'true' | 'false'>('ALL');
   const [rows, setRows]       = useState<AgentCollection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(false);
   const [busyId, setBusyId]   = useState<string | null>(null);
   const [rejecting, setRejecting] = useState<AgentCollection | null>(null);
-  const [agentName, setAgentName] = useState<string>('');
+  const [agent, setAgent] = useState<AgentIdentity | null>(null);
+
+  // Initial filter off the URL (no useSearchParams → no Suspense boundary). Audit
+  // entry passes ?status=all → land on "Tümü"; bare entry (triage) stays pending.
+  useEffect(() => {
+    setStatus(initialStatusFromParam(new URLSearchParams(window.location.search).get('status')));
+    setMounted(true);
+  }, []);
 
   const load = useCallback(() => {
-    if (!agentId) return;
+    if (!agentId || !mounted) return;
     setLoading(true); setError(false);
-    accountingService.agentCollections(agentId, { status: status === 'ALL' ? undefined : status, page: 1, limit: 100 })
+    accountingService.agentCollections(agentId, {
+      status: status === 'ALL' ? undefined : status,
+      settled: settled === 'ALL' ? undefined : settled === 'true',
+      page: 1,
+      limit: 100,
+    })
       .then((res) => {
         setRows(res.data);
-        const named = res.data.find((r) => (r as { agentName?: string }).agentName);
-        if (named) setAgentName((named as { agentName?: string }).agentName ?? '');
+        if (res.meta.agent) setAgent(res.meta.agent);
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, [agentId, status]);
+  }, [agentId, status, settled, mounted]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -206,26 +252,49 @@ export default function AccountingAgentCollectionsPage() {
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm">
           <UserRound className="w-5 h-5 text-white" />
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{agentName || 'Temsilci'}</h1>
-          <p className="text-sm text-gray-500">Tahsilat makbuzları — doğrula / reddet.</p>
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold text-gray-900 truncate">{agent?.agentName || 'Temsilci'}</h1>
+          {agent?.agentPhone ? (
+            <p className="text-sm text-gray-500 flex items-center gap-1.5" dir="ltr">
+              <Phone className="w-3.5 h-3.5 shrink-0" /> {agent.agentPhone}
+            </p>
+          ) : (
+            <p className="text-sm text-gray-500">Tahsilat makbuzları — doğrula / reddet.</p>
+          )}
+          {agent?.agentCode && <div className="mt-1"><CopyableId id={agent.agentCode} /></div>}
         </div>
       </div>
 
-      {/* Status filter */}
-      <div className="flex gap-1 mb-6 bg-white border border-gray-200 rounded-xl p-1 w-fit overflow-x-auto max-w-full">
-        {STATUS_FILTERS.map(({ value, label }) => (
-          <button
-            key={value}
-            onClick={() => setStatus(value)}
-            className={cn(
-              'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors shrink-0',
-              status === value ? 'bg-emerald-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100',
-            )}
-          >
-            {label}
-          </button>
-        ))}
+      {/* Filters: verification status × settlement state (combined server-side) */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit overflow-x-auto max-w-full">
+          {STATUS_FILTERS.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => setStatus(value)}
+              className={cn(
+                'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors shrink-0',
+                status === value ? 'bg-emerald-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100',
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit overflow-x-auto max-w-full">
+          {SETTLED_FILTERS.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => setSettled(value)}
+              className={cn(
+                'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors shrink-0',
+                settled === value ? 'bg-slate-700 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100',
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
