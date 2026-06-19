@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, TrendingUp, Receipt, ClipboardCheck, Banknote } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, Receipt, ClipboardCheck, Banknote, ArrowLeftRight } from 'lucide-react';
 
 const LINKS = [
   { href: '/accounting',              label: 'Genel Bakış',        icon: LayoutDashboard, exact: true },
   { href: '/accounting/pnl',          label: 'Kâr-Zarar',          icon: TrendingUp                    },
   { href: '/accounting/expenses',     label: 'Giderler',           icon: Receipt                       },
   { href: '/accounting/verification', label: 'Tahsilat Doğrulama', icon: ClipboardCheck                },
+  { href: '/accounting/transfers',    label: 'Transfer Onayları',  icon: ArrowLeftRight                },
   { href: '/accounting/settlements',  label: 'Mutabakat',          icon: Banknote                      },
 ];
 
