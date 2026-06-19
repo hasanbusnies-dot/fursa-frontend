@@ -29,6 +29,7 @@ const FOOTER_LINKS = {
 export function Footer() {
   const pathname = usePathname();
   if (pathname.startsWith('/agent')) return null; // staff tool — no consumer chrome
+  if (pathname.startsWith('/accounting')) return null; // staff tool — no consumer chrome
 
   return (
     <footer className="bg-gray-900 text-gray-400">

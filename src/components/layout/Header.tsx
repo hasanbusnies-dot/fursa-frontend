@@ -106,6 +106,7 @@ export function Header() {
   if (['/login', '/register'].includes(pathname)) return null;
   if (pathname.startsWith('/m/')) return null;
   if (pathname.startsWith('/agent')) return null; // staff tool — no consumer chrome
+  if (pathname.startsWith('/accounting')) return null; // staff tool — no consumer chrome
 
   // Option (B): on mobile inner pages, MobileTopBar is the top bar — hide the
   // Header below md there. Desktop (md+) is unchanged.
