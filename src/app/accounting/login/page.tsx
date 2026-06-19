@@ -6,71 +6,100 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { Calculator, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Calculator, KeyRound, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
-import { authService } from '@/services/auth.service';
+import { staffAuthService, type StaffAuthed } from '@/services/staff-auth.service';
 import { ApiError } from '@/services/api';
 
-// Accountants are created with a PHONE and no email, so the identifier must accept
-// phone OR email — the backend login takes a single `identifier` field for either.
-const schema = z.object({
-  identifier: z
-    .string()
-    .min(1, 'Telefon veya e-posta gerekli')
-    .refine(
-      (v) => /^\+?[0-9]{8,16}$/.test(v.trim()) || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()),
-      'Geçerli bir telefon veya e-posta girin',
-    ),
-  password: z.string().min(1, 'Şifre gerekli'),
+// ── Schemas (3-factor code-login, mirrors the agent flow) ───────────────────────────
+
+const loginSchema = z.object({
+  staffLoginCode: z.string().regex(/^\d{11}$/, 'Personel kodu 11 rakamdan oluşur'),
+  phone:          z.string().min(1, 'Telefon gerekli'),
+  password:       z.string().min(1, 'Şifre gerekli'),
 });
-type FormData = z.infer<typeof schema>;
+type LoginForm = z.infer<typeof loginSchema>;
+
+const resetSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .min(8, 'Şifre en az 8 karakter olmalı')
+      .regex(/[A-Z]/, 'En az 1 büyük harf')
+      .regex(/\d/, 'En az 1 rakam'),
+    confirm: z.string().min(1, 'Şifreyi tekrar girin'),
+  })
+  .refine((d) => d.newPassword === d.confirm, {
+    path: ['confirm'],
+    message: 'Şifreler eşleşmiyor',
+  });
+type ResetForm = z.infer<typeof resetSchema>;
+
+const GENERIC_ERROR = 'Giriş bilgileri hatalı. Tekrar deneyin.';
+
+// ── Page ────────────────────────────────────────────────────────────────────────
 
 export default function AccountingLoginPage() {
   const router = useRouter();
   const { setAuth, logout } = useAuthStore();
 
-  const [isLoading, setIsLoading]       = useState(false);
-  const [globalError, setGlobalError]   = useState('');
+  // Phase: regular 3-factor login, or the forced first-password reset.
+  const [phase, setPhase]           = useState<'login' | 'reset'>('login');
+  const [resetToken, setResetToken] = useState('');      // one-off — component state only
+
+  const [isLoading,    setIsLoading]    = useState(false);
+  const [globalError,  setGlobalError]  = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema),
-  });
+  const loginForm = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
+  const resetForm = useForm<ResetForm>({ resolver: zodResolver(resetSchema) });
 
-  const onSubmit = async (data: FormData) => {
+  // Store tokens exactly like the regular login and enter the accounting area.
+  const enterPanel = (authed: StaffAuthed) => {
+    // ACCOUNTANT (or ADMIN) may enter; the backend gates this too — verify defensively.
+    if (authed.user.userType !== 'ACCOUNTANT' && authed.user.userType !== 'ADMIN') {
+      logout();
+      setGlobalError('Erişim reddedildi. Bu portal yalnızca muhasebe içindir.');
+      return;
+    }
+    setAuth(authed.user, authed.token, authed.refreshToken);
+    toast.success(`Hoş geldiniz, ${authed.user.profile?.firstName ?? 'Muhasebe'}.`);
+    router.replace('/accounting');
+  };
+
+  const onLogin = async (data: LoginForm) => {
     setIsLoading(true);
     setGlobalError('');
     try {
-      const { token, refreshToken, user: loginUser } = await authService.login({
-        identifier: data.identifier.trim(),
-        password:   data.password,
-      });
-      setAuth(loginUser, token, refreshToken);
-
-      // Fetch the live role from the DB (the login JWT may lag a role change).
-      let finalUser = loginUser;
-      try {
-        finalUser = await authService.getProfile();
-        setAuth(finalUser, token, refreshToken);
-      } catch { /* /auth/me unavailable — use the login role */ }
-
-      // ACCOUNTANT or ADMIN may enter; anyone else is denied.
-      if (finalUser.userType !== 'ACCOUNTANT' && finalUser.userType !== 'ADMIN') {
-        setGlobalError('Erişim reddedildi. Bu portal yalnızca muhasebe içindir.');
-        logout();
+      const result = await staffAuthService.login(data);
+      if (result.kind === 'mustChange') {
+        // First login with the one-time password → forced reset; no tokens yet.
+        setResetToken(result.resetToken);
+        setPhase('reset');
         return;
       }
-
-      toast.success(`Hoş geldiniz, ${finalUser.profile?.firstName ?? 'Muhasebe'}.`);
-      router.push('/accounting');
+      enterPanel(result);
     } catch (err) {
-      setGlobalError(
-        err instanceof ApiError || err instanceof Error ? err.message : 'Giriş başarısız. Tekrar deneyin.',
-      );
+      setGlobalError(err instanceof ApiError || err instanceof Error ? err.message : GENERIC_ERROR);
     } finally {
       setIsLoading(false);
     }
   };
+
+  const onReset = async (data: ResetForm) => {
+    setIsLoading(true);
+    setGlobalError('');
+    try {
+      const authed = await staffAuthService.firstSetPassword(data.newPassword, resetToken);
+      enterPanel(authed);
+    } catch (err) {
+      setGlobalError(err instanceof ApiError || err instanceof Error ? err.message : GENERIC_ERROR);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const isReset = phase === 'reset';
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4 py-16">
@@ -78,64 +107,154 @@ export default function AccountingLoginPage() {
         <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden">
           <div className="bg-gradient-to-r from-emerald-700 to-emerald-900 px-8 py-6 flex flex-col items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center">
-              <Calculator className="w-6 h-6 text-white" />
+              {isReset ? <KeyRound className="w-6 h-6 text-white" /> : <Calculator className="w-6 h-6 text-white" />}
             </div>
             <div className="text-center">
-              <h1 className="text-lg font-bold text-white tracking-tight">Muhasebe Portalı</h1>
-              <p className="text-emerald-300 text-xs mt-0.5">Yalnızca yetkili personel</p>
+              <h1 className="text-lg font-bold text-white tracking-tight">
+                {isReset ? 'Şifre Belirle' : 'Muhasebe Portalı'}
+              </h1>
+              <p className="text-emerald-300 text-xs mt-0.5">
+                {isReset ? 'Devam etmek için yeni bir şifre seçin' : 'Yalnızca yetkili personel'}
+              </p>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="px-8 py-7 space-y-5">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Telefon veya e-posta</label>
-              <input
-                type="text"
-                autoComplete="username"
-                placeholder="09xxxxxxxx veya muhasebe@forsa.com"
-                {...register('identifier')}
-                className="w-full bg-slate-700/60 border border-slate-600 text-white rounded-lg px-3 py-2.5 text-sm placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
-              />
-              {errors.identifier && <p className="text-red-400 text-xs">{errors.identifier.message}</p>}
-            </div>
+          {/* ── Login form (3-factor) ── */}
+          {!isReset && (
+            <form onSubmit={loginForm.handleSubmit(onLogin)} className="px-8 py-7 space-y-5">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Personel Kodu</label>
+                <input
+                  inputMode="numeric"
+                  autoComplete="off"
+                  maxLength={11}
+                  placeholder="11 haneli kod"
+                  dir="ltr"
+                  {...loginForm.register('staffLoginCode')}
+                  className="w-full bg-slate-700/60 border border-slate-600 text-white rounded-lg px-3 py-2.5 text-sm placeholder-slate-500 tracking-widest focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
+                />
+                {loginForm.formState.errors.staffLoginCode && (
+                  <p className="text-red-400 text-xs">{loginForm.formState.errors.staffLoginCode.message}</p>
+                )}
+              </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Şifre</label>
-              <div className="relative">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Telefon</label>
+                <input
+                  inputMode="tel"
+                  autoComplete="username"
+                  placeholder="09xxxxxxxx"
+                  dir="ltr"
+                  {...loginForm.register('phone')}
+                  className="w-full bg-slate-700/60 border border-slate-600 text-white rounded-lg px-3 py-2.5 text-sm placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
+                />
+                {loginForm.formState.errors.phone && (
+                  <p className="text-red-400 text-xs">{loginForm.formState.errors.phone.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Şifre</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    {...loginForm.register('password')}
+                    className="w-full bg-slate-700/60 border border-slate-600 text-white rounded-lg px-3 py-2.5 pr-10 text-sm placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {loginForm.formState.errors.password && (
+                  <p className="text-red-400 text-xs">{loginForm.formState.errors.password.message}</p>
+                )}
+              </div>
+
+              {globalError && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">
+                  <p className="text-red-400 text-sm leading-snug">{globalError}</p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+              >
+                {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                {isLoading ? 'Giriş yapılıyor…' : 'Muhasebe Paneline Giriş'}
+              </button>
+            </form>
+          )}
+
+          {/* ── Forced first-password reset ── */}
+          {isReset && (
+            <form onSubmit={resetForm.handleSubmit(onReset)} className="px-8 py-7 space-y-5">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Yeni Şifre</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    placeholder="••••••••"
+                    {...resetForm.register('newPassword')}
+                    className="w-full bg-slate-700/60 border border-slate-600 text-white rounded-lg px-3 py-2.5 pr-10 text-sm placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {resetForm.formState.errors.newPassword && (
+                  <p className="text-red-400 text-xs">{resetForm.formState.errors.newPassword.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Şifre Tekrar</label>
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   placeholder="••••••••"
-                  {...register('password')}
-                  className="w-full bg-slate-700/60 border border-slate-600 text-white rounded-lg px-3 py-2.5 pr-10 text-sm placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
+                  {...resetForm.register('confirm')}
+                  className="w-full bg-slate-700/60 border border-slate-600 text-white rounded-lg px-3 py-2.5 text-sm placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+                {resetForm.formState.errors.confirm && (
+                  <p className="text-red-400 text-xs">{resetForm.formState.errors.confirm.message}</p>
+                )}
               </div>
-              {errors.password && <p className="text-red-400 text-xs">{errors.password.message}</p>}
-            </div>
 
-            {globalError && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">
-                <p className="text-red-400 text-sm leading-snug">{globalError}</p>
-              </div>
-            )}
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Şifre en az 8 karakter, 1 büyük harf ve 1 rakam içermelidir.
+              </p>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
-            >
-              {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isLoading ? 'Giriş yapılıyor…' : 'Muhasebe Paneline Giriş'}
-            </button>
-          </form>
+              {globalError && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">
+                  <p className="text-red-400 text-sm leading-snug">{globalError}</p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+              >
+                {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                {isLoading ? 'Kaydediliyor…' : 'Kaydet ve Devam Et'}
+              </button>
+            </form>
+          )}
         </div>
 
         <p className="text-center mt-6 text-slate-600 text-sm">
