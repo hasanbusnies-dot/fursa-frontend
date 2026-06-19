@@ -11,8 +11,16 @@ import { useAuthStore } from '@/store/auth.store';
 import { authService } from '@/services/auth.service';
 import { ApiError } from '@/services/api';
 
+// Accountants are created with a PHONE and no email, so the identifier must accept
+// phone OR email — the backend login takes a single `identifier` field for either.
 const schema = z.object({
-  email:    z.string().email('Geçerli bir e-posta girin'),
+  identifier: z
+    .string()
+    .min(1, 'Telefon veya e-posta gerekli')
+    .refine(
+      (v) => /^\+?[0-9]{8,16}$/.test(v.trim()) || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()),
+      'Geçerli bir telefon veya e-posta girin',
+    ),
   password: z.string().min(1, 'Şifre gerekli'),
 });
 type FormData = z.infer<typeof schema>;
@@ -34,7 +42,7 @@ export default function AccountingLoginPage() {
     setGlobalError('');
     try {
       const { token, refreshToken, user: loginUser } = await authService.login({
-        identifier: data.email,
+        identifier: data.identifier.trim(),
         password:   data.password,
       });
       setAuth(loginUser, token, refreshToken);
@@ -80,15 +88,15 @@ export default function AccountingLoginPage() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="px-8 py-7 space-y-5">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">E-posta</label>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Telefon veya e-posta</label>
               <input
-                type="email"
-                autoComplete="email"
-                placeholder="muhasebe@forsa.com"
-                {...register('email')}
+                type="text"
+                autoComplete="username"
+                placeholder="09xxxxxxxx veya muhasebe@forsa.com"
+                {...register('identifier')}
                 className="w-full bg-slate-700/60 border border-slate-600 text-white rounded-lg px-3 py-2.5 text-sm placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
               />
-              {errors.email && <p className="text-red-400 text-xs">{errors.email.message}</p>}
+              {errors.identifier && <p className="text-red-400 text-xs">{errors.identifier.message}</p>}
             </div>
 
             <div className="space-y-1.5">
