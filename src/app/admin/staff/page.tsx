@@ -4,19 +4,13 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  UserPlus, Loader2, Eye, EyeOff, Calculator, MapPin, CheckCircle2,
+  UserPlus, Loader2, Calculator, MapPin, CheckCircle2,
   Copy, Check, AlertTriangle, ArrowRight, RotateCcw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { useAuthStore } from '@/store/auth.store';
-import {
-  staffService,
-  type CreateAccountantResult,
-  type CreateAgentResult,
-} from '@/services/staff.service';
-
-type Role = 'ACCOUNTANT' | 'FIELD_AGENT';
+import { staffService, type CreateStaffResult, type StaffRole } from '@/services/staff.service';
 
 // ── Validation (mirrors the backend rules) ──────────────────────────────────────────
 const PHONE_RE = /^\+?[0-9]+$/;
@@ -37,15 +31,9 @@ function validateRegion(v: string): string | null {
   if (t && t.length > 100) return 'Bölge en fazla 100 karakter olabilir.';
   return null;
 }
-function validatePassword(v: string): string | null {
-  if (v.length < 8) return 'Şifre en az 8 karakter olmalı.';
-  if (!/[A-Z]/.test(v)) return 'Şifre en az 1 büyük harf içermeli.';
-  if (!/[0-9]/.test(v)) return 'Şifre en az 1 rakam içermeli.';
-  return null;
-}
 
-// ── Prominent copyable field (agent code / one-time password) ────────────────────────
-function CopyField({ label, value, mono = true }: { label: string; value: string; mono?: boolean }) {
+// ── Prominent copyable field (staff code / one-time password) ────────────────────────
+function CopyField({ label, value }: { label: string; value: string }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     try {
@@ -58,7 +46,7 @@ function CopyField({ label, value, mono = true }: { label: string; value: string
     <div className="rounded-xl border-2 border-blue-200 bg-blue-50 px-4 py-3">
       <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wide mb-1">{label}</p>
       <div className="flex items-center justify-between gap-3">
-        <span className={`text-xl font-extrabold text-gray-900 break-all ${mono ? 'font-mono tracking-wide' : ''}`} dir="ltr">
+        <span className="text-xl font-extrabold text-gray-900 break-all font-mono tracking-wide" dir="ltr">
           {value}
         </span>
         <button
@@ -70,16 +58,6 @@ function CopyField({ label, value, mono = true }: { label: string; value: string
           {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-blue-600" />}
         </button>
       </div>
-    </div>
-  );
-}
-
-// ── Plain text row (accountant credentials) ─────────────────────────────────────────
-function CredRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-baseline justify-between gap-3 px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200">
-      <span className="text-xs font-semibold text-gray-500">{label}</span>
-      <span className="text-sm font-bold text-gray-900 break-all" dir="ltr">{value}</span>
     </div>
   );
 }
@@ -117,19 +95,15 @@ export default function AdminStaffPage() {
   const { user, isAuthenticated } = useAuthStore();
   const [mounted, setMounted] = useState(false);
 
-  const [role, setRole] = useState<Role>('ACCOUNTANT');
+  const [role, setRole] = useState<StaffRole>('ACCOUNTANT');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName]   = useState('');
   const [phone, setPhone]         = useState('');
-  const [password, setPassword]   = useState('');
   const [region, setRegion]       = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [submitting, setSubmitting]     = useState(false);
-  const [touched, setTouched]           = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [touched, setTouched]       = useState(false);
 
-  // Role-specific success payloads
-  const [accountantDone, setAccountantDone] = useState<{ phone: string; password: string; name: string } | null>(null);
-  const [agentDone, setAgentDone]           = useState<CreateAgentResult | null>(null);
+  const [done, setDone] = useState<CreateStaffResult | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => {
@@ -143,15 +117,14 @@ export default function AdminStaffPage() {
   const nameErr  = touched ? validateName(firstName) : null;
   const lastErr  = touched ? validateName(lastName)  : null;
   const phoneErr = touched ? validatePhone(phone)    : null;
-  const passErr  = touched && role === 'ACCOUNTANT' ? validatePassword(password) : null;
-  const regErr   = touched && role === 'FIELD_AGENT' ? validateRegion(region)    : null;
+  const regErr   = touched && role === 'FIELD_AGENT' ? validateRegion(region) : null;
 
   const resetForm = () => {
-    setFirstName(''); setLastName(''); setPhone(''); setPassword(''); setRegion('');
-    setTouched(false); setShowPassword(false);
+    setFirstName(''); setLastName(''); setPhone(''); setRegion('');
+    setTouched(false);
   };
 
-  const switchRole = (r: Role) => {
+  const switchRole = (r: StaffRole) => {
     setRole(r);
     setTouched(false);
   };
@@ -160,32 +133,20 @@ export default function AdminStaffPage() {
     setTouched(true);
     const errs = [
       validateName(firstName), validateName(lastName), validatePhone(phone),
-      role === 'ACCOUNTANT' ? validatePassword(password) : null,
       role === 'FIELD_AGENT' ? validateRegion(region) : null,
     ].filter(Boolean);
     if (errs.length) { toast.error('Lütfen formdaki hataları düzeltin.'); return; }
 
     setSubmitting(true);
     try {
-      if (role === 'ACCOUNTANT') {
-        const res: CreateAccountantResult = await staffService.createAccountant({
-          firstName: firstName.trim(), lastName: lastName.trim(),
-          phone: phone.trim(), password,
-        });
-        // The server doesn't echo the password — re-show the typed value for first login.
-        setAccountantDone({
-          phone: res.phone ?? phone.trim(),
-          password,
-          name: `${firstName.trim()} ${lastName.trim()}`.trim(),
-        });
-      } else {
-        const res = await staffService.createAgent({
-          firstName: firstName.trim(), lastName: lastName.trim(),
-          phone: phone.trim(),
-          region: region.trim() || undefined,
-        });
-        setAgentDone(res);
-      }
+      const res = await staffService.createStaff({
+        role,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: phone.trim(),
+        region: role === 'FIELD_AGENT' ? region.trim() || undefined : undefined,
+      });
+      setDone(res);
       resetForm();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Oluşturma başarısız.');
@@ -195,10 +156,15 @@ export default function AdminStaffPage() {
   };
 
   const createAnother = () => {
-    setAccountantDone(null);
-    setAgentDone(null);
+    setDone(null);
     resetForm();
   };
+
+  // Role-specific copy on the (otherwise uniform) success screen.
+  const isAccountant = done?.role === 'ACCOUNTANT';
+  const successHeading = isAccountant ? 'Muhasebeci oluşturuldu.' : 'Saha temsilcisi oluşturuldu.';
+  const loginHref      = isAccountant ? '/accounting/login' : '/agent/login';
+  const loginLabel     = isAccountant ? 'Muhasebe girişine git' : 'Temsilci girişine git';
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -216,74 +182,40 @@ export default function AdminStaffPage() {
 
         <AdminNav />
 
-        {/* ── ACCOUNTANT success ── */}
-        {accountantDone ? (
+        {done ? (
+          /* ── Uniform success screen (both roles) ── */
           <div className="bg-white border border-gray-200 rounded-2xl p-6">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500" />
               </div>
-              <h2 className="text-lg font-bold text-gray-900">Muhasebeci oluşturuldu.</h2>
-            </div>
-            <p className="text-sm text-gray-600 mb-4">{accountantDone.name} için giriş bilgileri:</p>
-            <div className="space-y-2.5">
-              <CredRow label="Telefon" value={accountantDone.phone} />
-              <CredRow label="Şifre" value={accountantDone.password} />
-            </div>
-            <div className="mt-4 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3">
-              <p className="text-sm text-emerald-800 leading-relaxed">
-                Bu bilgilerle <span className="font-semibold">/accounting/login</span> adresinden giriş yapabilir.
-              </p>
-            </div>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Link
-                href="/accounting/login"
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors"
-              >
-                Muhasebe girişine git <ArrowRight className="w-4 h-4" />
-              </Link>
-              <button
-                onClick={createAnother}
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-semibold transition-colors"
-              >
-                <RotateCcw className="w-4 h-4" /> Yeni personel oluştur
-              </button>
-            </div>
-          </div>
-        ) : agentDone ? (
-          /* ── FIELD_AGENT success ── */
-          <div className="bg-white border border-gray-200 rounded-2xl p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
-                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-              </div>
-              <h2 className="text-lg font-bold text-gray-900">Saha temsilcisi oluşturuldu.</h2>
+              <h2 className="text-lg font-bold text-gray-900">{successHeading}</h2>
             </div>
             <p className="text-sm text-gray-600 mb-4">
-              {agentDone.user.firstName} {agentDone.user.lastName} ({agentDone.user.phone})
+              {done.user.firstName} {done.user.lastName} ({done.user.phone})
             </p>
 
             {/* Once-only warning — the oneTimePassword exists only in this response */}
             <div className="mb-4 rounded-xl bg-amber-50 border-2 border-amber-300 px-4 py-3 flex items-start gap-2.5">
               <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
               <p className="text-sm text-amber-800 leading-relaxed font-medium">
-                Bu şifre yalnızca bir kez gösterilir — kaydedin. Temsilci{' '}
-                <span className="font-semibold">/agent/login</span> adresinden bu kod ve şifreyle giriş yapıp
+                Bu şifre yalnızca bir kez gösterilir — kaydedin. Personel{' '}
+                <span className="font-semibold">{loginHref}</span> adresinden bu kod ve şifreyle giriş yapıp
                 şifresini değiştirecek.
               </p>
             </div>
 
             <div className="space-y-2.5">
-              <CopyField label="Temsilci Kodu (11 hane)" value={agentDone.agentCode} />
-              <CopyField label="Tek Kullanımlık Şifre" value={agentDone.oneTimePassword} />
+              <CopyField label="Personel Kodu (11 hane)" value={done.staffCode} />
+              <CopyField label="Tek Kullanımlık Şifre" value={done.oneTimePassword} />
             </div>
 
             <div className="mt-5 flex flex-wrap gap-2">
               <Link
-                href="/agent/login"
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors"
+                href={loginHref}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors"
               >
-                Temsilci girişine git <ArrowRight className="w-4 h-4" />
+                {loginLabel} <ArrowRight className="w-4 h-4" />
               </Link>
               <button
                 onClick={createAnother}
@@ -332,38 +264,15 @@ export default function AdminStaffPage() {
               <Field label="Telefon" value={phone} onChange={setPhone} placeholder="09xxxxxxxx" error={phoneErr} type="tel" autoComplete="off" />
             </div>
 
-            {role === 'ACCOUNTANT' ? (
-              <div className="mt-4">
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Şifre</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    autoComplete="new-password"
-                    className="block w-full px-3.5 py-2.5 pr-10 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-colors"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    tabIndex={-1}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                <p className="text-[11px] text-gray-500 mt-1">En az 8 karakter, 1 büyük harf ve 1 rakam içermeli.</p>
-                {passErr && <p className="text-red-500 text-xs mt-1">{passErr}</p>}
-              </div>
-            ) : (
+            {role === 'FIELD_AGENT' && (
               <div className="mt-4">
                 <Field label="Bölge (opsiyonel)" value={region} onChange={setRegion} placeholder="Örn. Şam" error={regErr} autoComplete="off" />
-                <p className="text-[11px] text-gray-500 mt-1">
-                  Şifre sunucu tarafından oluşturulur ve oluşturma sonrası bir kez gösterilir.
-                </p>
               </div>
             )}
+
+            <p className="mt-4 text-[11px] text-gray-500 leading-relaxed">
+              Giriş kodu ve şifre sunucu tarafından oluşturulur; oluşturma sonrası şifre yalnızca bir kez gösterilir.
+            </p>
 
             <button
               onClick={submit}
