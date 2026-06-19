@@ -1,4 +1,5 @@
 import { api } from './api';
+import type { PageMeta } from './stores.service';
 
 // ── Manual transfer top-up (AP-M6) ─────────────────────────────────────────────────
 // User transfers money to our Sham-Cash (etc.) account, tags it with a referenceCode,
@@ -65,6 +66,37 @@ export interface AdminTransferRow {
 
 export interface ConfirmTransferResult {
   transfer: AdminTransferRow;
+  balanceAfter?: string;     // STRING — the credited wallet's new balance
+  currency?: string;
+}
+
+/** A row in the ACCOUNTANT transfer queue (/accounting/transfers). Like the admin
+ *  row, plus the verification outcome (status + who confirmed/rejected + when). */
+export interface AccountingTransferRow {
+  id: string;
+  user: { id?: string; name?: string | null; phone?: string | null } | null;
+  method: TransferMethod;
+  currency?: string;
+  amount: string;            // STRING
+  receivingAccount: string;
+  referenceCode: string;
+  userReference?: string | null;
+  proofUrl?: string | null;  // signed, time-limited proof screenshot URL
+  status: TransferStatus;
+  confirmedById?: string | null;
+  confirmedByName?: string | null; // who confirmed/rejected — audit column
+  confirmedAt?: string | null;
+  rejectionReason?: string | null;
+  createdAt: string;
+}
+
+export interface AccountingTransfersPage {
+  data: AccountingTransferRow[];
+  meta: PageMeta;
+}
+
+/** Result of confirming an accounting transfer (credits the wallet). */
+export interface AccountingConfirmResult {
   balanceAfter?: string;     // STRING — the credited wallet's new balance
   currency?: string;
 }
@@ -143,5 +175,42 @@ export const adminTransfersService = {
   reject: async (id: string, reason: string): Promise<AdminTransferRow> => {
     const res = await api.post<unknown>(`/admin/transfers/${id}/reject`, { reason });
     return unwrap<AdminTransferRow>(res);
+  },
+};
+
+// ── Accounting service (ACCOUNTANT/ADMIN, /api/v1/accounting) ────────────────────────
+
+export const accountingTransfersService = {
+  /** The accounting transfer queue. No status ⇒ pending; 'ALL' ⇒ full history; or a
+   *  specific status. Paginated. */
+  list: async (
+    status: TransferStatus | 'ALL' = 'PENDING_VERIFICATION',
+    page = 1,
+    limit = 20,
+  ): Promise<AccountingTransfersPage> => {
+    const qs = new URLSearchParams({ status, page: String(page), limit: String(limit) });
+    const res = await api.get<unknown>(`/accounting/transfers?${qs.toString()}`);
+    const r = (res ?? {}) as { data?: AccountingTransferRow[]; items?: AccountingTransferRow[]; meta?: PageMeta };
+    const items = Array.isArray(r.data) ? r.data
+      : Array.isArray(r.items) ? r.items
+      : Array.isArray(res) ? (res as AccountingTransferRow[]) : [];
+    const meta: PageMeta = r.meta ?? {
+      total: items.length, page, limit,
+      totalPages: items.length < limit ? page : page + 1,
+      hasNextPage: items.length >= limit,
+      hasPrevPage: page > 1,
+    };
+    return { data: items, meta };
+  },
+
+  /** Confirm a transfer → credits the user's wallet (same chokepoint as admin). */
+  confirm: async (id: string): Promise<AccountingConfirmResult> => {
+    const res = await api.post<unknown>(`/accounting/transfers/${id}/confirm`, {});
+    return unwrap<AccountingConfirmResult>(res);
+  },
+
+  /** Reject a transfer with a reason. */
+  reject: async (id: string, reason: string): Promise<void> => {
+    await api.post<unknown>(`/accounting/transfers/${id}/reject`, { reason });
   },
 };
