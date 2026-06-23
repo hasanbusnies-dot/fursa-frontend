@@ -5,15 +5,15 @@ import { usePathname } from 'next/navigation';
 import { LayoutList, Megaphone, Zap, Store, CalendarClock, Coins, ArrowLeftRight, UserPlus, Calculator } from 'lucide-react';
 
 const LINKS = [
-  { href: '/admin/listings',       label: 'İlan Yönetimi',     icon: LayoutList     },
-  { href: '/admin/advertisements', label: 'Reklam Yönetimi',   icon: Megaphone      },
-  { href: '/admin/dopings',        label: 'Doping Yönetimi',   icon: Zap            },
-  { href: '/admin/stores',         label: 'Mağaza Onayları',   icon: Store          },
-  { href: '/admin/renewals',       label: 'Yenilemeler',       icon: CalendarClock  },
-  { href: '/admin/commissions',    label: 'Komisyonlar',       icon: Coins          },
-  { href: '/admin/transfers',      label: 'Transfer Onayları', icon: ArrowLeftRight },
-  { href: '/admin/staff',          label: 'Personel',          icon: UserPlus       },
-  { href: '/accounting',           label: 'Muhasebe',          icon: Calculator     },
+  { href: '/admin/listings',       label: 'إدارة الإعلانات',         icon: LayoutList     },
+  { href: '/admin/advertisements', label: 'الإعلانات الدعائية',      icon: Megaphone      },
+  { href: '/admin/dopings',        label: 'إدارة التمييز',           icon: Zap            },
+  { href: '/admin/stores',         label: 'اعتماد المتاجر',          icon: Store          },
+  { href: '/admin/renewals',       label: 'التجديدات',               icon: CalendarClock  },
+  { href: '/admin/commissions',    label: 'العمولات',                icon: Coins          },
+  { href: '/admin/transfers',      label: 'اعتماد الحوالات',         icon: ArrowLeftRight },
+  { href: '/admin/staff',          label: 'الموظفون',                icon: UserPlus       },
+  { href: '/accounting',           label: 'المحاسبة',                icon: Calculator     },
 ];
 
 export function AdminNav() {

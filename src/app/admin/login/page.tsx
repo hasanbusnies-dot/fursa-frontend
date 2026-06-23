@@ -12,8 +12,8 @@ import { authService } from '@/services/auth.service';
 import { ApiError } from '@/services/api';
 
 const schema = z.object({
-  email:    z.string().email('Enter a valid email address'),
-  password: z.string().min(1, 'Password is required'),
+  email:    z.string().email('أدخل بريداً إلكترونياً صحيحاً'),
+  password: z.string().min(1, 'كلمة المرور مطلوبة'),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -52,18 +52,18 @@ export default function AdminLoginPage() {
 
       // Step 3 — role gate
       if (finalUser.userType !== 'ADMIN') {
-        setGlobalError('Access denied. This portal is for administrators only.');
+        setGlobalError('الدخول مرفوض. هذه البوابة مخصّصة للمسؤولين فقط.');
         logout();
         return;
       }
 
-      toast.success(`Welcome back, ${finalUser.profile?.firstName ?? 'Admin'}.`);
+      toast.success(`أهلاً بعودتك، ${finalUser.profile?.firstName ?? 'المسؤول'}.`);
       router.push('/admin/listings');
     } catch (err) {
       setGlobalError(
         err instanceof ApiError || err instanceof Error
           ? err.message
-          : 'Invalid credentials. Please try again.'
+          : 'بيانات الدخول غير صحيحة. حاول مرة أخرى.'
       );
     } finally {
       setIsLoading(false);
@@ -83,8 +83,8 @@ export default function AdminLoginPage() {
               <ShieldCheck className="w-6 h-6 text-white" />
             </div>
             <div className="text-center">
-              <h1 className="text-lg font-bold text-white tracking-tight">Admin Portal</h1>
-              <p className="text-blue-300 text-xs mt-0.5">Authorized personnel only</p>
+              <h1 className="text-lg font-bold text-white tracking-tight">بوابة الإدارة</h1>
+              <p className="text-blue-300 text-xs mt-0.5">مخصّصة للمسؤولين المصرّح لهم</p>
             </div>
           </div>
 
@@ -94,12 +94,13 @@ export default function AdminLoginPage() {
             {/* Email */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                Email
+                البريد الإلكتروني
               </label>
               <input
                 type="email"
                 autoComplete="email"
                 placeholder="admin@forsa.com"
+                dir="ltr"
                 {...register('email')}
                 className="w-full bg-slate-700/60 border border-slate-600 text-white rounded-lg px-3 py-2.5 text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-colors"
               />
@@ -111,7 +112,7 @@ export default function AdminLoginPage() {
             {/* Password */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                Password
+                كلمة المرور
               </label>
               <div className="relative">
                 <input
@@ -149,7 +150,7 @@ export default function AdminLoginPage() {
               className="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isLoading ? 'Signing in…' : 'Sign in to Admin Panel'}
+              {isLoading ? 'جارٍ تسجيل الدخول…' : 'تسجيل الدخول إلى لوحة الإدارة'}
             </button>
           </form>
         </div>
@@ -157,7 +158,7 @@ export default function AdminLoginPage() {
         {/* Back link */}
         <p className="text-center mt-6 text-slate-600 text-sm">
           <a href="/" className="hover:text-slate-400 transition-colors">
-            ← Back to main site
+            ← العودة إلى الموقع الرئيسي
           </a>
         </p>
       </div>

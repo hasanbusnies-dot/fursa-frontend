@@ -14,9 +14,9 @@ import { ApiError } from '@/services/api';
 // ── Schemas (3-factor code-login, mirrors the agent flow) ───────────────────────────
 
 const loginSchema = z.object({
-  staffLoginCode: z.string().regex(/^\d{11}$/, 'Personel kodu 11 rakamdan oluşur'),
-  phone:          z.string().min(1, 'Telefon gerekli'),
-  password:       z.string().min(1, 'Şifre gerekli'),
+  staffLoginCode: z.string().regex(/^\d{11}$/, 'رمز الموظف مكوّن من 11 رقماً'),
+  phone:          z.string().min(1, 'رقم الهاتف مطلوب'),
+  password:       z.string().min(1, 'كلمة المرور مطلوبة'),
 });
 type LoginForm = z.infer<typeof loginSchema>;
 
@@ -24,18 +24,18 @@ const resetSchema = z
   .object({
     newPassword: z
       .string()
-      .min(8, 'Şifre en az 8 karakter olmalı')
-      .regex(/[A-Z]/, 'En az 1 büyük harf')
-      .regex(/\d/, 'En az 1 rakam'),
-    confirm: z.string().min(1, 'Şifreyi tekrar girin'),
+      .min(8, 'كلمة المرور 8 أحرف على الأقل')
+      .regex(/[A-Z]/, 'حرف كبير واحد على الأقل')
+      .regex(/\d/, 'رقم واحد على الأقل'),
+    confirm: z.string().min(1, 'أعد إدخال كلمة المرور'),
   })
   .refine((d) => d.newPassword === d.confirm, {
     path: ['confirm'],
-    message: 'Şifreler eşleşmiyor',
+    message: 'كلمتا المرور غير متطابقتين',
   });
 type ResetForm = z.infer<typeof resetSchema>;
 
-const GENERIC_ERROR = 'Giriş bilgileri hatalı. Tekrar deneyin.';
+const GENERIC_ERROR = 'بيانات الدخول غير صحيحة. حاول مرة أخرى.';
 
 // ── Page ────────────────────────────────────────────────────────────────────────
 
@@ -59,11 +59,11 @@ export default function AccountingLoginPage() {
     // ACCOUNTANT (or ADMIN) may enter; the backend gates this too — verify defensively.
     if (authed.user.userType !== 'ACCOUNTANT' && authed.user.userType !== 'ADMIN') {
       logout();
-      setGlobalError('Erişim reddedildi. Bu portal yalnızca muhasebe içindir.');
+      setGlobalError('الدخول مرفوض. هذه البوابة مخصّصة للمحاسبة فقط.');
       return;
     }
     setAuth(authed.user, authed.token, authed.refreshToken);
-    toast.success(`Hoş geldiniz, ${authed.user.profile?.firstName ?? 'Muhasebe'}.`);
+    toast.success(`أهلاً، ${authed.user.profile?.firstName ?? 'المحاسبة'}.`);
     router.replace('/accounting');
   };
 
@@ -111,10 +111,10 @@ export default function AccountingLoginPage() {
             </div>
             <div className="text-center">
               <h1 className="text-lg font-bold text-white tracking-tight">
-                {isReset ? 'Şifre Belirle' : 'Muhasebe Portalı'}
+                {isReset ? 'تعيين كلمة المرور' : 'بوابة المحاسبة'}
               </h1>
               <p className="text-emerald-300 text-xs mt-0.5">
-                {isReset ? 'Devam etmek için yeni bir şifre seçin' : 'Yalnızca yetkili personel'}
+                {isReset ? 'اختر كلمة مرور جديدة لمتابعة الدخول' : 'مخصّصة للموظفين المصرّح لهم'}
               </p>
             </div>
           </div>
@@ -123,12 +123,12 @@ export default function AccountingLoginPage() {
           {!isReset && (
             <form onSubmit={loginForm.handleSubmit(onLogin)} className="px-8 py-7 space-y-5">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Personel Kodu</label>
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">رمز الموظف</label>
                 <input
                   inputMode="numeric"
                   autoComplete="off"
                   maxLength={11}
-                  placeholder="11 haneli kod"
+                  placeholder="11 رقماً"
                   dir="ltr"
                   {...loginForm.register('staffLoginCode')}
                   className="w-full bg-slate-700/60 border border-slate-600 text-white rounded-lg px-3 py-2.5 text-sm placeholder-slate-500 tracking-widest focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
@@ -139,7 +139,7 @@ export default function AccountingLoginPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Telefon</label>
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">رقم الهاتف</label>
                 <input
                   inputMode="tel"
                   autoComplete="username"
@@ -154,7 +154,7 @@ export default function AccountingLoginPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Şifre</label>
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">كلمة المرور</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -189,7 +189,7 @@ export default function AccountingLoginPage() {
                 className="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
               >
                 {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                {isLoading ? 'Giriş yapılıyor…' : 'Muhasebe Paneline Giriş'}
+                {isLoading ? 'جارٍ تسجيل الدخول…' : 'تسجيل الدخول إلى لوحة المحاسبة'}
               </button>
             </form>
           )}
@@ -198,7 +198,7 @@ export default function AccountingLoginPage() {
           {isReset && (
             <form onSubmit={resetForm.handleSubmit(onReset)} className="px-8 py-7 space-y-5">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Yeni Şifre</label>
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">كلمة المرور الجديدة</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -222,7 +222,7 @@ export default function AccountingLoginPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Şifre Tekrar</label>
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">تأكيد كلمة المرور</label>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
@@ -236,7 +236,7 @@ export default function AccountingLoginPage() {
               </div>
 
               <p className="text-[11px] text-slate-500 leading-relaxed">
-                Şifre en az 8 karakter, 1 büyük harf ve 1 rakam içermelidir.
+                يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل، وحرف كبير واحد، ورقم واحد.
               </p>
 
               {globalError && (
@@ -251,14 +251,14 @@ export default function AccountingLoginPage() {
                 className="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
               >
                 {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                {isLoading ? 'Kaydediliyor…' : 'Kaydet ve Devam Et'}
+                {isLoading ? 'جارٍ الحفظ…' : 'حفظ ومتابعة'}
               </button>
             </form>
           )}
         </div>
 
         <p className="text-center mt-6 text-slate-600 text-sm">
-          <a href="/" className="hover:text-slate-400 transition-colors">← Ana siteye dön</a>
+          <a href="/" className="hover:text-slate-400 transition-colors">← العودة إلى الموقع الرئيسي</a>
         </p>
       </div>
     </div>
