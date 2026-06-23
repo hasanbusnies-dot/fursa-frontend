@@ -15,34 +15,35 @@ import type { CreateAdPayload } from '@/services/advertisements.service';
 import type { Advertisement, ApiResponse } from '@/types';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { resolveMediaUrl } from '@/lib/utils';
+import { UI_AR } from '@/lib/staff-labels';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const BG_PRESETS = [
-  { label: 'Gece Mavisi',     value: 'linear-gradient(135deg,#1e3a5f,#2563eb)' },
-  { label: 'Turuncu Ateş',    value: 'linear-gradient(135deg,#f97316,#ea580c)' },
-  { label: 'Mor Rüya',        value: 'linear-gradient(135deg,#7c3aed,#4f46e5)' },
-  { label: 'Orman Yeşili',    value: 'linear-gradient(135deg,#065f46,#10b981)' },
-  { label: 'Kırmızı Güç',     value: 'linear-gradient(135deg,#991b1b,#ef4444)' },
-  { label: 'Obsidyen',        value: '#111827' },
-  { label: 'Altın Sarısı',    value: 'linear-gradient(135deg,#b45309,#f59e0b)' },
-  { label: 'Pembe Gün Batımı', value: 'linear-gradient(135deg,#be185d,#f472b6)' },
+  { label: 'أزرق ليلي',    value: 'linear-gradient(135deg,#1e3a5f,#2563eb)' },
+  { label: 'برتقالي ناري', value: 'linear-gradient(135deg,#f97316,#ea580c)' },
+  { label: 'بنفسجي حالم',  value: 'linear-gradient(135deg,#7c3aed,#4f46e5)' },
+  { label: 'أخضر غابي',    value: 'linear-gradient(135deg,#065f46,#10b981)' },
+  { label: 'أحمر قويّ',    value: 'linear-gradient(135deg,#991b1b,#ef4444)' },
+  { label: 'أسود فحمي',    value: '#111827' },
+  { label: 'أصفر ذهبي',    value: 'linear-gradient(135deg,#b45309,#f59e0b)' },
+  { label: 'وردي الغروب',  value: 'linear-gradient(135deg,#be185d,#f472b6)' },
 ];
 
 const TEXT_COLORS = [
-  { label: 'Beyaz',     value: '#ffffff' },
-  { label: 'Sarı',      value: '#fde68a' },
-  { label: 'Açık Mavi', value: '#bfdbfe' },
-  { label: 'Turuncu',   value: '#fed7aa' },
-  { label: 'Pembe',     value: '#fbcfe8' },
-  { label: 'Siyah',     value: '#111827' },
+  { label: 'أبيض',      value: '#ffffff' },
+  { label: 'أصفر',      value: '#fde68a' },
+  { label: 'أزرق فاتح', value: '#bfdbfe' },
+  { label: 'برتقالي',   value: '#fed7aa' },
+  { label: 'وردي',      value: '#fbcfe8' },
+  { label: 'أسود',      value: '#111827' },
 ];
 
 const FONT_SIZES = [
-  { label: 'Küçük',     value: '1.25rem'  },
-  { label: 'Orta',      value: '1.875rem' },
-  { label: 'Büyük',     value: '3rem'     },
-  { label: 'Çok Büyük', value: '4.5rem'   },
+  { label: 'صغير',     value: '1.25rem'  },
+  { label: 'متوسط',    value: '1.875rem' },
+  { label: 'كبير',     value: '3rem'     },
+  { label: 'كبير جداً', value: '4.5rem'   },
 ];
 
 const EMPTY: CreateAdPayload = {
@@ -79,7 +80,7 @@ function initUploadStateFromAd(ad: Advertisement): UploadState {
     status: 'done',
     url: ad.mediaUrl,
     previewUrl: resolveMediaUrl(ad.mediaUrl),
-    name: 'Mevcut dosya',
+    name: 'الملف الحالي',
   };
 }
 
@@ -99,11 +100,11 @@ async function uploadFile(
     const url = 'url' in res.data
       ? res.data.url
       : (res.data as { urls: string[] }).urls[0] ?? '';
-    if (!url) throw new Error('Sunucu URL döndürmedi.');
+    if (!url) throw new Error('لم يُرجع الخادم رابطاً.');
     onState({ status: 'done', url, previewUrl: resolveMediaUrl(url), name: file.name });
     onUrl(url, mediaType);
   } catch (err) {
-    const msg = err instanceof ApiError ? err.message : 'Yükleme başarısız oldu.';
+    const msg = err instanceof ApiError ? err.message : 'فشل الرفع.';
     onState({ status: 'error', message: msg });
     toast.error(msg);
   }
@@ -141,17 +142,17 @@ function MediaUploader({
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 text-green-700 text-xs font-semibold mb-0.5">
-              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Yüklendi
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> تم الرفع
             </div>
             <p className="text-xs text-gray-600 truncate">{uploadState.name}</p>
             <p className="text-[10px] text-gray-400 truncate mt-0.5">{uploadState.url}</p>
           </div>
-          <button type="button" onClick={onClear} className="p-1 rounded-full hover:bg-green-200 text-green-600 transition-colors shrink-0" aria-label="Kaldır">
+          <button type="button" onClick={onClear} className="p-1 rounded-full hover:bg-green-200 text-green-600 transition-colors shrink-0" aria-label="إزالة">
             <X className="w-4 h-4" />
           </button>
         </div>
         <button type="button" onClick={() => inputRef.current?.click()} className="w-full py-1.5 text-[11px] text-green-700 hover:text-green-900 font-medium transition-colors border-t border-green-200 bg-green-50 hover:bg-green-100">
-          Farklı dosya seç
+          اختر ملفاً آخر
         </button>
         <input ref={inputRef} type="file" accept="image/*,image/gif,video/*" className="hidden" onChange={(e) => handleFiles(e.target.files)} />
       </div>
@@ -162,7 +163,7 @@ function MediaUploader({
     return (
       <div className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blue-300 bg-blue-50 py-8 px-4">
         <Loader2 className="w-7 h-7 text-blue-500 animate-spin" />
-        <p className="text-sm font-medium text-blue-600">Yükleniyor…</p>
+        <p className="text-sm font-medium text-blue-600">جارٍ الرفع…</p>
       </div>
     );
   }
@@ -186,9 +187,9 @@ function MediaUploader({
       </div>
       <div className="text-center">
         <p className={`text-sm font-semibold ${uploadState.status === 'error' ? 'text-red-600' : 'text-gray-700'}`}>
-          {uploadState.status === 'error' ? uploadState.message : dragging ? 'Bırak!' : 'Bilgisayardan Yükle'}
+          {uploadState.status === 'error' ? uploadState.message : dragging ? 'أفلِت!' : 'ارفع من الجهاز'}
         </p>
-        <p className="text-xs text-gray-400 mt-0.5">Resim, GIF veya Video — sürükle-bırak veya tıkla</p>
+        <p className="text-xs text-gray-400 mt-0.5">صورة أو GIF أو فيديو — اسحب وأفلِت أو انقر</p>
       </div>
       <input ref={inputRef} type="file" accept="image/*,image/gif,video/*" className="hidden" onChange={(e) => handleFiles(e.target.files)} />
     </div>
@@ -207,26 +208,26 @@ function TextDesignStudio({
   return (
     <div className="space-y-4 rounded-xl border border-violet-200 bg-violet-50/50 p-4">
       <p className="text-xs font-bold text-violet-700 uppercase tracking-widest flex items-center gap-1.5">
-        <Palette className="w-3.5 h-3.5" /> Tasarım Stüdyosu
+        <Palette className="w-3.5 h-3.5" /> استوديو التصميم
       </p>
 
       {/* Ad text */}
       <div>
         <label className="block text-xs font-semibold text-gray-600 mb-1.5 flex items-center gap-1">
-          <Type className="w-3.5 h-3.5" /> Reklam Yazısı
+          <Type className="w-3.5 h-3.5" /> نص الإعلان
         </label>
         <textarea
           value={form.adText ?? ''}
           onChange={(e) => onChange({ adText: e.target.value })}
           rows={3}
-          placeholder="Reklam metninizi buraya yazın…"
+          placeholder="اكتب نص إعلانك هنا…"
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400 resize-none bg-white transition"
         />
       </div>
 
       {/* Background presets */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Arka Plan</label>
+        <label className="block text-xs font-semibold text-gray-600 mb-1.5">الخلفية</label>
         <div className="grid grid-cols-4 gap-2">
           {BG_PRESETS.map((p) => (
             <button
@@ -244,13 +245,13 @@ function TextDesignStudio({
           ))}
         </div>
         <p className="text-[10px] text-gray-400 mt-1 italic">
-          {BG_PRESETS.find((p) => p.value === form.backgroundColor)?.label ?? 'Özel'}
+          {BG_PRESETS.find((p) => p.value === form.backgroundColor)?.label ?? 'مخصّص'}
         </p>
       </div>
 
       {/* Text color swatches + custom picker */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Yazı Rengi</label>
+        <label className="block text-xs font-semibold text-gray-600 mb-1.5">لون النص</label>
         <div className="flex items-center gap-2 flex-wrap">
           {TEXT_COLORS.map((c) => (
             <button
@@ -266,21 +267,21 @@ function TextDesignStudio({
               style={{ background: c.value }}
             />
           ))}
-          <label className="flex items-center gap-1 cursor-pointer" title="Özel renk">
+          <label className="flex items-center gap-1 cursor-pointer" title="لون مخصّص">
             <input
               type="color"
               value={form.textColor ?? '#ffffff'}
               onChange={(e) => onChange({ textColor: e.target.value })}
               className="w-7 h-7 rounded-full border-2 border-gray-300 cursor-pointer p-0"
             />
-            <span className="text-[10px] text-gray-500">Özel</span>
+            <span className="text-[10px] text-gray-500">مخصّص</span>
           </label>
         </div>
       </div>
 
       {/* Font size */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Yazı Boyutu</label>
+        <label className="block text-xs font-semibold text-gray-600 mb-1.5">حجم الخط</label>
         <div className="flex gap-2 flex-wrap">
           {FONT_SIZES.map((s) => (
             <button
@@ -301,7 +302,7 @@ function TextDesignStudio({
 
       {/* Live preview */}
       <div>
-        <p className="text-xs font-semibold text-gray-600 mb-1.5">Canlı Önizleme</p>
+        <p className="text-xs font-semibold text-gray-600 mb-1.5">معاينة حيّة</p>
         <div
           className="w-full h-36 rounded-xl flex items-center justify-center p-6 shadow-inner overflow-hidden"
           style={{ background: form.backgroundColor ?? BG_PRESETS[0].value }}
@@ -313,7 +314,7 @@ function TextDesignStudio({
               fontSize: form.fontSize ?? '1.875rem',
             }}
           >
-            {form.adText || 'Reklam yazınız burada görünecek…'}
+            {form.adText || 'سيظهر نص إعلانك هنا…'}
           </p>
         </div>
       </div>
@@ -363,10 +364,10 @@ function EditModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.companyName.trim()) { toast.error('Şirket adı gerekli.'); return; }
-    if (form.mediaType !== 'TEXT' && !(form.mediaUrl ?? '').trim()) { toast.error('Medya dosyası gerekli.'); return; }
-    if (form.mediaType === 'TEXT' && !form.adText?.trim()) { toast.error('Reklam yazısı gerekli.'); return; }
-    if (!form.targetUrl.trim()) { toast.error('Hedef URL gerekli.'); return; }
+    if (!form.companyName.trim()) { toast.error('اسم الشركة مطلوب.'); return; }
+    if (form.mediaType !== 'TEXT' && !(form.mediaUrl ?? '').trim()) { toast.error('ملف الوسائط مطلوب.'); return; }
+    if (form.mediaType === 'TEXT' && !form.adText?.trim()) { toast.error('نص الإعلان مطلوب.'); return; }
+    if (!form.targetUrl.trim()) { toast.error('رابط الوجهة مطلوب.'); return; }
 
     const payload =
       form.mediaType === 'TEXT'
@@ -389,9 +390,9 @@ function EditModal({
     try {
       const updated = await advertisementsService.update(ad.id, payload as CreateAdPayload);
       onSave(updated);
-      toast.success('Reklam güncellendi.');
+      toast.success('تم تحديث الإعلان.');
     } catch {
-      toast.error('Güncelleme başarısız.');
+      toast.error('فشل التحديث.');
     } finally {
       setSaving(false);
     }
@@ -404,9 +405,9 @@ function EditModal({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-            <Pencil className="w-4 h-4 text-blue-600" /> Reklamı Düzenle
+            <Pencil className="w-4 h-4 text-blue-600" /> تعديل الإعلان
           </h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" aria-label="Kapat">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" aria-label="إغلاق">
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
@@ -416,7 +417,7 @@ function EditModal({
           {/* Company + Target URL */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Şirket Adı</label>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">اسم الشركة</label>
               <input
                 type="text"
                 value={form.companyName}
@@ -426,7 +427,7 @@ function EditModal({
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                Hedef URL <span className="text-gray-400 font-normal">(Hedef Site)</span>
+                رابط الوجهة <span className="text-gray-400 font-normal">(الموقع المستهدف)</span>
               </label>
               <input
                 type="url"
@@ -440,16 +441,16 @@ function EditModal({
 
           {/* Media type */}
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Medya Türü</label>
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5">نوع الوسائط</label>
             <select
               value={form.mediaType}
               onChange={(e) => patch({ mediaType: e.target.value as CreateAdPayload['mediaType'] })}
               className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 bg-white transition"
             >
-              <option value="IMAGE">Resim (IMAGE)</option>
+              <option value="IMAGE">صورة (IMAGE)</option>
               <option value="GIF">GIF</option>
-              <option value="VIDEO">Video (VIDEO)</option>
-              <option value="TEXT">Yazı / Tasarım (TEXT)</option>
+              <option value="VIDEO">فيديو (VIDEO)</option>
+              <option value="TEXT">نص / تصميم (TEXT)</option>
             </select>
           </div>
 
@@ -458,7 +459,7 @@ function EditModal({
             <TextDesignStudio form={form} onChange={patch} />
           ) : (
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Medya Dosyası</label>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">ملف الوسائط</label>
               <MediaUploader uploadState={uploadState} onChange={handleFileSelect} onClear={clearUpload} />
             </div>
           )}
@@ -472,7 +473,7 @@ function EditModal({
               onChange={(e) => patch({ isActive: e.target.checked })}
               className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
-            <label htmlFor="edit-isActive" className="text-sm text-gray-700 font-medium">Yayında</label>
+            <label htmlFor="edit-isActive" className="text-sm text-gray-700 font-medium">منشور</label>
           </div>
 
           {/* Actions */}
@@ -482,7 +483,7 @@ function EditModal({
               onClick={onClose}
               className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors"
             >
-              İptal
+              {UI_AR.cancel}
             </button>
             <button
               type="submit"
@@ -490,7 +491,7 @@ function EditModal({
               className="inline-flex items-center gap-2 px-5 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-              Kaydet
+              {UI_AR.save}
             </button>
           </div>
         </form>
@@ -528,7 +529,7 @@ export default function AdminAdvertisementsPage() {
     advertisementsService
       .getAll()
       .then((data) => { if (!cancelled) setAds(data); })
-      .catch(() => { if (!cancelled) toast.error('Reklamlar yüklenemedi.'); })
+      .catch(() => { if (!cancelled) toast.error('تعذّر تحميل الإعلانات.'); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [mounted, isAuthenticated, user]);
@@ -557,10 +558,10 @@ export default function AdminAdvertisementsPage() {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.companyName.trim()) { toast.error('Şirket adı gerekli.'); return; }
-    if (form.mediaType !== 'TEXT' && !(form.mediaUrl ?? '').trim()) { toast.error('Lütfen önce bir medya dosyası yükleyin.'); return; }
-    if (form.mediaType === 'TEXT' && !form.adText?.trim()) { toast.error('Reklam yazısı gerekli.'); return; }
-    if (!form.targetUrl.trim()) { toast.error('Hedef URL gerekli.'); return; }
+    if (!form.companyName.trim()) { toast.error('اسم الشركة مطلوب.'); return; }
+    if (form.mediaType !== 'TEXT' && !(form.mediaUrl ?? '').trim()) { toast.error('يرجى رفع ملف وسائط أولاً.'); return; }
+    if (form.mediaType === 'TEXT' && !form.adText?.trim()) { toast.error('نص الإعلان مطلوب.'); return; }
+    if (!form.targetUrl.trim()) { toast.error('رابط الوجهة مطلوب.'); return; }
 
     // Build an explicit payload so TEXT ads never send an empty-string mediaUrl
     const payload =
@@ -586,9 +587,9 @@ export default function AdminAdvertisementsPage() {
       setAds((prev) => [created, ...prev]);
       setForm(EMPTY);
       setUploadState({ status: 'idle' });
-      toast.success('Reklam oluşturuldu.');
+      toast.success('تم إنشاء الإعلان.');
     } catch {
-      toast.error('Reklam oluşturulamadı.');
+      toast.error('تعذّر إنشاء الإعلان.');
     } finally {
       setCreating(false);
     }
@@ -600,21 +601,21 @@ export default function AdminAdvertisementsPage() {
       await advertisementsService.toggleActive(ad.id, !ad.isActive);
       setAds((prev) => prev.map((a) => a.id === ad.id ? { ...a, isActive: !a.isActive } : a));
     } catch {
-      toast.error('Durum güncellenemedi.');
+      toast.error('تعذّر تحديث الحالة.');
     } finally {
       removeBusy(ad.id);
     }
   }
 
   async function handleDelete(id: string) {
-    if (!window.confirm('Bu reklamı silmek istediğinizden emin misiniz?')) return;
+    if (!window.confirm('هل أنت متأكد من حذف هذا الإعلان؟')) return;
     addBusy(id);
     try {
       await advertisementsService.delete(id);
       setAds((prev) => prev.filter((a) => a.id !== id));
-      toast.success('Reklam silindi.');
+      toast.success('تم حذف الإعلان.');
     } catch {
-      toast.error('Silme işlemi başarısız.');
+      toast.error('فشل الحذف.');
     } finally {
       removeBusy(id);
     }
@@ -647,8 +648,8 @@ export default function AdminAdvertisementsPage() {
             <Megaphone className="w-5 h-5 text-violet-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Reklam Yönetimi</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Ana sayfa sponsorlu reklam alanını yönetin</p>
+            <h1 className="text-2xl font-bold text-gray-900">الإعلانات الدعائية</h1>
+            <p className="text-sm text-gray-500 mt-0.5">أدِر مساحة الإعلانات المموَّلة في الصفحة الرئيسية</p>
           </div>
         </div>
 
@@ -657,7 +658,7 @@ export default function AdminAdvertisementsPage() {
         {/* ── Create form ─────────────────────────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-8">
           <h2 className="text-base font-semibold text-gray-800 mb-5 flex items-center gap-2">
-            <Plus className="w-4 h-4 text-blue-600" /> Yeni Reklam Ekle
+            <Plus className="w-4 h-4 text-blue-600" /> إضافة إعلان جديد
           </h2>
 
           <form onSubmit={handleCreate} className="space-y-5">
@@ -665,24 +666,24 @@ export default function AdminAdvertisementsPage() {
             {/* Row 1: Company + Target URL */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Şirket Adı</label>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">اسم الشركة</label>
                 <input
                   type="text"
                   value={form.companyName}
                   onChange={(e) => patchForm({ companyName: e.target.value })}
-                  placeholder="Örn. Forsa Motors"
+                  placeholder="مثال: Forsa Motors"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition"
                 />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                  Hedef URL <span className="text-gray-400 font-normal">(Hedef Site)</span>
+                  رابط الوجهة <span className="text-gray-400 font-normal">(الموقع المستهدف)</span>
                 </label>
                 <input
                   type="url"
                   value={form.targetUrl}
                   onChange={(e) => patchForm({ targetUrl: e.target.value })}
-                  placeholder="https://orneksirket.com"
+                  placeholder="https://example.com"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition"
                 />
               </div>
@@ -692,9 +693,9 @@ export default function AdminAdvertisementsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                  Medya Türü
+                  نوع الوسائط
                   {uploadState.status === 'done' && form.mediaType !== 'TEXT' && (
-                    <span className="ml-2 text-[10px] text-green-600 font-medium">(otomatik algılandı)</span>
+                    <span className="ml-2 text-[10px] text-green-600 font-medium">(تم التعرّف تلقائياً)</span>
                   )}
                 </label>
                 <select
@@ -702,10 +703,10 @@ export default function AdminAdvertisementsPage() {
                   onChange={(e) => patchForm({ mediaType: e.target.value as CreateAdPayload['mediaType'] })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 bg-white transition"
                 >
-                  <option value="IMAGE">Resim (IMAGE)</option>
+                  <option value="IMAGE">صورة (IMAGE)</option>
                   <option value="GIF">GIF</option>
-                  <option value="VIDEO">Video (VIDEO)</option>
-                  <option value="TEXT">Yazı / Tasarım (TEXT)</option>
+                  <option value="VIDEO">فيديو (VIDEO)</option>
+                  <option value="TEXT">نص / تصميم (TEXT)</option>
                 </select>
 
                 <div className="mt-4 flex items-center gap-2">
@@ -716,14 +717,14 @@ export default function AdminAdvertisementsPage() {
                     onChange={(e) => patchForm({ isActive: e.target.checked })}
                     className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <label htmlFor="isActive" className="text-sm text-gray-700 font-medium">Hemen yayınla</label>
+                  <label htmlFor="isActive" className="text-sm text-gray-700 font-medium">نشر فوري</label>
                 </div>
               </div>
 
               {/* Right: file upload (only for non-TEXT) */}
               {form.mediaType !== 'TEXT' && (
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">Medya Dosyası</label>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">ملف الوسائط</label>
                   <MediaUploader uploadState={uploadState} onChange={handleFileSelect} onClear={clearUpload} />
                 </div>
               )}
@@ -742,7 +743,7 @@ export default function AdminAdvertisementsPage() {
                 className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
               >
                 {creating && <Loader2 className="w-4 h-4 animate-spin" />}
-                Reklam Oluştur
+                إنشاء إعلان
               </button>
             </div>
           </form>
@@ -754,12 +755,12 @@ export default function AdminAdvertisementsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  <th className="px-4 py-3 text-left">Önizleme</th>
-                  <th className="px-4 py-3 text-left">Şirket</th>
-                  <th className="px-4 py-3 text-left">Tür</th>
-                  <th className="px-4 py-3 text-left">Hedef Site</th>
-                  <th className="px-4 py-3 text-left">Durum</th>
-                  <th className="px-4 py-3 text-left">İşlemler</th>
+                  <th className="px-4 py-3 text-start">معاينة</th>
+                  <th className="px-4 py-3 text-start">الشركة</th>
+                  <th className="px-4 py-3 text-start">النوع</th>
+                  <th className="px-4 py-3 text-start">الموقع المستهدف</th>
+                  <th className="px-4 py-3 text-start">الحالة</th>
+                  <th className="px-4 py-3 text-start">إجراءات</th>
                 </tr>
               </thead>
               <tbody>
@@ -775,7 +776,7 @@ export default function AdminAdvertisementsPage() {
                   <tr>
                     <td colSpan={6} className="py-16 text-center">
                       <Megaphone className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                      <p className="text-sm font-medium text-gray-500">Henüz reklam yok</p>
+                      <p className="text-sm font-medium text-gray-500">لا توجد إعلانات بعد</p>
                     </td>
                   </tr>
                 )}
@@ -857,7 +858,7 @@ export default function AdminAdvertisementsPage() {
                             <ToggleLeft className="w-5 h-5 text-gray-400" />
                           )}
                           <span className={ad.isActive ? 'text-green-600' : 'text-gray-400'}>
-                            {ad.isActive ? 'Aktif' : 'Pasif'}
+                            {ad.isActive ? 'نشط' : 'غير نشط'}
                           </span>
                         </button>
                       </td>
@@ -870,7 +871,7 @@ export default function AdminAdvertisementsPage() {
                             disabled={busy}
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100 font-medium transition-colors text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <Pencil className="w-3 h-3" /> Düzenle
+                            <Pencil className="w-3 h-3" /> {UI_AR.edit}
                           </button>
                           <button
                             onClick={() => handleDelete(ad.id)}
@@ -878,7 +879,7 @@ export default function AdminAdvertisementsPage() {
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 font-medium transition-colors text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
-                            Sil
+                            {UI_AR.delete}
                           </button>
                         </div>
                       </td>

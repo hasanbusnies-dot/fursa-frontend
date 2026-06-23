@@ -13,6 +13,7 @@ import { listingsService } from '@/services/listings.service';
 import { categoriesService } from '@/services/categories.service';
 import type { Category, Listing } from '@/types';
 import { AdminNav } from '@/components/admin/AdminNav';
+import { LISTING_STATUS_AR, UI_AR } from '@/lib/staff-labels';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -24,22 +25,22 @@ function formatPrice(price: number, currency: 'SYP' | 'USD') {
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60_000);
-  if (mins < 60)  return `${mins}d önce`;
+  if (mins < 60)  return `منذ ${mins} د`;
   const hrs = Math.floor(mins / 60);
-  if (hrs  < 24)  return `${hrs}s önce`;
-  return `${Math.floor(hrs / 24)}g önce`;
+  if (hrs  < 24)  return `منذ ${hrs} س`;
+  return `منذ ${Math.floor(hrs / 24)} ي`;
 }
 
 // ── Status badge ──────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status?: string }) {
   const map: Record<string, { label: string; cls: string }> = {
-    ACTIVE:         { label: 'Aktif',        cls: 'bg-green-100 text-green-700' },
-    PENDING_REVIEW: { label: 'İncelemede',   cls: 'bg-amber-100 text-amber-700' },
-    PENDING:        { label: 'Bekliyor',     cls: 'bg-amber-100 text-amber-700' },
-    REJECTED:       { label: 'Reddedildi',   cls: 'bg-red-100 text-red-600' },
-    SOLD:           { label: 'Satıldı',      cls: 'bg-gray-100 text-gray-500' },
-    INACTIVE:       { label: 'Pasif',        cls: 'bg-gray-100 text-gray-500' },
+    ACTIVE:         { label: LISTING_STATUS_AR.ACTIVE,         cls: 'bg-green-100 text-green-700' },
+    PENDING_REVIEW: { label: LISTING_STATUS_AR.PENDING_REVIEW, cls: 'bg-amber-100 text-amber-700' },
+    PENDING:        { label: LISTING_STATUS_AR.PENDING,        cls: 'bg-amber-100 text-amber-700' },
+    REJECTED:       { label: LISTING_STATUS_AR.REJECTED,       cls: 'bg-red-100 text-red-600' },
+    SOLD:           { label: LISTING_STATUS_AR.SOLD,           cls: 'bg-gray-100 text-gray-500' },
+    INACTIVE:       { label: LISTING_STATUS_AR.INACTIVE,       cls: 'bg-gray-100 text-gray-500' },
   };
   const s = map[status ?? ''] ?? { label: status ?? '—', cls: 'bg-gray-100 text-gray-500' };
   return (
@@ -59,7 +60,7 @@ function SellerBadge({ fromWho }: { fromWho?: string }) {
       isDealer ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
     }`}>
       {isDealer ? <Building2 className="w-2.5 h-2.5" /> : <Users className="w-2.5 h-2.5" />}
-      {isDealer ? 'Kurumsal' : 'Bireysel'}
+      {isDealer ? 'معرض' : 'فردي'}
     </span>
   );
 }
@@ -78,17 +79,17 @@ interface TabDef {
 }
 
 const TABS: TabDef[] = [
-  { id: 'all',      label: 'Tüm İlanlar',     params: {} },
-  { id: 'pending',  label: 'Onay Bekleyenler', params: { status: 'PENDING_REVIEW' } },
+  { id: 'all',      label: 'كل الإعلانات',     params: {} },
+  { id: 'pending',  label: 'بانتظار الاعتماد', params: { status: 'PENDING_REVIEW' } },
   {
-    id: 'individual', label: 'Bireysel İlanlar', params: {},
+    id: 'individual', label: 'إعلانات الأفراد', params: {},
     localFilter: (l) => {
       const fw = (l.vehicleDetails?.fromWho ?? '').toUpperCase();
       return fw === 'OWNER' || fw === 'SAHIBINDEN' || fw === '';
     },
   },
   {
-    id: 'corporate', label: 'Kurumsal İlanlar', params: {},
+    id: 'corporate', label: 'إعلانات المعارض', params: {},
     localFilter: (l) => {
       const fw = (l.vehicleDetails?.fromWho ?? '').toUpperCase();
       return fw === 'DEALER' || fw === 'GALERI' || fw === 'GALERIDEN';
@@ -117,8 +118,8 @@ function DeleteModal({
             <AlertTriangle className="w-5 h-5 text-red-600" />
           </div>
           <div>
-            <h3 className="font-bold text-gray-900">İlanı Sil</h3>
-            <p className="text-sm text-gray-500 mt-0.5">Bu işlem geri alınamaz.</p>
+            <h3 className="font-bold text-gray-900">حذف الإعلان</h3>
+            <p className="text-sm text-gray-500 mt-0.5">لا يمكن التراجع عن هذا الإجراء.</p>
           </div>
         </div>
         <p className="text-sm text-gray-700 bg-gray-50 rounded-lg px-3 py-2 mb-6 line-clamp-2">
@@ -130,7 +131,7 @@ function DeleteModal({
             disabled={busy}
             className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
           >
-            İptal
+            {UI_AR.cancel}
           </button>
           <button
             onClick={onConfirm}
@@ -138,7 +139,7 @@ function DeleteModal({
             className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 disabled:opacity-50 flex items-center gap-1.5"
           >
             {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-            Sil
+            {UI_AR.delete}
           </button>
         </div>
       </div>
@@ -237,7 +238,7 @@ export default function AdminListingsPage() {
         setListings(rows);
         setMeta({ page: r.page, totalPages: r.totalPages });
       })
-      .catch(() => { if (!cancelled) toast.error('İlanlar yüklenemedi.'); })
+      .catch(() => { if (!cancelled) toast.error('تعذّر تحميل الإعلانات.'); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [mounted, isAuthenticated, user, activeTab, page, selectedCategoryId]);
@@ -254,9 +255,9 @@ export default function AdminListingsPage() {
     try {
       await listingsService.updateListingStatus(id, status);
       setListings((prev) => prev.filter((l) => l.id !== id));
-      toast.success(status === 'ACTIVE' ? 'İlan onaylandı.' : 'İlan reddedildi.');
+      toast.success(status === 'ACTIVE' ? 'تم اعتماد الإعلان.' : 'تم رفض الإعلان.');
     } catch {
-      toast.error('İşlem başarısız.');
+      toast.error(UI_AR.actionFailed);
     } finally {
       clearBusy(id);
     }
@@ -270,9 +271,9 @@ export default function AdminListingsPage() {
       setListings((prev) =>
         prev.map((l) => l.id === listing.id ? { ...l, isFeatured: next } : l)
       );
-      toast.success(next ? 'Vitrine eklendi.' : 'Vitrinden kaldırıldı.');
+      toast.success(next ? 'تمّت الإضافة إلى المميّزة.' : 'تمّت الإزالة من المميّزة.');
     } catch {
-      toast.error('İşlem başarısız.');
+      toast.error(UI_AR.actionFailed);
     } finally {
       clearBusy(listing.id);
     }
@@ -284,10 +285,10 @@ export default function AdminListingsPage() {
     try {
       await listingsService.deleteListing(deleteTarget.id);
       setListings((prev) => prev.filter((l) => l.id !== deleteTarget.id));
-      toast.success('İlan silindi.');
+      toast.success('تم حذف الإعلان.');
       setDeleteTarget(null);
     } catch {
-      toast.error('Silme işlemi başarısız.');
+      toast.error('فشل الحذف.');
     } finally {
       setDeleteBusy(false);
     }
@@ -321,9 +322,9 @@ export default function AdminListingsPage() {
             <ShieldCheck className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">İlan Yönetimi</h1>
+            <h1 className="text-2xl font-bold text-gray-900">إدارة الإعلانات</h1>
             <p className="text-sm text-gray-500 mt-0.5">
-              {loading ? 'Yükleniyor…' : `${listings.length} ilan — ${currentTab.label}`}
+              {loading ? UI_AR.loading : `${listings.length} إعلان — ${currentTab.label}`}
             </p>
           </div>
         </div>
@@ -337,14 +338,14 @@ export default function AdminListingsPage() {
             {/* Main category */}
             <div className="flex items-center gap-2 min-w-0">
               <label className="text-xs font-semibold text-gray-500 whitespace-nowrap shrink-0">
-                Ana Kategori
+                القسم الرئيسي
               </label>
               <select
                 value={mainCatId}
                 onChange={(e) => setMainCatId(e.target.value)}
                 className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition min-w-[160px]"
               >
-                <option value="">Tümü</option>
+                <option value="">{UI_AR.all}</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
@@ -355,14 +356,14 @@ export default function AdminListingsPage() {
             {mainCatId && (categories.find((c) => c.id === mainCatId)?.children ?? []).length > 0 && (
               <div className="flex items-center gap-2 min-w-0">
                 <label className="text-xs font-semibold text-gray-500 whitespace-nowrap shrink-0">
-                  Alt Kategori
+                  القسم الفرعي
                 </label>
                 <select
                   value={subCatId}
                   onChange={(e) => setSubCatId(e.target.value)}
                   className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition min-w-[160px]"
                 >
-                  <option value="">Tümü</option>
+                  <option value="">{UI_AR.all}</option>
                   {(categories.find((c) => c.id === mainCatId)?.children ?? []).map((sub) => (
                     <option key={sub.id} value={sub.id}>{sub.name}</option>
                   ))}
@@ -386,7 +387,7 @@ export default function AdminListingsPage() {
                 className="ml-auto flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 border border-gray-200 hover:border-red-200 transition-colors"
               >
                 <X className="w-3 h-3" />
-                Filtreyi Temizle
+                مسح المرشّح
               </button>
             )}
           </div>
@@ -415,15 +416,15 @@ export default function AdminListingsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  <th className="px-4 py-3 text-left">İlan</th>
-                  <th className="px-4 py-3 text-left">Satıcı</th>
-                  <th className="px-4 py-3 text-left">Durum</th>
-                  <th className="px-4 py-3 text-left">Vitrin</th>
-                  <th className="px-4 py-3 text-left">Fiyat</th>
-                  <th className="px-4 py-3 text-left">
-                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Tarih</span>
+                  <th className="px-4 py-3 text-start">الإعلان</th>
+                  <th className="px-4 py-3 text-start">البائع</th>
+                  <th className="px-4 py-3 text-start">الحالة</th>
+                  <th className="px-4 py-3 text-start">مميّز</th>
+                  <th className="px-4 py-3 text-start">السعر</th>
+                  <th className="px-4 py-3 text-start">
+                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" />التاريخ</span>
                   </th>
-                  <th className="px-4 py-3 text-left">İşlemler</th>
+                  <th className="px-4 py-3 text-start">إجراءات</th>
                 </tr>
               </thead>
 
@@ -435,8 +436,8 @@ export default function AdminListingsPage() {
                     <td colSpan={7} className="py-24 text-center">
                       <div className="flex flex-col items-center gap-3 text-gray-400">
                         <Inbox className="w-10 h-10" />
-                        <p className="font-medium text-gray-600">Hiç ilan yok</p>
-                        <p className="text-sm">Bu sekme için görüntülenecek ilan bulunamadı.</p>
+                        <p className="font-medium text-gray-600">لا توجد إعلانات</p>
+                        <p className="text-sm">لا توجد إعلانات لعرضها في هذا التبويب.</p>
                       </div>
                     </td>
                   </tr>
@@ -476,7 +477,7 @@ export default function AdminListingsPage() {
                               {listing.title}
                             </p>
                             <p className="text-xs text-gray-400 mt-0.5">
-                              {listing.category?.name ?? 'Kategorisiz'}
+                              {listing.category?.name ?? 'بلا قسم'}
                             </p>
                           </div>
                         </div>
@@ -498,7 +499,7 @@ export default function AdminListingsPage() {
                         {listing.isFeatured && (
                           <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-700">
                             <Star className="w-2.5 h-2.5 fill-amber-700" />
-                            Vitrin
+                            مميّز
                           </span>
                         )}
                       </td>
@@ -523,7 +524,7 @@ export default function AdminListingsPage() {
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100 font-medium transition-colors text-xs"
                           >
                             <Pencil className="w-3 h-3" />
-                            Düzenle
+                            {UI_AR.edit}
                           </Link>
 
                           {/* Toggle featured */}
@@ -541,7 +542,7 @@ export default function AdminListingsPage() {
                               : listing.isFeatured
                                 ? <StarOff className="w-3 h-3" />
                                 : <Star className="w-3 h-3" />}
-                            {listing.isFeatured ? 'Kaldır' : 'Vitrin'}
+                            {listing.isFeatured ? 'إزالة' : 'تمييز'}
                           </button>
 
                           {/* Approve / Reject — only for pending review */}
@@ -555,7 +556,7 @@ export default function AdminListingsPage() {
                                 {isBusy
                                   ? <Loader2 className="w-3 h-3 animate-spin" />
                                   : <Check className="w-3 h-3" />}
-                                Onayla
+                                {UI_AR.approve}
                               </button>
                               <button
                                 onClick={() => handleApproveReject(listing.id, 'REJECTED')}
@@ -565,7 +566,7 @@ export default function AdminListingsPage() {
                                 {isBusy
                                   ? <Loader2 className="w-3 h-3 animate-spin" />
                                   : <X className="w-3 h-3" />}
-                                Reddet
+                                {UI_AR.reject}
                               </button>
                             </>
                           )}
@@ -577,7 +578,7 @@ export default function AdminListingsPage() {
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 font-medium transition-colors text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <Trash2 className="w-3 h-3" />
-                            Sil
+                            {UI_AR.delete}
                           </button>
                         </div>
                       </td>
@@ -597,17 +598,17 @@ export default function AdminListingsPage() {
               disabled={page === 1}
               className="px-6 py-2 bg-gray-200 text-gray-700 font-medium rounded-lg disabled:opacity-50 hover:bg-gray-300 transition-colors"
             >
-              Önceki
+              {UI_AR.prev}
             </button>
             <span className="text-gray-600 font-medium">
-              Sayfa {page} / {meta.totalPages}
+              {UI_AR.page} {page} / {meta.totalPages}
             </span>
             <button
               onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
               disabled={page === meta.totalPages}
               className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg disabled:opacity-50 hover:bg-blue-700 transition-colors"
             >
-              Sonraki
+              {UI_AR.next}
             </button>
           </div>
         )}

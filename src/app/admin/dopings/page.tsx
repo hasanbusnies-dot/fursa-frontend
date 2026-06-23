@@ -16,36 +16,37 @@ import {
   type DopingPackage,
 } from '@/services/admin-dopings.service';
 import { cn } from '@/lib/utils';
+import { UI_AR } from '@/lib/staff-labels';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const DOPING_TYPE_OPTIONS = [
-  { value: '',                label: 'Tüm Türler' },
-  { value: 'HOMEPAGE',        label: 'Anasayfa Vitrini' },
-  { value: 'CATEGORY',        label: 'Kategori Vitrini' },
-  { value: 'TOP_OF_SEARCH',   label: 'Üst Sıradayım' },
-  { value: 'DETAILED_SEARCH', label: 'Detaylı Arama' },
-  { value: 'URGENT',          label: 'Acil İlan' },
-  { value: 'HIGHLIGHT',       label: 'Kalın & Çerçeve' },
-  { value: 'REFRESH_DATE',    label: 'Güncelim' },
+  { value: '',                label: 'كل الأنواع' },
+  { value: 'HOMEPAGE',        label: 'واجهة الرئيسية' },
+  { value: 'CATEGORY',        label: 'واجهة القسم' },
+  { value: 'TOP_OF_SEARCH',   label: 'تصدّر البحث' },
+  { value: 'DETAILED_SEARCH', label: 'البحث المفصّل' },
+  { value: 'URGENT',          label: 'إعلان عاجل' },
+  { value: 'HIGHLIGHT',       label: 'خط عريض وإطار' },
+  { value: 'REFRESH_DATE',    label: 'تحديث التاريخ' },
 ];
 
 const DOPING_META: Record<string, { label: string; icon: React.ElementType; iconBg: string; iconColor: string; badge: string; badgeBg: string }> = {
-  HOMEPAGE:        { label: 'Anasayfa Vitrini', icon: Star,       iconBg: 'bg-yellow-50', iconColor: 'text-yellow-500', badge: 'Anasayfa',   badgeBg: 'bg-yellow-100 text-yellow-800' },
-  CATEGORY:        { label: 'Kategori Vitrini', icon: LayoutGrid, iconBg: 'bg-blue-50',   iconColor: 'text-blue-500',   badge: 'Kategori',   badgeBg: 'bg-blue-100 text-blue-800'   },
-  TOP_OF_SEARCH:   { label: 'Üst Sıradayım',    icon: ArrowUp,    iconBg: 'bg-indigo-50', iconColor: 'text-indigo-500', badge: 'Üst Sıra',   badgeBg: 'bg-indigo-100 text-indigo-800'},
-  DETAILED_SEARCH: { label: 'Detaylı Arama',    icon: Search,     iconBg: 'bg-purple-50', iconColor: 'text-purple-500', badge: 'Detaylı',    badgeBg: 'bg-purple-100 text-purple-800'},
-  URGENT:          { label: 'Acil İlan',         icon: Flame,      iconBg: 'bg-red-50',    iconColor: 'text-red-500',    badge: 'Acil',       badgeBg: 'bg-red-100 text-red-800'    },
-  HIGHLIGHT:       { label: 'Kalın & Çerçeve',  icon: Type,       iconBg: 'bg-orange-50', iconColor: 'text-orange-500', badge: 'Highlight',  badgeBg: 'bg-orange-100 text-orange-800'},
-  REFRESH_DATE:    { label: 'Güncelim',          icon: RefreshCw,  iconBg: 'bg-green-50',  iconColor: 'text-green-500',  badge: 'Güncellendi',badgeBg: 'bg-green-100 text-green-800' },
+  HOMEPAGE:        { label: 'واجهة الرئيسية', icon: Star,       iconBg: 'bg-yellow-50', iconColor: 'text-yellow-500', badge: 'الرئيسية', badgeBg: 'bg-yellow-100 text-yellow-800' },
+  CATEGORY:        { label: 'واجهة القسم',    icon: LayoutGrid, iconBg: 'bg-blue-50',   iconColor: 'text-blue-500',   badge: 'القسم',    badgeBg: 'bg-blue-100 text-blue-800'   },
+  TOP_OF_SEARCH:   { label: 'تصدّر البحث',    icon: ArrowUp,    iconBg: 'bg-indigo-50', iconColor: 'text-indigo-500', badge: 'التصدّر',  badgeBg: 'bg-indigo-100 text-indigo-800'},
+  DETAILED_SEARCH: { label: 'البحث المفصّل',  icon: Search,     iconBg: 'bg-purple-50', iconColor: 'text-purple-500', badge: 'مفصّل',    badgeBg: 'bg-purple-100 text-purple-800'},
+  URGENT:          { label: 'إعلان عاجل',     icon: Flame,      iconBg: 'bg-red-50',    iconColor: 'text-red-500',    badge: 'عاجل',     badgeBg: 'bg-red-100 text-red-800'    },
+  HIGHLIGHT:       { label: 'خط عريض وإطار',  icon: Type,       iconBg: 'bg-orange-50', iconColor: 'text-orange-500', badge: 'تمييز',    badgeBg: 'bg-orange-100 text-orange-800'},
+  REFRESH_DATE:    { label: 'تحديث التاريخ',  icon: RefreshCw,  iconBg: 'bg-green-50',  iconColor: 'text-green-500',  badge: 'مُحدّث',   badgeBg: 'bg-green-100 text-green-800' },
 };
 
 function formatDate(d: string) {
-  return new Date(d).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return new Date(d).toLocaleDateString('ar', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function formatPrice(price: number, currency: string) {
-  const n = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(price);
+  const n = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(price);
   return currency === 'USD' ? `$${n}` : `${n} SYP`;
 }
 
@@ -80,15 +81,15 @@ function PriceModal({
 
   const handleSave = async () => {
     const val = Number(price);
-    if (!val || val <= 0) { toast.error('Geçerli bir fiyat girin.'); return; }
+    if (!val || val <= 0) { toast.error('أدخل سعراً صحيحاً.'); return; }
     setSaving(true);
     try {
       const res = await adminDopingsService.updatePackagePrice(pkg.id, val);
       onSaved(res.data);
-      toast.success('Fiyat güncellendi.');
+      toast.success('تم تحديث السعر.');
       onClose();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Güncellenemedi.');
+      toast.error(err instanceof Error ? err.message : 'تعذّر التحديث.');
     } finally {
       setSaving(false);
     }
@@ -105,7 +106,7 @@ function PriceModal({
               </div>
             )}
             <div>
-              <h3 className="text-sm font-bold text-gray-900">Fiyatı Güncelle</h3>
+              <h3 className="text-sm font-bold text-gray-900">تحديث السعر</h3>
               <p className="text-xs text-gray-500">{meta?.label ?? pkg.dopingType}</p>
             </div>
           </div>
@@ -117,12 +118,12 @@ function PriceModal({
         {pkg.durationInWeeks && (
           <p className="text-xs text-gray-500 mb-3 flex items-center gap-1">
             <Clock className="w-3.5 h-3.5" />
-            {pkg.durationInWeeks} Haftalık Paket
+            باقة {pkg.durationInWeeks} أسبوع
           </p>
         )}
 
         <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-          Taban Fiyat ({pkg.currency})
+          السعر الأساسي ({pkg.currency})
         </label>
         <input
           type="number"
@@ -140,14 +141,14 @@ function PriceModal({
             disabled={saving}
             className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
           >
-            İptal
+            {UI_AR.cancel}
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
             className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold disabled:opacity-60 transition-colors"
           >
-            {saving ? 'Kaydediliyor…' : 'Kaydet'}
+            {saving ? UI_AR.saving : UI_AR.save}
           </button>
         </div>
       </div>
@@ -169,14 +170,14 @@ function PackageCard({ pkg, onEdit }: { pkg: DopingPackage; onEdit: () => void }
         <div className="min-w-0">
           <p className="text-sm font-bold text-gray-900 truncate">{meta?.label ?? pkg.dopingType}</p>
           <p className="text-xs text-gray-400">
-            {pkg.durationInWeeks ? `${pkg.durationInWeeks} haftalık` : 'Tek seferlik'}
+            {pkg.durationInWeeks ? `${pkg.durationInWeeks} أسبوع` : 'لمرة واحدة'}
           </p>
         </div>
       </div>
 
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-[11px] text-gray-400 uppercase tracking-wider font-semibold">Taban Fiyat</p>
+          <p className="text-[11px] text-gray-400 uppercase tracking-wider font-semibold">السعر الأساسي</p>
           <p className="text-2xl font-extrabold text-gray-900 leading-none mt-0.5">
             {formatPrice(pkg.basePrice, pkg.currency)}
           </p>
@@ -186,7 +187,7 @@ function PackageCard({ pkg, onEdit }: { pkg: DopingPackage; onEdit: () => void }
           className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 transition-colors"
         >
           <Pencil className="w-3.5 h-3.5" />
-          Güncelle
+          {UI_AR.update}
         </button>
       </div>
     </div>
@@ -208,7 +209,7 @@ function ActiveDopingsTab() {
       .then((res) => setDopings(Array.isArray(res.data) ? res.data : []))
       .catch((err) => {
         console.error('[AdminDopings] fetch error:', err);
-        toast.error('Veriler yüklenemedi.');
+        toast.error('تعذّر تحميل البيانات.');
         setDopings([]);
       })
       .finally(() => setLoading(false));
@@ -239,15 +240,15 @@ function ActiveDopingsTab() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="h-9 pl-3 pr-8 border border-gray-200 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 appearance-none cursor-pointer"
           >
-            <option value="">Tüm Durumlar</option>
-            <option value="active">Aktif</option>
-            <option value="expired">Süresi Dolmuş</option>
+            <option value="">كل الحالات</option>
+            <option value="active">نشط</option>
+            <option value="expired">منتهٍ</option>
           </select>
           <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
         </div>
 
         <div className="ml-auto flex items-center text-xs text-gray-500 gap-1">
-          <span className="font-semibold text-gray-800">{dopings.length}</span> kayıt
+          <span className="font-semibold text-gray-800">{dopings.length}</span> سجل
         </div>
       </div>
 
@@ -257,8 +258,8 @@ function ActiveDopingsTab() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                {['İlan', 'Satıcı', 'Doping Türü', 'Başlangıç', 'Bitiş', 'Durum'].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                {['الإعلان', 'البائع', 'نوع التمييز', 'البداية', 'النهاية', 'الحالة'].map((h) => (
+                  <th key={h} className="px-4 py-3 text-start text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     {h}
                   </th>
                 ))}
@@ -272,8 +273,8 @@ function ActiveDopingsTab() {
                   <td colSpan={6} className="px-4 py-16 text-center">
                     <div className="flex flex-col items-center gap-2 text-gray-400">
                       <AlertTriangle className="w-8 h-8 text-gray-300" />
-                      <p className="text-sm font-medium text-gray-500">Kayıt bulunamadı</p>
-                      <p className="text-xs">Filtrelerinizi değiştirmeyi deneyin.</p>
+                      <p className="text-sm font-medium text-gray-500">لا توجد سجلات</p>
+                      <p className="text-xs">جرّب تغيير المرشّحات.</p>
                     </div>
                   </td>
                 </tr>
@@ -285,8 +286,8 @@ function ActiveDopingsTab() {
 
                   // ── Resolve display fields safely ──────────────────────────
                   const displayId = (d.listingId || d.id || '').slice(0, 8);
-                  const title     = d.listingTitle || (raw.title as string) || 'İlan Başlığı Yok';
-                  const seller    = d.sellerName || user?.profile?.firstName || user?.email || 'Bilinmeyen Satıcı';
+                  const title     = d.listingTitle || (raw.title as string) || 'بلا عنوان';
+                  const seller    = d.sellerName || user?.profile?.firstName || user?.email || 'بائع غير معروف';
                   const email     = d.sellerEmail || user?.email || '';
 
                   // ── Derive doping type from listing flags ──────────────────
@@ -303,23 +304,23 @@ function ActiveDopingsTab() {
                     v instanceof Date ? v.toISOString() : (v ?? null);
 
                   if (d.homepageShowcaseUntil && ts(d.homepageShowcaseUntil) > now) {
-                    typeName = 'Anasayfa Vitrini'; endDate = toStr(d.homepageShowcaseUntil); isActive = true;
+                    typeName = 'واجهة الرئيسية'; endDate = toStr(d.homepageShowcaseUntil); isActive = true;
                   } else if (d.categoryShowcaseUntil && ts(d.categoryShowcaseUntil) > now) {
-                    typeName = 'Kategori Vitrini'; endDate = toStr(d.categoryShowcaseUntil); isActive = true;
+                    typeName = 'واجهة القسم'; endDate = toStr(d.categoryShowcaseUntil); isActive = true;
                   } else if (d.topOfSearchUntil && ts(d.topOfSearchUntil) > now) {
-                    typeName = 'Üst Sıradayım'; endDate = toStr(d.topOfSearchUntil); isActive = true;
+                    typeName = 'تصدّر البحث'; endDate = toStr(d.topOfSearchUntil); isActive = true;
                   } else if (d.isUrgent) {
-                    typeName = 'Acil Acil'; isActive = true;
+                    typeName = 'إعلان عاجل'; isActive = true;
                   } else if (d.hasHighlightFrame) {
-                    typeName = 'Kalın Yazı & Çerçeve'; isActive = true;
+                    typeName = 'خط عريض وإطار'; isActive = true;
                   }
 
                   // Map typeName → DOPING_META for the icon/badge
-                  const typeKey = typeName === 'Anasayfa Vitrini' ? 'HOMEPAGE'
-                    : typeName === 'Kategori Vitrini'      ? 'CATEGORY'
-                    : typeName === 'Üst Sıradayım'         ? 'TOP_OF_SEARCH'
-                    : typeName === 'Acil Acil'             ? 'URGENT'
-                    : typeName === 'Kalın Yazı & Çerçeve'  ? 'HIGHLIGHT'
+                  const typeKey = typeName === 'واجهة الرئيسية' ? 'HOMEPAGE'
+                    : typeName === 'واجهة القسم'    ? 'CATEGORY'
+                    : typeName === 'تصدّر البحث'    ? 'TOP_OF_SEARCH'
+                    : typeName === 'إعلان عاجل'     ? 'URGENT'
+                    : typeName === 'خط عريض وإطار'  ? 'HIGHLIGHT'
                     : null;
                   const meta = typeKey ? DOPING_META[typeKey] : null;
 
@@ -351,14 +352,14 @@ function ActiveDopingsTab() {
                       {/* Başlangıç */}
                       <td className="px-4 py-3 whitespace-nowrap text-[12px] text-gray-600">
                         {startDateStr
-                          ? new Date(startDateStr).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })
+                          ? new Date(startDateStr).toLocaleDateString('ar', { day: '2-digit', month: 'short', year: 'numeric' })
                           : <span className="text-gray-400">—</span>}
                       </td>
 
                       {/* Bitiş */}
                       <td className="px-4 py-3 whitespace-nowrap text-[12px] text-gray-600">
                         {endDate
-                          ? new Date(endDate).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })
+                          ? new Date(endDate).toLocaleDateString('ar', { day: '2-digit', month: 'short', year: 'numeric' })
                           : <span className="text-gray-400">—</span>}
                       </td>
 
@@ -367,12 +368,12 @@ function ActiveDopingsTab() {
                         {isActive ? (
                           <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">
                             <CheckCircle2 className="w-3 h-3" />
-                            Aktif
+                            نشط
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">
                             <XCircle className="w-3 h-3" />
-                            Dolmuş
+                            منتهٍ
                           </span>
                         )}
                       </td>
@@ -401,7 +402,7 @@ function PriceManagementTab() {
       .then((res) => setPackages(Array.isArray(res.data) ? res.data : []))
       .catch((err) => {
         console.error('[AdminDopings] packages error:', err);
-        toast.error('Paketler yüklenemedi.');
+        toast.error('تعذّر تحميل الباقات.');
       })
       .finally(() => setLoading(false));
   }, []);
@@ -423,10 +424,10 @@ function PriceManagementTab() {
       <div>
         <div className="flex items-center justify-between mb-5">
           <p className="text-sm text-gray-500">
-            Aşağıdaki paket fiyatları, kullanıcıların Doping satın alırken gördüğü taban fiyatlardır.
+            أسعار الباقات أدناه هي الأسعار الأساسية التي يراها المستخدمون عند شراء التمييز.
           </p>
           <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-3 py-1.5 rounded-full">
-            {packages.length} paket
+            {packages.length} باقة
           </span>
         </div>
 
@@ -439,8 +440,8 @@ function PriceManagementTab() {
         ) : packages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
             <Package className="w-10 h-10 text-gray-300" />
-            <p className="text-sm font-medium text-gray-500">Henüz paket tanımlanmamış.</p>
-            <p className="text-xs text-gray-400">Backend&apos;den paket verisi bekleyin.</p>
+            <p className="text-sm font-medium text-gray-500">لا توجد باقات معرّفة بعد.</p>
+            <p className="text-xs text-gray-400">بانتظار بيانات الباقات من الخادم.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -485,8 +486,8 @@ export default function AdminDopingsPage() {
             <Zap className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Vitrin &amp; Doping Yönetimi</h1>
-            <p className="text-sm text-gray-500">Aktif dopingleri izleyin ve paket fiyatlarını yönetin.</p>
+            <h1 className="text-2xl font-bold text-gray-900">إدارة التمييز</h1>
+            <p className="text-sm text-gray-500">تابِع عمليات التمييز النشطة وأدِر أسعار الباقات.</p>
           </div>
         </div>
 
@@ -496,8 +497,8 @@ export default function AdminDopingsPage() {
         {/* Tab switcher */}
         <div className="flex gap-1 mb-6 bg-white border border-gray-200 rounded-xl p-1 w-fit">
           {([
-            { key: 'active',   label: 'Aktif Dopingli İlanlar', icon: CheckCircle2 },
-            { key: 'packages', label: 'Paket & Fiyat Yönetimi', icon: Package      },
+            { key: 'active',   label: 'الإعلانات المميَّزة النشطة', icon: CheckCircle2 },
+            { key: 'packages', label: 'الباقات والأسعار',          icon: Package      },
           ] as const).map(({ key, label, icon: Icon }) => (
             <button
               key={key}
