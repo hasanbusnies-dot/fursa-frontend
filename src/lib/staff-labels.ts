@@ -36,6 +36,20 @@ export const TRANSFER_METHOD_AR: Record<string, string> = {
   SYRIATEL_CASH: 'Syriatel Cash',
 };
 
+/** Membership payment method. */
+export const PAYMENT_METHOD_AR: Record<string, string> = {
+  ONLINE: 'إلكتروني',
+  CASH:   'نقداً',
+  FREE:   'مجاني',
+};
+
+/** Membership pricing campaign. */
+export const CAMPAIGN_AR: Record<string, string> = {
+  FULL_PRICE:       'السعر الكامل',
+  DISCOUNT_33:      'خصم 33%',
+  FIRST_MONTH_FREE: 'الشهر الأول مجاناً',
+};
+
 /** Common UI strings reused across the staff pages. */
 export const UI_AR = {
   // actions

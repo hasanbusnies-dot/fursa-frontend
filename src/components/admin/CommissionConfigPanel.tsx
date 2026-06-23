@@ -9,6 +9,7 @@ import {
 } from '@/services/admin-commissions.service';
 import { ApiError } from '@/services/api';
 import { cn } from '@/lib/utils';
+import { UI_AR } from '@/lib/staff-labels';
 
 const MONEY_RE = /^\d+(\.\d{1,2})?$/;
 
@@ -34,7 +35,7 @@ export function CommissionConfigPanel({ onSaved }: { onSaved: () => void }) {
         setAmount(c.amountPerPaymentUsd ?? '');
         setLoaded(true);
       })
-      .catch(() => toast.error('Ayarlar yüklenemedi.'))
+      .catch(() => toast.error('تعذّر تحميل الإعدادات.'))
       .finally(() => setLoading(false));
   }, [open, loaded, loading]);
 
@@ -53,10 +54,10 @@ export function CommissionConfigPanel({ onSaved }: { onSaved: () => void }) {
       const saved = await adminCommissionsService.updateConfig(payload);
       setThreshold(String(saved.thresholdPaymentsPerPeriod ?? payload.thresholdPaymentsPerPeriod));
       setAmount(saved.amountPerPaymentUsd ?? payload.amountPerPaymentUsd);
-      toast.success('Komisyon ayarları güncellendi.');
+      toast.success('تم تحديث إعدادات العمولة.');
       onSaved();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Ayarlar kaydedilemedi.');
+      toast.error(err instanceof ApiError ? err.message : 'تعذّر حفظ الإعدادات.');
     } finally {
       setSaving(false);
     }
@@ -71,7 +72,7 @@ export function CommissionConfigPanel({ onSaved }: { onSaved: () => void }) {
       >
         <span className="flex items-center gap-2 text-sm font-bold text-gray-800">
           <Settings className="w-4 h-4 text-gray-500" />
-          Komisyon Ayarları
+          إعدادات العمولة
         </span>
         {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
       </button>
@@ -87,41 +88,41 @@ export function CommissionConfigPanel({ onSaved }: { onSaved: () => void }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 mb-1.5">
-                    Eşik (dönem başına ödeme)
+                    العتبة (دفعات لكل فترة)
                   </label>
                   <input
                     inputMode="numeric"
                     value={threshold}
                     onChange={(e) => setThreshold(e.target.value.replace(/[^\d]/g, ''))}
-                    placeholder="örn. 10"
+                    placeholder="مثال: 10"
                     dir="ltr"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-sm text-start focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-colors"
                   />
                   {threshold !== '' && !thresholdValid && (
-                    <p className="text-xs text-red-500 mt-1.5">Negatif olmayan bir tam sayı girin.</p>
+                    <p className="text-xs text-red-500 mt-1.5">أدخل عدداً صحيحاً غير سالب.</p>
                   )}
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 mb-1.5">
-                    Ödeme başına tutar (USD)
+                    المبلغ لكل دفعة (USD)
                   </label>
                   <input
                     inputMode="decimal"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, ''))}
-                    placeholder="örn. 2.50"
+                    placeholder="مثال: 2.50"
                     dir="ltr"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-sm text-start focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-colors"
                   />
                   {amount !== '' && !amountValid && (
-                    <p className="text-xs text-red-500 mt-1.5">Geçerli bir tutar girin (en çok 2 ondalık).</p>
+                    <p className="text-xs text-red-500 mt-1.5">أدخل مبلغاً صحيحاً (خانتان عشريتان كحد أقصى).</p>
                   )}
                 </div>
               </div>
 
               <p className="text-[11px] text-gray-400 leading-relaxed">
-                Komisyon okuma anında geçerli ayarlara göre hesaplanır — kaydetmek
-                rapordaki tutarları yeniden hesaplar.
+                تُحتسب العمولة وقت القراءة وفق الإعدادات الحالية — والحفظ يعيد
+                حساب المبالغ في التقرير.
               </p>
 
               <button
@@ -130,7 +131,7 @@ export function CommissionConfigPanel({ onSaved }: { onSaved: () => void }) {
                 className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                {saving ? 'Kaydediliyor…' : 'Kaydet'}
+                {saving ? UI_AR.saving : UI_AR.save}
               </button>
             </div>
           )}

@@ -15,6 +15,7 @@ import {
 } from '@/services/admin-commissions.service';
 import { formatMoney } from '@/lib/money';
 import { cn } from '@/lib/utils';
+import { UI_AR } from '@/lib/staff-labels';
 
 type Mode = 'month' | 'range';
 
@@ -33,7 +34,7 @@ function shiftMonth(ym: string, delta: number): string {
 
 function monthLabel(ym: string): string {
   const [y, m] = ym.split('-').map(Number);
-  return new Date(y, m - 1, 1).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+  return new Date(y, m - 1, 1).toLocaleDateString('ar', { month: 'long', year: 'numeric' });
 }
 
 // ── Summary cards ───────────────────────────────────────────────────────────────
@@ -41,9 +42,9 @@ function monthLabel(ym: string): string {
 function SummaryHeader({ report }: { report: CommissionsReport }) {
   const s = report.summary;
   const cards = [
-    { label: 'Toplam Temsilci', value: String(s.totalAgents ?? 0),            cls: 'text-blue-600'  },
-    { label: 'Toplam Ödeme',    value: String(s.totalQualifyingPayments ?? 0), cls: 'text-gray-800'  },
-    { label: 'Toplam Komisyon',  value: formatMoney(s.totalCommissionUsd ?? '0', 'USD'), cls: 'text-green-600' },
+    { label: 'إجمالي المندوبين', value: String(s.totalAgents ?? 0),            cls: 'text-blue-600'  },
+    { label: 'إجمالي المدفوعات', value: String(s.totalQualifyingPayments ?? 0), cls: 'text-gray-800'  },
+    { label: 'إجمالي العمولات',  value: formatMoney(s.totalCommissionUsd ?? '0', 'USD'), cls: 'text-green-600' },
   ];
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
@@ -135,8 +136,8 @@ export default function AdminCommissionsPage() {
             <Coins className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Komisyonlar</h1>
-            <p className="text-sm text-gray-500">Temsilci komisyon raporu ve ayarları.</p>
+            <h1 className="text-2xl font-bold text-gray-900">العمولات</h1>
+            <p className="text-sm text-gray-500">تقرير عمولات المندوبين وإعداداتها.</p>
           </div>
         </div>
 
@@ -149,7 +150,7 @@ export default function AdminCommissionsPage() {
         <div className="bg-white border border-gray-200 rounded-2xl p-4 mb-6">
           {/* Mode toggle */}
           <div className="flex gap-1 mb-4 bg-gray-100 rounded-xl p-1 w-fit">
-            {([['month', 'Ay'], ['range', 'Tarih aralığı']] as [Mode, string][]).map(([m, label]) => (
+            {([['month', 'شهر'], ['range', 'نطاق تاريخي']] as [Mode, string][]).map(([m, label]) => (
               <button
                 key={m}
                 onClick={() => setMode(m)}
@@ -169,7 +170,7 @@ export default function AdminCommissionsPage() {
               <button
                 onClick={() => setMonth((m) => shiftMonth(m, -1))}
                 className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors"
-                aria-label="Önceki ay"
+                aria-label="الشهر السابق"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -180,7 +181,7 @@ export default function AdminCommissionsPage() {
                 onClick={() => setMonth((m) => shiftMonth(m, 1))}
                 disabled={atCurrentMonth}
                 className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                aria-label="Sonraki ay"
+                aria-label="الشهر التالي"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -189,14 +190,14 @@ export default function AdminCommissionsPage() {
                   onClick={() => setMonth(thisMonth)}
                   className="text-xs font-semibold text-orange-600 hover:text-orange-700"
                 >
-                  Bu ay
+                  هذا الشهر
                 </button>
               )}
             </div>
           ) : (
             <div className="flex flex-wrap items-end gap-3">
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1.5">Başlangıç</label>
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">من</label>
                 <input
                   type="date"
                   value={fromInput}
@@ -206,7 +207,7 @@ export default function AdminCommissionsPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1.5">Bitiş</label>
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">إلى</label>
                 <input
                   type="date"
                   value={toInput}
@@ -220,7 +221,7 @@ export default function AdminCommissionsPage() {
                 disabled={!rangeValid}
                 className="px-5 py-2 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600 transition-colors disabled:opacity-50"
               >
-                Uygula
+                تطبيق
               </button>
             </div>
           )}
@@ -232,9 +233,9 @@ export default function AdminCommissionsPage() {
             <Info className="w-4 h-4 shrink-0" />
             <span className="font-semibold">{report.period.label}</span>
             <span className="text-blue-300">·</span>
-            <span>Eşik: {report.config.thresholdPaymentsPerPeriod} ödeme</span>
+            <span>العتبة: {report.config.thresholdPaymentsPerPeriod} دفعة</span>
             <span className="text-blue-300">·</span>
-            <span>Ödeme başına: {formatMoney(report.config.amountPerPaymentUsd, 'USD')}</span>
+            <span>لكل دفعة: {formatMoney(report.config.amountPerPaymentUsd, 'USD')}</span>
           </div>
         )}
 
@@ -245,22 +246,22 @@ export default function AdminCommissionsPage() {
         {mode === 'range' && !range ? (
           <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
             <Inbox className="w-10 h-10 text-gray-300" />
-            <p className="text-sm font-medium text-gray-500">Bir tarih aralığı seçin.</p>
+            <p className="text-sm font-medium text-gray-500">اختر نطاقاً تاريخياً.</p>
           </div>
         ) : loading ? (
           <div className="bg-white rounded-2xl border border-gray-200 animate-pulse h-64" />
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
             <AlertTriangle className="w-10 h-10 text-gray-300" />
-            <p className="text-sm font-medium text-gray-500">Rapor yüklenemedi.</p>
+            <p className="text-sm font-medium text-gray-500">تعذّر تحميل التقرير.</p>
             <button onClick={load} className="text-xs font-semibold text-orange-600 hover:text-orange-700 underline">
-              Tekrar dene
+              {UI_AR.retry}
             </button>
           </div>
         ) : agents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
             <Inbox className="w-10 h-10 text-gray-300" />
-            <p className="text-sm font-medium text-gray-500">Bu dönemde temsilci verisi yok.</p>
+            <p className="text-sm font-medium text-gray-500">لا توجد بيانات مندوبين في هذه الفترة.</p>
           </div>
         ) : (
           <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
@@ -268,12 +269,12 @@ export default function AdminCommissionsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 text-gray-500 text-xs">
-                    <th className="text-start font-semibold px-4 py-3">Temsilci</th>
-                    <th className="text-end font-semibold px-4 py-3 whitespace-nowrap">Uygun Ödeme</th>
-                    <th className="text-end font-semibold px-4 py-3 whitespace-nowrap">Eşik</th>
-                    <th className="text-end font-semibold px-4 py-3 whitespace-nowrap">Komisyonlu</th>
-                    <th className="text-end font-semibold px-4 py-3 whitespace-nowrap">Ödeme/$</th>
-                    <th className="text-end font-semibold px-4 py-3 whitespace-nowrap">Komisyon</th>
+                    <th className="text-start font-semibold px-4 py-3">المندوب</th>
+                    <th className="text-end font-semibold px-4 py-3 whitespace-nowrap">الدفعات المؤهَّلة</th>
+                    <th className="text-end font-semibold px-4 py-3 whitespace-nowrap">العتبة</th>
+                    <th className="text-end font-semibold px-4 py-3 whitespace-nowrap">المُحتسَبة</th>
+                    <th className="text-end font-semibold px-4 py-3 whitespace-nowrap">لكل دفعة</th>
+                    <th className="text-end font-semibold px-4 py-3 whitespace-nowrap">العمولة</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -302,7 +303,7 @@ export default function AdminCommissionsPage() {
             </div>
             <p className="flex items-center gap-1.5 px-4 py-3 border-t border-gray-100 text-[11px] text-gray-400">
               <Info className="w-3.5 h-3.5 shrink-0" />
-              Komisyon manuel olarak ödenir.
+              تُدفع العمولة يدوياً.
             </p>
           </div>
         )}

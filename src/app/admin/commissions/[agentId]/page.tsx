@@ -16,13 +16,11 @@ import {
 } from '@/services/admin-commissions.service';
 import { formatMoney } from '@/lib/money';
 import { cn } from '@/lib/utils';
-
-const METHOD_LABEL: Record<string, string> = {
-  ONLINE: 'Online', CASH: 'Nakit', FREE: 'Ücretsiz',
-};
-const CAMPAIGN_LABEL: Record<string, string> = {
-  FULL_PRICE: 'Tam fiyat', DISCOUNT_33: '%33 indirim', FIRST_MONTH_FREE: 'İlk ay ücretsiz',
-};
+import {
+  PAYMENT_METHOD_AR as METHOD_LABEL,
+  CAMPAIGN_AR as CAMPAIGN_LABEL,
+  UI_AR,
+} from '@/lib/staff-labels';
 
 function methodLabel(m?: string | null) { return m ? (METHOD_LABEL[m] ?? m) : '—'; }
 function campaignLabel(c?: string | null) { return c ? (CAMPAIGN_LABEL[c] ?? c) : '—'; }
@@ -36,7 +34,7 @@ function formatDate(d?: string | null) {
   if (!d) return '—';
   const t = new Date(d);
   if (Number.isNaN(t.getTime())) return '—';
-  return t.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return t.toLocaleDateString('ar', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 // ── CSV export ────────────────────────────────────────────────────────────────────
@@ -46,15 +44,15 @@ function csvCell(v: string): string {
 }
 
 function downloadCsv(detail: CommissionAgentDetail) {
-  const header = ['Mağaza', 'Tarih', 'Tutar (USD)', 'Yöntem', 'Kampanya', 'Sahip kendi ödedi', 'Komisyon kazandırır'];
+  const header = ['المتجر', 'التاريخ', 'المبلغ (USD)', 'الطريقة', 'الحملة', 'دفع المالك بنفسه', 'يُحتسب عمولة'];
   const rows = detail.payments.map((p) => [
     p.storeName,
     formatDate(p.chargedAt),
     p.netAmountUsd,
     methodLabel(p.method),
     campaignLabel(p.campaign),
-    p.paidByOwnerSelf ? 'Evet' : 'Hayır',
-    p.earnsCommission ? 'Evet' : 'Hayır',
+    p.paidByOwnerSelf ? 'نعم' : 'لا',
+    p.earnsCommission ? 'نعم' : 'لا',
   ]);
   // Prepend a UTF-8 BOM so Excel renders Turkish characters correctly.
   const csv = '﻿' + [header, ...rows].map((r) => r.map(csvCell).join(',')).join('\r\n');
@@ -63,7 +61,7 @@ function downloadCsv(detail: CommissionAgentDetail) {
   const a = document.createElement('a');
   const safeName = (detail.agent.name || detail.agent.id).replace(/[^\p{L}\p{N}]+/gu, '_');
   a.href = url;
-  a.download = `komisyon-${safeName}-${detail.period.label.replace(/[^\p{L}\p{N}]+/gu, '_')}.csv`;
+  a.download = `عمولة-${safeName}-${detail.period.label.replace(/[^\p{L}\p{N}]+/gu, '_')}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -144,7 +142,7 @@ export default function AdminCommissionAgentPage() {
           className="inline-flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-gray-700 mb-4 print:hidden"
         >
           <ChevronLeft className="w-4 h-4" />
-          Komisyonlar
+          العمولات
         </Link>
 
         {/* Page header — chrome hidden in print */}
@@ -153,8 +151,8 @@ export default function AdminCommissionAgentPage() {
             <Coins className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Temsilci Komisyonu</h1>
-            <p className="text-sm text-gray-500">Ödeme bazında komisyon dökümü.</p>
+            <h1 className="text-2xl font-bold text-gray-900">عمولة المندوب</h1>
+            <p className="text-sm text-gray-500">تفصيل العمولة حسب كل دفعة.</p>
           </div>
         </div>
 
@@ -165,9 +163,9 @@ export default function AdminCommissionAgentPage() {
         ) : error || !detail ? (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
             <AlertTriangle className="w-10 h-10 text-gray-300" />
-            <p className="text-sm font-medium text-gray-500">Rapor yüklenemedi.</p>
+            <p className="text-sm font-medium text-gray-500">تعذّر تحميل التقرير.</p>
             <button onClick={load} className="text-xs font-semibold text-orange-600 hover:text-orange-700 underline">
-              Tekrar dene
+              {UI_AR.retry}
             </button>
           </div>
         ) : (
@@ -179,14 +177,14 @@ export default function AdminCommissionAgentPage() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-colors"
               >
                 <Printer className="w-4 h-4" />
-                Yazdır
+                طباعة
               </button>
               <button
                 onClick={() => downloadCsv(detail)}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <Download className="w-4 h-4" />
-                CSV indir
+                تنزيل CSV
               </button>
             </div>
 
@@ -205,19 +203,19 @@ export default function AdminCommissionAgentPage() {
               <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600">
                 <span className="font-semibold text-gray-800">{detail.period.label}</span>
                 <span className="text-gray-300">·</span>
-                <span>Eşik: {detail.summary.threshold} ödeme</span>
+                <span>العتبة: {detail.summary.threshold} دفعة</span>
                 <span className="text-gray-300">·</span>
-                <span>Ödeme başına: {formatMoney(detail.config.amountPerPaymentUsd, 'USD')}</span>
+                <span>لكل دفعة: {formatMoney(detail.config.amountPerPaymentUsd, 'USD')}</span>
               </div>
             </div>
 
             {/* Summary line — reconciles with the summary row */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-              <SummaryStat label="Uygun ödeme"   value={String(detail.summary.qualifyingPayments)} />
-              <SummaryStat label="Komisyonlu"    value={String(detail.summary.commissionablePayments)} />
-              <SummaryStat label="Ödeme başına"  value={formatMoney(detail.summary.amountPerPaymentUsd, 'USD')} />
+              <SummaryStat label="الدفعات المؤهَّلة" value={String(detail.summary.qualifyingPayments)} />
+              <SummaryStat label="المُحتسَبة"         value={String(detail.summary.commissionablePayments)} />
+              <SummaryStat label="لكل دفعة"          value={formatMoney(detail.summary.amountPerPaymentUsd, 'USD')} />
               <SummaryStat
-                label="Ödenecek komisyon"
+                label="العمولة المستحقّة"
                 value={formatMoney(detail.summary.commissionUsd, 'USD')}
                 emphasized
               />
@@ -227,7 +225,7 @@ export default function AdminCommissionAgentPage() {
             {payments.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center gap-3 bg-white border border-gray-200 rounded-2xl">
                 <Inbox className="w-10 h-10 text-gray-300" />
-                <p className="text-sm font-medium text-gray-500">Bu dönemde ödeme yok.</p>
+                <p className="text-sm font-medium text-gray-500">لا توجد مدفوعات في هذه الفترة.</p>
               </div>
             ) : (
               <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden print:border-0">
@@ -235,12 +233,12 @@ export default function AdminCommissionAgentPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-gray-50 text-gray-500 text-xs">
-                        <th className="text-start font-semibold px-4 py-3">Mağaza</th>
-                        <th className="text-start font-semibold px-4 py-3 whitespace-nowrap">Tarih</th>
-                        <th className="text-end font-semibold px-4 py-3 whitespace-nowrap">Tutar</th>
-                        <th className="text-start font-semibold px-4 py-3">Yöntem</th>
-                        <th className="text-start font-semibold px-4 py-3">Kampanya</th>
-                        <th className="text-end font-semibold px-4 py-3 whitespace-nowrap">Komisyon</th>
+                        <th className="text-start font-semibold px-4 py-3">المتجر</th>
+                        <th className="text-start font-semibold px-4 py-3 whitespace-nowrap">التاريخ</th>
+                        <th className="text-end font-semibold px-4 py-3 whitespace-nowrap">المبلغ</th>
+                        <th className="text-start font-semibold px-4 py-3">الطريقة</th>
+                        <th className="text-start font-semibold px-4 py-3">الحملة</th>
+                        <th className="text-end font-semibold px-4 py-3 whitespace-nowrap">العمولة</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -257,7 +255,7 @@ export default function AdminCommissionAgentPage() {
                 </div>
                 <p className="flex items-center gap-1.5 px-4 py-3 border-t border-gray-100 text-[11px] text-gray-400 print:hidden">
                   <Info className="w-3.5 h-3.5 shrink-0" />
-                  İlk {detail.summary.threshold} ödeme baz kabul edilir; komisyon manuel olarak ödenir.
+                  تُعتبر أول {detail.summary.threshold} دفعة أساساً؛ وتُدفع العمولة يدوياً.
                 </p>
               </div>
             )}
@@ -298,7 +296,7 @@ function Row({
       {showThresholdDivider && (
         <tr className="bg-amber-50">
           <td colSpan={6} className="px-4 py-1.5 text-[11px] font-bold text-amber-700 uppercase tracking-wide">
-            Eşik aşıldı — buradan sonrası komisyon kazandırır
+            تم تجاوز العتبة — ما بعدها يُحتسب عمولة
           </td>
         </tr>
       )}
@@ -307,7 +305,7 @@ function Row({
           <span className={p.earnsCommission ? 'text-gray-800' : 'text-gray-500'}>{p.storeName}</span>
           {p.paidByOwnerSelf && (
             <span className="ms-2 inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 align-middle">
-              Sahip kendi ödedi
+              دفع المالك بنفسه
             </span>
           )}
         </td>
@@ -319,7 +317,7 @@ function Row({
           {p.earnsCommission ? (
             <span className="font-extrabold text-green-600 tabular-nums">+{formatMoney(amountPerPayment, 'USD')}</span>
           ) : (
-            <span className="text-[11px] font-semibold text-gray-400">Baz</span>
+            <span className="text-[11px] font-semibold text-gray-400">أساس</span>
           )}
         </td>
       </tr>

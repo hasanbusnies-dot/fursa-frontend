@@ -18,29 +18,25 @@ import {
 import { ContractDoc } from '@/components/stores/ContractDoc';
 import { formatMoney } from '@/lib/money';
 import { cn } from '@/lib/utils';
+import {
+  STORE_STATUS_AR,
+  CAMPAIGN_AR as CAMPAIGN_LABEL,
+  PAYMENT_METHOD_AR as METHOD_LABEL,
+  UI_AR,
+} from '@/lib/staff-labels';
 
 const STATUS_META: Record<StoreStatus, { label: string; cls: string; Icon: React.ElementType }> = {
-  PENDING:   { label: 'Beklemede', cls: 'bg-amber-100 text-amber-800', Icon: Clock        },
-  APPROVED:  { label: 'Onaylandı', cls: 'bg-green-100 text-green-700', Icon: CheckCircle2 },
-  REJECTED:  { label: 'Reddedildi',cls: 'bg-red-100 text-red-700',     Icon: XCircle      },
-  SUSPENDED: { label: 'Askıda',    cls: 'bg-gray-200 text-gray-600',   Icon: Ban          },
-};
-
-const CAMPAIGN_LABEL: Record<string, string> = {
-  FULL_PRICE:       'Tam fiyat',
-  DISCOUNT_33:      '%33 indirim',
-  FIRST_MONTH_FREE: 'İlk ay ücretsiz',
-};
-
-const METHOD_LABEL: Record<string, string> = {
-  ONLINE: 'Online', CASH: 'Nakit', FREE: 'Ücretsiz',
+  PENDING:   { label: STORE_STATUS_AR.PENDING,   cls: 'bg-amber-100 text-amber-800', Icon: Clock        },
+  APPROVED:  { label: STORE_STATUS_AR.APPROVED,  cls: 'bg-green-100 text-green-700', Icon: CheckCircle2 },
+  REJECTED:  { label: STORE_STATUS_AR.REJECTED,  cls: 'bg-red-100 text-red-700',     Icon: XCircle      },
+  SUSPENDED: { label: STORE_STATUS_AR.SUSPENDED, cls: 'bg-gray-200 text-gray-600',   Icon: Ban          },
 };
 
 function formatDate(d?: string | null) {
   if (!d) return '—';
   const t = new Date(d);
   if (Number.isNaN(t.getTime())) return '—';
-  return t.toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' });
+  return t.toLocaleDateString('ar', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
 function campaignLabel(c?: string | null): string {
@@ -97,7 +93,7 @@ export default function AdminStoreDetailPage() {
           className="inline-flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-gray-700 mb-4"
         >
           <ChevronLeft className="w-4 h-4" />
-          Mağaza Onayları
+          اعتماد المتاجر
         </Link>
 
         {loading ? (
@@ -108,9 +104,9 @@ export default function AdminStoreDetailPage() {
         ) : error || !store ? (
           <div className="rounded-2xl bg-white border border-gray-200 p-8 text-center">
             <AlertTriangle className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-            <p className="text-sm font-medium text-gray-600">Mağaza yüklenemedi.</p>
+            <p className="text-sm font-medium text-gray-600">تعذّر تحميل المتجر.</p>
             <button onClick={load} className="mt-3 text-xs font-semibold text-orange-600 hover:text-orange-700 underline">
-              Tekrar dene
+              {UI_AR.retry}
             </button>
           </div>
         ) : (() => {
@@ -149,7 +145,7 @@ export default function AdminStoreDetailPage() {
                   <p className="flex items-center gap-1.5">
                     <UserRound className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                     <span className="font-medium text-gray-800">{store.ownerName ?? store.owner?.name ?? '—'}</span>
-                    <span className="text-gray-400">(Sahip)</span>
+                    <span className="text-gray-400">(المالك)</span>
                   </p>
                   {ownerPhone && (
                     <p className="flex items-center gap-1.5">
@@ -161,7 +157,7 @@ export default function AdminStoreDetailPage() {
                     <p className="flex items-center gap-1.5">
                       <UserCog className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                       <span>{agent.name ?? agent.phone ?? agent.id}</span>
-                      <span className="text-gray-400">(Kayıt eden temsilci)</span>
+                      <span className="text-gray-400">(المندوب المُسجِّل)</span>
                     </p>
                   )}
                   {store.address && (
@@ -186,10 +182,10 @@ export default function AdminStoreDetailPage() {
                 <div className="mt-4">
                   <ContractDoc
                     url={contractUrlOf(store)}
-                    label="Sözleşmeyi Görüntüle"
-                    emptyLabel="Sözleşme yok"
-                    expiredLabel="Bağlantının süresi doldu, sayfayı yenileyin."
-                    alt={`${store.name} sözleşmesi`}
+                    label="عرض العقد"
+                    emptyLabel="لا يوجد عقد"
+                    expiredLabel="انتهت صلاحية الرابط، حدّث الصفحة."
+                    alt={`عقد ${store.name}`}
                     dir="ltr"
                   />
                 </div>
@@ -199,28 +195,28 @@ export default function AdminStoreDetailPage() {
               <div className="rounded-2xl bg-white border border-gray-200 p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <BadgeCheck className="w-4 h-4 text-orange-500" />
-                  <h2 className="text-sm font-bold text-gray-800">Üyelik</h2>
+                  <h2 className="text-sm font-bold text-gray-800">العضوية</h2>
                 </div>
 
                 {memberActive ? (
                   <div className="rounded-xl bg-green-50 border border-green-200 p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <BadgeCheck className="w-5 h-5 text-green-600" />
-                      <span className="text-sm font-bold text-green-800">Aktif üye</span>
+                      <span className="text-sm font-bold text-green-800">عضو فعّال</span>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <p className="text-[11px] text-gray-500">Geçerlilik</p>
+                        <p className="text-[11px] text-gray-500">سارية حتى</p>
                         <p className="text-sm font-bold text-gray-800">{formatDate(membership?.paidUntil)}</p>
                       </div>
                       <div>
-                        <p className="text-[11px] text-gray-500">Kalan</p>
+                        <p className="text-[11px] text-gray-500">المتبقّي</p>
                         <p className="text-sm font-bold text-gray-800">
-                          {membership?.daysRemaining != null ? `${membership.daysRemaining} gün` : '—'}
+                          {membership?.daysRemaining != null ? `${membership.daysRemaining} يوم` : '—'}
                         </p>
                       </div>
                       <div className="col-span-2">
-                        <p className="text-[11px] text-gray-500">Kampanya</p>
+                        <p className="text-[11px] text-gray-500">الحملة</p>
                         <p className="text-sm font-bold text-gray-800">{campaignLabel(membership?.campaign)}</p>
                       </div>
                     </div>
@@ -228,7 +224,7 @@ export default function AdminStoreDetailPage() {
                 ) : (
                   <div className="rounded-xl bg-gray-50 border border-gray-200 p-4 text-center">
                     <ShieldX className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-gray-600">Üyelik aktif değil</p>
+                    <p className="text-sm font-medium text-gray-600">العضوية غير فعّالة</p>
                   </div>
                 )}
               </div>
@@ -236,7 +232,7 @@ export default function AdminStoreDetailPage() {
               {/* Charge history with receipts — the admin's window into cash collections */}
               {charges.length > 0 && (
                 <div className="rounded-2xl bg-white border border-gray-200 p-5">
-                  <h2 className="text-sm font-bold text-gray-800 mb-3">Ödeme Geçmişi</h2>
+                  <h2 className="text-sm font-bold text-gray-800 mb-3">سجل المدفوعات</h2>
                   <div className="divide-y divide-gray-100">
                     {charges.map((c) => (
                       <div key={c.id} className="py-2.5">
@@ -260,10 +256,10 @@ export default function AdminStoreDetailPage() {
                           <div className="mt-2">
                             <ContractDoc
                               url={c.receiptUrl}
-                              label="Makbuzu Görüntüle"
-                              emptyLabel="Makbuz yok"
-                              expiredLabel="Bağlantının süresi doldu, sayfayı yenileyin."
-                              alt={`${store.name} tahsilat makbuzu`}
+                              label="عرض الإيصال"
+                              emptyLabel="لا يوجد إيصال"
+                              expiredLabel="انتهت صلاحية الرابط، حدّث الصفحة."
+                              alt={`إيصال تحصيل ${store.name}`}
                               dir="ltr"
                             />
                           </div>

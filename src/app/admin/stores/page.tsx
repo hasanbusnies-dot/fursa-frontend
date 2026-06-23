@@ -20,28 +20,29 @@ import {
 import { ContractDoc } from '@/components/stores/ContractDoc';
 import { ResendSetupLinkButton } from '@/components/stores/ResendSetupLinkButton';
 import { cn } from '@/lib/utils';
+import { STORE_STATUS_AR, UI_AR } from '@/lib/staff-labels';
 
 // ── Status + filter config ──────────────────────────────────────────────────────
 
 const STATUS_META: Record<StoreStatus, { label: string; cls: string; Icon: React.ElementType }> = {
-  PENDING:   { label: 'Beklemede', cls: 'bg-amber-100 text-amber-800', Icon: Clock        },
-  APPROVED:  { label: 'Onaylandı', cls: 'bg-green-100 text-green-700', Icon: CheckCircle2 },
-  REJECTED:  { label: 'Reddedildi',cls: 'bg-red-100 text-red-700',     Icon: XCircle      },
-  SUSPENDED: { label: 'Askıda',    cls: 'bg-gray-200 text-gray-600',   Icon: Ban          },
+  PENDING:   { label: STORE_STATUS_AR.PENDING,   cls: 'bg-amber-100 text-amber-800', Icon: Clock        },
+  APPROVED:  { label: STORE_STATUS_AR.APPROVED,  cls: 'bg-green-100 text-green-700', Icon: CheckCircle2 },
+  REJECTED:  { label: STORE_STATUS_AR.REJECTED,  cls: 'bg-red-100 text-red-700',     Icon: XCircle      },
+  SUSPENDED: { label: STORE_STATUS_AR.SUSPENDED, cls: 'bg-gray-200 text-gray-600',   Icon: Ban          },
 };
 
 // Filter chips — default to PENDING (the review queue).
 const FILTERS: { value: StoreStatus | 'ALL'; label: string }[] = [
-  { value: 'PENDING',  label: 'Beklemede' },
-  { value: 'APPROVED', label: 'Onaylandı' },
-  { value: 'REJECTED', label: 'Reddedildi' },
-  { value: 'ALL',      label: 'Tümü' },
+  { value: 'PENDING',  label: STORE_STATUS_AR.PENDING },
+  { value: 'APPROVED', label: STORE_STATUS_AR.APPROVED },
+  { value: 'REJECTED', label: STORE_STATUS_AR.REJECTED },
+  { value: 'ALL',      label: UI_AR.all },
 ];
 
 function formatDate(d: string) {
   const t = new Date(d);
   if (Number.isNaN(t.getTime())) return '—';
-  return t.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return t.toLocaleDateString('ar', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function ownerNameOf(s: StoreModel) { return s.ownerName ?? s.owner?.name ?? '—'; }
@@ -62,7 +63,7 @@ function RejectModal({
 
   const submit = async () => {
     const r = reason.trim();
-    if (!r) { toast.error('Lütfen bir red gerekçesi girin.'); return; }
+    if (!r) { toast.error('الرجاء إدخال سبب الرفض.'); return; }
     setSaving(true);
     try {
       await onConfirm(r);
@@ -80,7 +81,7 @@ function RejectModal({
               <XCircle className="w-4 h-4 text-red-500" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-gray-900">Mağazayı Reddet</h3>
+              <h3 className="text-sm font-bold text-gray-900">رفض المتجر</h3>
               <p className="text-xs text-gray-500 truncate max-w-[200px]">{store.name}</p>
             </div>
           </div>
@@ -89,13 +90,13 @@ function RejectModal({
           </button>
         </div>
 
-        <label className="block text-xs font-semibold text-gray-700 mb-1.5">Red Gerekçesi</label>
+        <label className="block text-xs font-semibold text-gray-700 mb-1.5">سبب الرفض</label>
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={3}
           autoFocus
-          placeholder="Neden reddedildiğini açıklayın…"
+          placeholder="وضّح سبب الرفض…"
           className="block w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-colors resize-none"
         />
 
@@ -105,7 +106,7 @@ function RejectModal({
             disabled={saving}
             className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
           >
-            İptal
+            {UI_AR.cancel}
           </button>
           <button
             onClick={submit}
@@ -113,7 +114,7 @@ function RejectModal({
             className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
           >
             {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-            Reddet
+            {UI_AR.reject}
           </button>
         </div>
       </div>
@@ -157,7 +158,7 @@ function StoreCard({
           <p className="flex items-center gap-1.5">
             <UserRound className="w-3.5 h-3.5 text-gray-400 shrink-0" />
             <span className="font-medium text-gray-800">{ownerNameOf(store)}</span>
-            <span className="text-gray-400">(Sahip)</span>
+            <span className="text-gray-400">(المالك)</span>
           </p>
           {phone && (
             <p className="flex items-center gap-1.5">
@@ -175,7 +176,7 @@ function StoreCard({
             <p className="flex items-center gap-1.5">
               <UserCog className="w-3.5 h-3.5 text-gray-400 shrink-0" />
               <span>{agent.name ?? agent.phone ?? agent.id}</span>
-              <span className="text-gray-400">(Kayıt eden temsilci)</span>
+              <span className="text-gray-400">(المندوب المُسجِّل)</span>
             </p>
           )}
           <p className="flex items-center gap-1.5">
@@ -189,17 +190,17 @@ function StoreCard({
         <div className="mt-3 flex items-center justify-between gap-2">
           <ContractDoc
             url={photo}
-            label="Sözleşmeyi Görüntüle"
-            emptyLabel="Sözleşme yok"
-            expiredLabel="Bağlantının süresi doldu, sayfayı yenileyin."
-            alt={`${store.name} sözleşmesi`}
+            label="عرض العقد"
+            emptyLabel="لا يوجد عقد"
+            expiredLabel="انتهت صلاحية الرابط، حدّث الصفحة."
+            alt={`عقد ${store.name}`}
             dir="ltr"
           />
           <Link
             href={`/admin/stores/${store.id}`}
             className="inline-flex items-center gap-1 text-xs font-semibold text-orange-600 hover:text-orange-700 shrink-0"
           >
-            Detay
+            التفاصيل
             <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
@@ -218,12 +219,12 @@ function StoreCard({
               onResend={() => adminStoresService.resendOwnerSetupLink(store.id)}
               className="w-full py-2 border-gray-200 text-gray-600 hover:bg-gray-50"
               labels={{
-                idle:          'Kurulum bağlantısını yeniden gönder',
-                sending:       'Gönderiliyor…',
-                sent:          'Bağlantı gönderildi',
-                success:       'Şifre belirleme bağlantısı sahibin e-postasına gönderildi.',
-                alreadyActive: 'Sahip hesabını zaten etkinleştirmiş.',
-                error:         'Bağlantı gönderilemedi. Tekrar deneyin.',
+                idle:          'إعادة إرسال رابط الإعداد',
+                sending:       'جارٍ الإرسال…',
+                sent:          'تم إرسال الرابط',
+                success:       'تم إرسال رابط تعيين كلمة المرور إلى بريد المالك.',
+                alreadyActive: 'لقد فعّل المالك حسابه بالفعل.',
+                error:         'تعذّر إرسال الرابط. حاول مرة أخرى.',
               }}
             />
           </div>
@@ -238,7 +239,7 @@ function StoreCard({
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-semibold disabled:opacity-60 transition-colors"
             >
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-              Onayla
+              {UI_AR.approve}
             </button>
             <button
               onClick={onReject}
@@ -246,7 +247,7 @@ function StoreCard({
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-sm font-semibold disabled:opacity-60 transition-colors"
             >
               <XCircle className="w-4 h-4" />
-              Reddet
+              {UI_AR.reject}
             </button>
           </div>
         )}
@@ -301,10 +302,10 @@ export default function AdminStoresPage() {
     setBusyId(store.id);
     try {
       await adminStoresService.updateStatus(store.id, { status: 'APPROVED' });
-      toast.success(`"${store.name}" onaylandı.`);
+      toast.success(`تم اعتماد "${store.name}".`);
       load();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'İşlem başarısız.');
+      toast.error(err instanceof Error ? err.message : UI_AR.actionFailed);
     } finally {
       setBusyId(null);
     }
@@ -314,11 +315,11 @@ export default function AdminStoresPage() {
     setBusyId(store.id);
     try {
       await adminStoresService.updateStatus(store.id, { status: 'REJECTED', rejectionReason: reason });
-      toast.success(`"${store.name}" reddedildi.`);
+      toast.success(`تم رفض "${store.name}".`);
       setRejecting(null);
       load();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'İşlem başarısız.');
+      toast.error(err instanceof Error ? err.message : UI_AR.actionFailed);
     } finally {
       setBusyId(null);
     }
@@ -343,8 +344,8 @@ export default function AdminStoresPage() {
             <Store className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Mağaza Onayları</h1>
-            <p className="text-sm text-gray-500">Temsilcilerin kaydettiği mağazaları inceleyin ve onaylayın.</p>
+            <h1 className="text-2xl font-bold text-gray-900">اعتماد المتاجر</h1>
+            <p className="text-sm text-gray-500">راجِع المتاجر التي سجّلها المندوبون واعتمِدها.</p>
           </div>
         </div>
 
@@ -376,16 +377,16 @@ export default function AdminStoresPage() {
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
             <AlertTriangle className="w-10 h-10 text-gray-300" />
-            <p className="text-sm font-medium text-gray-500">Mağazalar yüklenemedi.</p>
+            <p className="text-sm font-medium text-gray-500">تعذّر تحميل المتاجر.</p>
             <button onClick={load} className="text-xs font-semibold text-orange-600 hover:text-orange-700 underline">
-              Tekrar dene
+              {UI_AR.retry}
             </button>
           </div>
         ) : stores.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
             <Store className="w-10 h-10 text-gray-300" />
-            <p className="text-sm font-medium text-gray-500">Kayıt bulunamadı.</p>
-            <p className="text-xs text-gray-400">Bu durumda mağaza yok.</p>
+            <p className="text-sm font-medium text-gray-500">لا توجد سجلات.</p>
+            <p className="text-xs text-gray-400">لا توجد متاجر بهذه الحالة.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -11,24 +11,25 @@ import { toast } from 'sonner';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { useAuthStore } from '@/store/auth.store';
 import { staffService, type CreateStaffResult, type StaffRole } from '@/services/staff.service';
+import { UI_AR } from '@/lib/staff-labels';
 
 // ── Validation (mirrors the backend rules) ──────────────────────────────────────────
 const PHONE_RE = /^\+?[0-9]+$/;
 
 function validateName(v: string): string | null {
   const t = v.trim();
-  if (t.length < 2 || t.length > 50) return 'Ad/soyad 2–50 karakter olmalı.';
+  if (t.length < 2 || t.length > 50) return 'يجب أن يكون الاسم بين 2 و50 حرفاً.';
   return null;
 }
 function validatePhone(v: string): string | null {
   const t = v.trim();
-  if (!PHONE_RE.test(t)) return 'Telefon yalnızca rakam (başında + olabilir) içerebilir.';
-  if (t.length < 8 || t.length > 16) return 'Telefon 8–16 karakter olmalı.';
+  if (!PHONE_RE.test(t)) return 'يجب أن يحتوي الهاتف على أرقام فقط (مع + في البداية اختيارياً).';
+  if (t.length < 8 || t.length > 16) return 'يجب أن يكون الهاتف بين 8 و16 خانة.';
   return null;
 }
 function validateRegion(v: string): string | null {
   const t = v.trim();
-  if (t && t.length > 100) return 'Bölge en fazla 100 karakter olabilir.';
+  if (t && t.length > 100) return 'لا يتجاوز نطاق العمل 100 حرف.';
   return null;
 }
 
@@ -52,7 +53,7 @@ function CopyField({ label, value }: { label: string; value: string }) {
         <button
           type="button"
           onClick={copy}
-          title="Kopyala"
+          title="نسخ"
           className="shrink-0 w-9 h-9 rounded-lg bg-white border border-blue-200 hover:bg-blue-100 flex items-center justify-center transition-colors"
         >
           {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-blue-600" />}
@@ -135,7 +136,7 @@ export default function AdminStaffPage() {
       validateName(firstName), validateName(lastName), validatePhone(phone),
       role === 'FIELD_AGENT' ? validateRegion(region) : null,
     ].filter(Boolean);
-    if (errs.length) { toast.error('Lütfen formdaki hataları düzeltin.'); return; }
+    if (errs.length) { toast.error('يرجى تصحيح الأخطاء في النموذج.'); return; }
 
     setSubmitting(true);
     try {
@@ -149,7 +150,7 @@ export default function AdminStaffPage() {
       setDone(res);
       resetForm();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Oluşturma başarısız.');
+      toast.error(err instanceof Error ? err.message : 'تعذّر الإنشاء.');
     } finally {
       setSubmitting(false);
     }
@@ -162,9 +163,9 @@ export default function AdminStaffPage() {
 
   // Role-specific copy on the (otherwise uniform) success screen.
   const isAccountant = done?.role === 'ACCOUNTANT';
-  const successHeading = isAccountant ? 'Muhasebeci oluşturuldu.' : 'Saha temsilcisi oluşturuldu.';
+  const successHeading = isAccountant ? 'تم إنشاء محاسب.' : 'تم إنشاء مندوب ميداني.';
   const loginHref      = isAccountant ? '/accounting/login' : '/agent/login';
-  const loginLabel     = isAccountant ? 'Muhasebe girişine git' : 'Temsilci girişine git';
+  const loginLabel     = isAccountant ? 'الذهاب إلى دخول المحاسبة' : 'الذهاب إلى دخول المندوب';
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -175,8 +176,8 @@ export default function AdminStaffPage() {
             <UserPlus className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Personel Oluştur</h1>
-            <p className="text-sm text-gray-500">Yeni muhasebeci veya saha temsilcisi ekleyin.</p>
+            <h1 className="text-2xl font-bold text-gray-900">إنشاء موظف</h1>
+            <p className="text-sm text-gray-500">أضِف محاسباً أو مندوباً ميدانياً جديداً.</p>
           </div>
         </div>
 
@@ -199,15 +200,15 @@ export default function AdminStaffPage() {
             <div className="mb-4 rounded-xl bg-amber-50 border-2 border-amber-300 px-4 py-3 flex items-start gap-2.5">
               <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
               <p className="text-sm text-amber-800 leading-relaxed font-medium">
-                Bu şifre yalnızca bir kez gösterilir — kaydedin. Personel{' '}
-                <span className="font-semibold">{loginHref}</span> adresinden bu kod ve şifreyle giriş yapıp
-                şifresini değiştirecek.
+                تُعرض كلمة المرور هذه مرة واحدة فقط — احفظها. سيسجّل الموظف الدخول عبر{' '}
+                <span className="font-semibold">{loginHref}</span> بهذا الرمز وكلمة المرور، ثم
+                يغيّر كلمة مروره.
               </p>
             </div>
 
             <div className="space-y-2.5">
-              <CopyField label="Personel Kodu (11 hane)" value={done.staffCode} />
-              <CopyField label="Tek Kullanımlık Şifre" value={done.oneTimePassword} />
+              <CopyField label="رمز الموظف (11 خانة)" value={done.staffCode} />
+              <CopyField label="كلمة مرور لمرة واحدة" value={done.oneTimePassword} />
             </div>
 
             <div className="mt-5 flex flex-wrap gap-2">
@@ -221,7 +222,7 @@ export default function AdminStaffPage() {
                 onClick={createAnother}
                 className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-semibold transition-colors"
               >
-                <RotateCcw className="w-4 h-4" /> Yeni personel oluştur
+                <RotateCcw className="w-4 h-4" /> إنشاء موظف جديد
               </button>
             </div>
           </div>
@@ -229,7 +230,7 @@ export default function AdminStaffPage() {
           /* ── Form ── */
           <div className="bg-white border border-gray-200 rounded-2xl p-6">
             {/* Role selector */}
-            <label className="block text-xs font-semibold text-gray-700 mb-2">Personel Türü</label>
+            <label className="block text-xs font-semibold text-gray-700 mb-2">نوع الموظف</label>
             <div className="grid grid-cols-2 gap-2 mb-6">
               <button
                 type="button"
@@ -240,7 +241,7 @@ export default function AdminStaffPage() {
                     : 'border-gray-200 text-gray-500 hover:bg-gray-50'
                 }`}
               >
-                <Calculator className="w-4 h-4" /> Muhasebeci
+                <Calculator className="w-4 h-4" /> محاسب
               </button>
               <button
                 type="button"
@@ -251,27 +252,27 @@ export default function AdminStaffPage() {
                     : 'border-gray-200 text-gray-500 hover:bg-gray-50'
                 }`}
               >
-                <MapPin className="w-4 h-4" /> Saha Temsilcisi
+                <MapPin className="w-4 h-4" /> مندوب ميداني
               </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Ad" value={firstName} onChange={setFirstName} placeholder="Ad" error={nameErr} autoComplete="off" />
-              <Field label="Soyad" value={lastName} onChange={setLastName} placeholder="Soyad" error={lastErr} autoComplete="off" />
+              <Field label="الاسم" value={firstName} onChange={setFirstName} placeholder="الاسم" error={nameErr} autoComplete="off" />
+              <Field label="الكنية" value={lastName} onChange={setLastName} placeholder="الكنية" error={lastErr} autoComplete="off" />
             </div>
 
             <div className="mt-4">
-              <Field label="Telefon" value={phone} onChange={setPhone} placeholder="09xxxxxxxx" error={phoneErr} type="tel" autoComplete="off" />
+              <Field label="رقم الهاتف" value={phone} onChange={setPhone} placeholder="09xxxxxxxx" error={phoneErr} type="tel" autoComplete="off" />
             </div>
 
             {role === 'FIELD_AGENT' && (
               <div className="mt-4">
-                <Field label="Bölge (opsiyonel)" value={region} onChange={setRegion} placeholder="Örn. Şam" error={regErr} autoComplete="off" />
+                <Field label="نطاق العمل (اختياري)" value={region} onChange={setRegion} placeholder="مثال: دمشق" error={regErr} autoComplete="off" />
               </div>
             )}
 
             <p className="mt-4 text-[11px] text-gray-500 leading-relaxed">
-              Giriş kodu ve şifre sunucu tarafından oluşturulur; oluşturma sonrası şifre yalnızca bir kez gösterilir.
+              يُنشئ الخادم رمز الدخول وكلمة المرور؛ وتُعرض كلمة المرور مرة واحدة فقط بعد الإنشاء.
             </p>
 
             <button
@@ -280,7 +281,7 @@ export default function AdminStaffPage() {
               className="mt-6 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold disabled:opacity-60 transition-colors"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-              {role === 'ACCOUNTANT' ? 'Muhasebeci Oluştur' : 'Saha Temsilcisi Oluştur'}
+              {role === 'ACCOUNTANT' ? 'إنشاء محاسب' : 'إنشاء مندوب ميداني'}
             </button>
           </div>
         )}
