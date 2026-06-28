@@ -11,6 +11,7 @@ import {
 } from '@/services/accounting.service';
 import { formatMoney, compareAmounts } from '@/lib/money';
 import { cn } from '@/lib/utils';
+import { UI_AR, expenseCategoryLabel } from '@/lib/staff-labels';
 
 function prettyType(t: string): string {
   return t.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
@@ -33,14 +34,14 @@ function CurrencyCard({ block }: { block: PnlCurrencyBlock }) {
         {/* Revenue */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-xs font-bold text-green-700 uppercase tracking-wide">Gelir</span>
+            <span className="text-xs font-bold text-green-700 uppercase tracking-wide">الإيرادات</span>
             <span className="text-sm font-extrabold text-green-700 tabular-nums" dir="ltr">
               {formatMoney(block.revenue.total, block.currency)}
             </span>
           </div>
           <div className="divide-y divide-gray-50">
             {block.revenue.byType.length === 0 ? (
-              <p className="text-xs text-gray-400 py-1">Gelir yok.</p>
+              <p className="text-xs text-gray-400 py-1">لا إيرادات.</p>
             ) : block.revenue.byType.map((r, i) => (
               <div key={`${r.type}-${i}`} className="flex items-center justify-between py-1.5">
                 <span className="text-xs text-gray-500">{prettyType(r.type)}</span>
@@ -53,17 +54,17 @@ function CurrencyCard({ block }: { block: PnlCurrencyBlock }) {
         {/* Expenses */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-xs font-bold text-red-700 uppercase tracking-wide">Gider</span>
+            <span className="text-xs font-bold text-red-700 uppercase tracking-wide">المصروفات</span>
             <span className="text-sm font-extrabold text-red-700 tabular-nums" dir="ltr">
               −{formatMoney(block.expenses.total, block.currency)}
             </span>
           </div>
           <div className="divide-y divide-gray-50">
             {block.expenses.byCategory.length === 0 ? (
-              <p className="text-xs text-gray-400 py-1">Gider yok.</p>
+              <p className="text-xs text-gray-400 py-1">لا مصروفات.</p>
             ) : block.expenses.byCategory.map((e, i) => (
               <div key={`${e.categoryKey}-${i}`} className="flex items-center justify-between py-1.5">
-                <span className="text-xs text-gray-500">{e.label}</span>
+                <span className="text-xs text-gray-500">{expenseCategoryLabel(e.categoryKey, e.label)}</span>
                 <span className="text-sm text-gray-700 tabular-nums" dir="ltr">{formatMoney(e.amount, block.currency)}</span>
               </div>
             ))}
@@ -72,7 +73,7 @@ function CurrencyCard({ block }: { block: PnlCurrencyBlock }) {
 
         {/* Net */}
         <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-          <span className="text-sm font-bold text-gray-800">Net</span>
+          <span className="text-sm font-bold text-gray-800">الصافي</span>
           <span className={cn('text-lg font-extrabold tabular-nums', netCls)} dir="ltr">
             {formatMoney(block.net, block.currency)}
           </span>
@@ -108,8 +109,8 @@ export default function AccountingPnlPage() {
           <TrendingUp className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Kâr-Zarar</h1>
-          <p className="text-sm text-gray-500">Para birimi başına gelir − gider = net.</p>
+          <h1 className="text-2xl font-bold text-gray-900">الأرباح والخسائر</h1>
+          <p className="text-sm text-gray-500">لكل عملة: الإيرادات − المصروفات = الصافي.</p>
         </div>
       </div>
 
@@ -124,15 +125,15 @@ export default function AccountingPnlPage() {
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
           <AlertTriangle className="w-10 h-10 text-gray-300" />
-          <p className="text-sm font-medium text-gray-500">Kâr-zarar yüklenemedi.</p>
+          <p className="text-sm font-medium text-gray-500">تعذّر تحميل الأرباح والخسائر.</p>
           <button onClick={load} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 underline">
-            Tekrar dene
+            {UI_AR.retry}
           </button>
         </div>
       ) : blocks.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
           <Inbox className="w-10 h-10 text-gray-300" />
-          <p className="text-sm font-medium text-gray-500">Bu dönemde veri yok.</p>
+          <p className="text-sm font-medium text-gray-500">لا توجد بيانات في هذه الفترة.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

@@ -18,6 +18,7 @@ import type { PageMeta } from '@/services/stores.service';
 import { ApiError } from '@/services/api';
 import { formatMoney } from '@/lib/money';
 import { cn } from '@/lib/utils';
+import { UI_AR, expenseCategoryLabel } from '@/lib/staff-labels';
 
 const MONEY_RE = /^\d+(\.\d{1,2})?$/;
 const CURRENCIES = ['SYP', 'USD', 'EUR'] as const;
@@ -26,7 +27,7 @@ function formatDate(d?: string | null) {
   if (!d) return '—';
   const t = new Date(d);
   if (Number.isNaN(t.getTime())) return '—';
-  return t.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return t.toLocaleDateString('ar', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function todayISO() {
@@ -68,10 +69,10 @@ function ExpenseForm({
       };
       if (editing) await accountingService.updateExpense(editing.id, payload);
       else await accountingService.createExpense(payload);
-      toast.success(editing ? 'Gider güncellendi.' : 'Gider eklendi.');
+      toast.success(editing ? 'تم تحديث المصروف.' : 'تمت إضافة المصروف.');
       onSaved();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Gider kaydedilemedi.');
+      toast.error(err instanceof ApiError ? err.message : 'تعذّر حفظ المصروف.');
     } finally {
       setSaving(false);
     }
@@ -81,7 +82,7 @@ function ExpenseForm({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-xl max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="sticky top-0 bg-white flex items-center justify-between p-5 border-b border-gray-100">
-          <h3 className="text-sm font-bold text-gray-900">{editing ? 'Gideri Düzenle' : 'Gider Ekle'}</h3>
+          <h3 className="text-sm font-bold text-gray-900">{editing ? 'تعديل المصروف' : 'إضافة مصروف'}</h3>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
             <X className="w-4 h-4 text-gray-500" />
           </button>
@@ -90,7 +91,7 @@ function ExpenseForm({
         <div className="p-5 space-y-4">
           <div className="grid grid-cols-3 gap-2">
             <div className="col-span-2">
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Tutar</label>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">المبلغ</label>
               <input
                 inputMode="decimal"
                 value={amount}
@@ -101,7 +102,7 @@ function ExpenseForm({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Birim</label>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">العملة</label>
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
@@ -112,23 +113,23 @@ function ExpenseForm({
             </div>
           </div>
           {amount !== '' && !amountValid && (
-            <p className="text-xs text-red-500 -mt-2">Geçerli bir tutar girin (en çok 2 ondalık).</p>
+            <p className="text-xs text-red-500 -mt-2">أدخل مبلغاً صحيحاً (خانتان عشريتان كحد أقصى).</p>
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Kategori</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">الفئة</label>
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
               className="w-full px-3 py-2.5 rounded-xl border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 transition-colors"
             >
-              <option value="" disabled>Kategori seçin</option>
-              {activeCats.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+              <option value="" disabled>اختر الفئة</option>
+              {activeCats.map((c) => <option key={c.id} value={c.id}>{expenseCategoryLabel(c.key, c.label)}</option>)}
             </select>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Tarih</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">التاريخ</label>
             <input
               type="date"
               value={incurredAt}
@@ -138,7 +139,7 @@ function ExpenseForm({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Açıklama (opsiyonel)</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">الوصف (اختياري)</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -153,7 +154,7 @@ function ExpenseForm({
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-            {saving ? 'Kaydediliyor…' : editing ? 'Güncelle' : 'Ekle'}
+            {saving ? UI_AR.saving : editing ? UI_AR.update : 'إضافة'}
           </button>
         </div>
       </div>
@@ -210,14 +211,14 @@ export default function AccountingExpensesPage() {
   const openEdit = (e: Expense) => { setEditing(e); setFormOpen(true); };
 
   const remove = async (e: Expense) => {
-    if (!confirm('Bu gider silinsin mi?')) return;
+    if (!confirm('حذف هذا المصروف؟')) return;
     setDeletingId(e.id);
     try {
       await accountingService.deleteExpense(e.id);
-      toast.success('Gider silindi.');
+      toast.success('تم حذف المصروف.');
       load();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Silinemedi.');
+      toast.error(err instanceof ApiError ? err.message : 'تعذّر الحذف.');
     } finally {
       setDeletingId(null);
     }
@@ -231,8 +232,8 @@ export default function AccountingExpensesPage() {
             <Receipt className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Giderler</h1>
-            <p className="text-sm text-gray-500">Gider kayıtları ve kategoriler.</p>
+            <h1 className="text-2xl font-bold text-gray-900">المصروفات</h1>
+            <p className="text-sm text-gray-500">سجلات المصروفات والفئات.</p>
           </div>
         </div>
         <button
@@ -240,7 +241,7 @@ export default function AccountingExpensesPage() {
           className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-colors shrink-0"
         >
           <Plus className="w-4 h-4" />
-          Gider Ekle
+          إضافة مصروف
         </button>
       </div>
 
@@ -255,15 +256,15 @@ export default function AccountingExpensesPage() {
           onChange={(e) => onCategory(e.target.value)}
           className="text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-100 cursor-pointer"
         >
-          <option value="">Tüm kategoriler</option>
-          {categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+          <option value="">كل الفئات</option>
+          {categories.map((c) => <option key={c.id} value={c.id}>{expenseCategoryLabel(c.key, c.label)}</option>)}
         </select>
         <select
           value={currencyFilter}
           onChange={(e) => onCurrency(e.target.value)}
           className="text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-100 cursor-pointer"
         >
-          <option value="">Tüm birimler</option>
+          <option value="">كل العملات</option>
           {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
@@ -274,13 +275,13 @@ export default function AccountingExpensesPage() {
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
           <AlertTriangle className="w-10 h-10 text-gray-300" />
-          <p className="text-sm font-medium text-gray-500">Giderler yüklenemedi.</p>
-          <button onClick={load} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 underline">Tekrar dene</button>
+          <p className="text-sm font-medium text-gray-500">تعذّر تحميل المصروفات.</p>
+          <button onClick={load} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 underline">{UI_AR.retry}</button>
         </div>
       ) : rows.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
           <Inbox className="w-10 h-10 text-gray-300" />
-          <p className="text-sm font-medium text-gray-500">Bu filtrelerde gider yok.</p>
+          <p className="text-sm font-medium text-gray-500">لا مصروفات ضمن هذه الفلاتر.</p>
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
@@ -298,10 +299,10 @@ export default function AccountingExpensesPage() {
                   {formatMoney(e.amount, e.currency)}
                 </span>
                 <div className="flex items-center gap-1 shrink-0">
-                  <button onClick={() => openEdit(e)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors" aria-label="Düzenle">
+                  <button onClick={() => openEdit(e)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors" aria-label={UI_AR.edit}>
                     <Pencil className="w-4 h-4" />
                   </button>
-                  <button onClick={() => remove(e)} disabled={deletingId === e.id} className="w-8 h-8 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50" aria-label="Sil">
+                  <button onClick={() => remove(e)} disabled={deletingId === e.id} className="w-8 h-8 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50" aria-label={UI_AR.delete}>
                     {deletingId === e.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                   </button>
                 </div>
@@ -312,11 +313,11 @@ export default function AccountingExpensesPage() {
           {meta && (meta.hasPrevPage || meta.hasNextPage) && (
             <div className="flex items-center justify-between p-3 border-t border-gray-100">
               <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={!meta.hasPrevPage} className="flex items-center gap-1 text-sm font-semibold text-gray-600 disabled:opacity-40 hover:text-gray-900 transition-colors">
-                <ChevronLeft className="w-4 h-4" /> Önceki
+                <ChevronLeft className="w-4 h-4" /> {UI_AR.prev}
               </button>
-              <span className="text-xs text-gray-400">Sayfa {meta.page}</span>
+              <span className="text-xs text-gray-400">{UI_AR.page} {meta.page}</span>
               <button onClick={() => setPage((p) => p + 1)} disabled={!meta.hasNextPage} className="flex items-center gap-1 text-sm font-semibold text-gray-600 disabled:opacity-40 hover:text-gray-900 transition-colors">
-                Sonraki <ChevronRight className="w-4 h-4" />
+                {UI_AR.next} <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           )}

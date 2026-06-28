@@ -13,6 +13,7 @@ import {
   type ReconciliationReport,
 } from '@/services/accounting.service';
 import { formatMoney } from '@/lib/money';
+import { UI_AR } from '@/lib/staff-labels';
 
 function prettyType(t: string): string {
   return t.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
@@ -53,7 +54,7 @@ function AmountRow({ label, amount, currency, strong }: { label: string; amount:
 }
 
 function EmptyLine() {
-  return <p className="text-xs text-gray-400 py-1.5">Veri yok.</p>;
+  return <p className="text-xs text-gray-400 py-1.5">لا توجد بيانات.</p>;
 }
 
 // ── Reconciliation health ─────────────────────────────────────────────────────────
@@ -66,20 +67,20 @@ function ReconciliationCard({ report }: { report: ReconciliationReport | null })
 
   return (
     <Card
-      title="Mutabakat Kontrolleri"
+      title="فحوصات التسوية"
       icon={healthy ? ShieldCheck : ShieldAlert}
       iconCls={healthy ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}
     >
       {checks.length === 0 ? (
         <EmptyLine />
       ) : healthy ? (
-        <p className="text-sm font-semibold text-green-600">Tüm bütünlük kontrolleri sağlıklı.</p>
+        <p className="text-sm font-semibold text-green-600">جميع فحوصات السلامة سليمة.</p>
       ) : (
         <div className="space-y-1.5">
           {issues.map(([key, rows]) => (
             <div key={key} className="flex items-center justify-between gap-3">
               <span className="text-xs text-gray-600">{prettyType(key)}</span>
-              <span className="text-xs font-bold text-red-600">{rows.length} sorun</span>
+              <span className="text-xs font-bold text-red-600">{rows.length} مشكلة</span>
             </div>
           ))}
         </div>
@@ -118,8 +119,8 @@ export default function AccountingOverviewPage() {
           <TrendingUp className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Genel Bakış</h1>
-          <p className="text-sm text-gray-500">Finansal anlık görünüm.</p>
+          <h1 className="text-2xl font-bold text-gray-900">نظرة عامة</h1>
+          <p className="text-sm text-gray-500">لمحة مالية سريعة.</p>
         </div>
       </div>
 
@@ -134,19 +135,19 @@ export default function AccountingOverviewPage() {
       ) : error || !data ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
           <AlertTriangle className="w-10 h-10 text-gray-300" />
-          <p className="text-sm font-medium text-gray-500">Veriler yüklenemedi.</p>
+          <p className="text-sm font-medium text-gray-500">تعذّر تحميل البيانات.</p>
           <button onClick={load} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 underline">
-            Tekrar dene
+            {UI_AR.retry}
           </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Revenue recognized */}
-          <Card title="Tahakkuk Eden Gelir" icon={TrendingUp} iconCls="bg-green-100 text-green-600">
+          <Card title="الإيرادات المُحقَّقة" icon={TrendingUp} iconCls="bg-green-100 text-green-600">
             {data.revenueRecognized.totals.length === 0 ? <EmptyLine /> : (
               <>
                 {data.revenueRecognized.totals.map((t) => (
-                  <AmountRow key={t.currency} label={`Toplam (${t.currency})`} amount={t.amount} currency={t.currency} strong />
+                  <AmountRow key={t.currency} label={`الإجمالي (${t.currency})`} amount={t.amount} currency={t.currency} strong />
                 ))}
                 {data.revenueRecognized.byType.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-gray-100">
@@ -160,26 +161,26 @@ export default function AccountingOverviewPage() {
           </Card>
 
           {/* Platform liability */}
-          <Card title="Platform Yükümlülüğü" icon={Wallet} iconCls="bg-blue-100 text-blue-600">
+          <Card title="التزام المنصّة" icon={Wallet} iconCls="bg-blue-100 text-blue-600">
             {data.platformLiability.length === 0 ? <EmptyLine /> : data.platformLiability.map((l) => (
               <AmountRow key={l.currency} label={l.currency} amount={l.amount} currency={l.currency} strong />
             ))}
-            <p className="text-[11px] text-gray-400 mt-2">Kullanıcı cüzdanlarında tutulan toplam bakiye.</p>
+            <p className="text-[11px] text-gray-400 mt-2">إجمالي الرصيد المحفوظ في محافظ المستخدمين.</p>
           </Card>
 
           {/* Top-up mix */}
-          <Card title="Yükleme Dağılımı" icon={ArrowDownToLine} iconCls="bg-orange-100 text-orange-600">
+          <Card title="توزيع الشحن" icon={ArrowDownToLine} iconCls="bg-orange-100 text-orange-600">
             {data.topupMix.length === 0 ? <EmptyLine /> : data.topupMix.map((m, i) => (
               <AmountRow key={`${m.type}-${m.currency}-${i}`} label={`${prettyType(m.type)} (${m.currency})`} amount={m.amount} currency={m.currency} />
             ))}
           </Card>
 
           {/* Agent outstanding */}
-          <Card title="Temsilci Bekleyen Nakit" icon={HandCoins} iconCls="bg-amber-100 text-amber-600">
+          <Card title="النقد المعلّق لدى المندوبين" icon={HandCoins} iconCls="bg-amber-100 text-amber-600">
             {data.agentOutstanding.length === 0 ? <EmptyLine /> : data.agentOutstanding.map((a) => (
               <AmountRow key={a.currency} label={a.currency} amount={a.amount} currency={a.currency} strong />
             ))}
-            <p className="text-[11px] text-gray-400 mt-2">Henüz HQ ile mutabakatı yapılmamış tahsilat.</p>
+            <p className="text-[11px] text-gray-400 mt-2">تحصيلات لم تُسوَّ بعد مع المركز.</p>
           </Card>
 
           {/* Reconciliation */}

@@ -11,6 +11,7 @@ import {
 } from '@/services/accounting.service';
 import { formatMoney, compareAmounts } from '@/lib/money';
 import { cn } from '@/lib/utils';
+import { UI_AR } from '@/lib/staff-labels';
 
 function hasPending(a: AgentOutstanding): boolean {
   return compareAmounts(a.byVerification?.pending ?? '0', '0') > 0;
@@ -41,13 +42,13 @@ export default function AccountingVerificationPage() {
           <ClipboardCheck className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Tahsilat Doğrulama</h1>
-          <p className="text-sm text-gray-500">Temsilci nakit tahsilatlarının makbuz doğrulaması (cüzdana dokunmaz).</p>
+          <h1 className="text-2xl font-bold text-gray-900">تحقّق التحصيلات</h1>
+          <p className="text-sm text-gray-500">التحقق من إيصالات تحصيلات المندوبين النقدية (لا يمسّ المحفظة).</p>
         </div>
       </div>
 
       <div className="flex gap-1 mb-6 bg-white border border-gray-200 rounded-xl p-1 w-fit">
-        {([[true, 'Bekleyenler'], [false, 'Tümü']] as [boolean, string][]).map(([v, label]) => (
+        {([[true, 'قيد التحقق'], [false, UI_AR.all]] as [boolean, string][]).map(([v, label]) => (
           <button
             key={label}
             onClick={() => setOnlyPending(v)}
@@ -68,13 +69,13 @@ export default function AccountingVerificationPage() {
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
           <AlertTriangle className="w-10 h-10 text-gray-300" />
-          <p className="text-sm font-medium text-gray-500">Temsilciler yüklenemedi.</p>
-          <button onClick={load} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 underline">Tekrar dene</button>
+          <p className="text-sm font-medium text-gray-500">تعذّر تحميل المندوبين.</p>
+          <button onClick={load} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 underline">{UI_AR.retry}</button>
         </div>
       ) : shown.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
           <Inbox className="w-10 h-10 text-gray-300" />
-          <p className="text-sm font-medium text-gray-500">{onlyPending ? 'Doğrulama bekleyen tahsilat yok.' : 'Kayıt yok.'}</p>
+          <p className="text-sm font-medium text-gray-500">{onlyPending ? 'لا تحصيلات بانتظار التحقق.' : 'لا سجلات.'}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -100,7 +101,7 @@ export default function AccountingVerificationPage() {
               </div>
 
               <div className="mt-3 rounded-xl bg-gray-50 border border-gray-100 p-3">
-                <p className="text-[11px] text-gray-500 mb-1">Bekleyen ({a.currency})</p>
+                <p className="text-[11px] text-gray-500 mb-1">قيد التحقق ({a.currency})</p>
                 <p className="text-lg font-extrabold text-amber-600 tabular-nums" dir="ltr">
                   {formatMoney(a.byVerification?.pending ?? '0', a.currency)}
                 </p>
@@ -112,7 +113,7 @@ export default function AccountingVerificationPage() {
 
               {a.ageDays != null && (
                 <p className="mt-2 flex items-center gap-1.5 text-[11px] text-gray-400">
-                  <Clock className="w-3 h-3" /> En eski {a.ageDays} gün
+                  <Clock className="w-3 h-3" /> الأقدم {a.ageDays} يوم
                 </p>
               )}
             </Link>

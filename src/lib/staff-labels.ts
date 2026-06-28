@@ -50,6 +50,43 @@ export const CAMPAIGN_AR: Record<string, string> = {
   FIRST_MONTH_FREE: 'الشهر الأول مجاناً',
 };
 
+/** Agent cash-collection verification status. */
+export const VERIFICATION_STATUS_AR: Record<string, string> = {
+  PENDING_VERIFICATION: 'قيد التحقق',
+  VERIFIED:             'مُتحقَّق',
+  REJECTED:             'مرفوض',
+};
+
+/** Manual-transfer top-up status (accounting queue). */
+export const TRANSFER_STATUS_AR: Record<string, string> = {
+  PENDING_VERIFICATION: 'بانتظار الاعتماد',
+  CONFIRMED:            'مُعتمد',
+  REJECTED:             'مرفوض',
+  INITIATED:            'بدأت',
+};
+
+/** Settlement state of a collection (settled / not yet reconciled with HQ). */
+export const SETTLEMENT_AR = {
+  settled:   'مسوّى',
+  unsettled: 'غير مسوّى',
+} as const;
+
+/** Canonical Arabic for the standard (system) expense categories. Custom categories
+ *  fall back to their server-provided label — use expenseCategoryLabel(). */
+export const EXPENSE_CATEGORY_AR: Record<string, string> = {
+  salary:      'رواتب',
+  servers:     'خوادم',
+  advertising: 'دعاية وإعلان',
+  tax:         'ضرائب',
+  office:      'مصاريف المكتب',
+  other:       'أخرى',
+};
+
+/** Localize a category by key, falling back to the backend label for custom keys. */
+export function expenseCategoryLabel(key: string, fallback: string): string {
+  return EXPENSE_CATEGORY_AR[key] ?? fallback;
+}
+
 /** Common UI strings reused across the staff pages. */
 export const UI_AR = {
   // actions

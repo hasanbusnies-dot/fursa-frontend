@@ -6,7 +6,7 @@ import { Loader2, Calculator, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { AccountingNav } from '@/components/accounting/AccountingNav';
 
-// Accounting is a staff finance tool (Turkish/LTR), gated to ACCOUNTANT or ADMIN.
+// Accounting is a staff finance tool (Arabic/RTL), gated to ACCOUNTANT or ADMIN.
 // Unlike the admin pages (which each inline their own guard), this area centralizes
 // the guard + nav here so the views only render content.
 
@@ -49,7 +49,7 @@ export default function AccountingLayout({ children }: { children: React.ReactNo
               <Calculator className="w-4 h-4 text-emerald-600" />
             </div>
             <div className="min-w-0 leading-tight">
-              <p className="text-sm font-bold text-gray-900 truncate">Muhasebe</p>
+              <p className="text-sm font-bold text-gray-900 truncate">المحاسبة</p>
               <p className="text-[11px] text-gray-400 truncate">{user?.profile?.firstName ?? user?.email}</p>
             </div>
           </div>
@@ -58,7 +58,7 @@ export default function AccountingLayout({ children }: { children: React.ReactNo
             className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-800 px-2.5 py-1.5 rounded-lg hover:bg-gray-100 transition-colors shrink-0"
           >
             <LogOut className="w-4 h-4" />
-            Çıkış
+            تسجيل الخروج
           </button>
         </div>
       </header>

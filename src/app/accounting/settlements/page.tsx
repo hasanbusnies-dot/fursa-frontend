@@ -17,6 +17,7 @@ import {
 import type { PageMeta } from '@/services/stores.service';
 import { ApiError } from '@/services/api';
 import { formatMoney, compareAmounts } from '@/lib/money';
+import { UI_AR, VERIFICATION_STATUS_AR } from '@/lib/staff-labels';
 
 const CURRENCIES = ['SYP', 'USD', 'EUR'] as const;
 
@@ -24,7 +25,7 @@ function formatDateTime(s?: string | null): string {
   if (!s) return '—';
   const t = new Date(s);
   if (Number.isNaN(t.getTime())) return '—';
-  return t.toLocaleString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return t.toLocaleString('ar', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 // ── Outstanding row (agent × currency) ─────────────────────────────────────────────
@@ -56,19 +57,19 @@ function OutstandingCard({
       </div>
 
       <div className="mt-3 rounded-xl bg-gray-50 border border-gray-100 p-3">
-        <p className="text-[11px] text-gray-500 mb-0.5">Toplam bekleyen</p>
+        <p className="text-[11px] text-gray-500 mb-0.5">إجمالي المستحق</p>
         <p className="text-xl font-extrabold text-gray-900 tabular-nums" dir="ltr">{formatMoney(row.outstanding, row.currency)}</p>
         <div className="mt-2 grid grid-cols-3 gap-2 text-center">
           <div className="rounded-lg bg-green-50 py-1.5">
-            <p className="text-[10px] text-green-600">Doğrulanmış</p>
+            <p className="text-[10px] text-green-600">{VERIFICATION_STATUS_AR.VERIFIED}</p>
             <p className="text-xs font-bold text-green-700 tabular-nums" dir="ltr">{formatMoney(verified, row.currency)}</p>
           </div>
           <div className="rounded-lg bg-amber-50 py-1.5">
-            <p className="text-[10px] text-amber-600">Bekleyen</p>
+            <p className="text-[10px] text-amber-600">{VERIFICATION_STATUS_AR.PENDING_VERIFICATION}</p>
             <p className="text-xs font-bold text-amber-700 tabular-nums" dir="ltr">{formatMoney(row.byVerification?.pending ?? '0', row.currency)}</p>
           </div>
           <div className="rounded-lg bg-red-50 py-1.5">
-            <p className="text-[10px] text-red-500">Reddedilen</p>
+            <p className="text-[10px] text-red-500">{VERIFICATION_STATUS_AR.REJECTED}</p>
             <p className="text-xs font-bold text-red-600 tabular-nums" dir="ltr">{formatMoney(row.byVerification?.rejected ?? '0', row.currency)}</p>
           </div>
         </div>
@@ -76,18 +77,18 @@ function OutstandingCard({
 
       {row.ageDays != null && (
         <p className="mt-2 flex items-center gap-1.5 text-[11px] text-gray-400">
-          <Clock className="w-3 h-3" /> En eski {row.ageDays} gün ({formatDateTime(row.oldestUnsettledAt)})
+          <Clock className="w-3 h-3" /> الأقدم {row.ageDays} يوم ({formatDateTime(row.oldestUnsettledAt)})
         </p>
       )}
 
       <button
         onClick={onSettle}
         disabled={busy || !settleable}
-        title={settleable ? undefined : 'Mutabakat için doğrulanmış nakit gerekir.'}
+        title={settleable ? undefined : 'تتطلب التسوية نقداً مُتحقَّقاً منه.'}
         className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50"
       >
         {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-        {settleable ? `Mutabakat (${formatMoney(verified, row.currency)})` : 'Doğrulanmış nakit yok'}
+        {settleable ? `تسوية (${formatMoney(verified, row.currency)})` : 'لا نقد مُتحقَّق منه'}
       </button>
     </div>
   );
@@ -110,7 +111,7 @@ function HistoryRow({ s }: { s: Settlement }) {
         className="flex-1 min-w-0 flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors"
       >
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 truncate">{s.agentName || 'Temsilci'}</p>
+          <p className="text-sm font-semibold text-gray-900 truncate">{s.agentName || 'مندوب'}</p>
           {s.agentPhone && (
             <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1" dir="ltr">
               <Phone className="w-3 h-3 shrink-0" /> {s.agentPhone}
@@ -118,12 +119,12 @@ function HistoryRow({ s }: { s: Settlement }) {
           )}
           <p className="text-[11px] text-gray-400 mt-0.5">
             {when}
-            {count != null ? ` · ${count} tahsilat` : ''}
+            {count != null ? ` · ${count} تحصيل` : ''}
             {s.note ? ` · ${s.note}` : ''}
           </p>
           {s.agentCode && (
             <p className="text-[10px] font-mono text-gray-300 mt-0.5 truncate" dir="ltr" title={s.agentCode}>
-              Kod: {s.agentCode}
+              الرمز: {s.agentCode}
             </p>
           )}
         </div>
@@ -135,11 +136,11 @@ function HistoryRow({ s }: { s: Settlement }) {
       {s.agentId && (
         <Link
           href={`/accounting/verification/${s.agentId}?status=all`}
-          title="Temsilcinin tüm tahsilat geçmişi"
+          title="سجل تحصيلات المندوب الكامل"
           className="shrink-0 flex items-center gap-1 px-3 border-s border-gray-50 text-[11px] font-semibold text-emerald-600 hover:bg-emerald-50 transition-colors"
         >
           <UserRound className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Geçmiş</span>
+          <span className="hidden sm:inline">السجل</span>
         </Link>
       )}
     </div>
@@ -196,7 +197,7 @@ export default function AccountingSettlementsPage() {
     accountingService.settlementsHistory({ limit: 100 })
       .then((res) => {
         const seen = new Map<string, string>();
-        for (const s of res.data) if (s.agentId) seen.set(s.agentId, s.agentName ?? 'Temsilci');
+        for (const s of res.data) if (s.agentId) seen.set(s.agentId, s.agentName ?? 'مندوب');
         setAgentOptions([...seen].map(([id, name]) => ({ id, name })));
       })
       .catch(() => setAgentOptions([]));
@@ -213,14 +214,14 @@ export default function AccountingSettlementsPage() {
         currency: row.currency,
         idempotencyKey: crypto.randomUUID(),
       });
-      toast.success(`${row.agentName} ile ${row.currency} mutabakatı yapıldı.`);
+      toast.success(`تمت تسوية ${row.currency} مع ${row.agentName}.`);
       loadOutstanding();
       loadHistory();
     } catch (err) {
       if (err instanceof ApiError && err.status === 422) {
-        toast.error('Mutabakat için doğrulanmış nakit bulunmuyor.');
+        toast.error('لا يوجد نقد مُتحقَّق منه للتسوية.');
       } else {
-        toast.error(err instanceof ApiError ? err.message : 'Mutabakat başarısız.');
+        toast.error(err instanceof ApiError ? err.message : 'تعذّرت التسوية.');
       }
     } finally {
       setBusyKey(null);
@@ -234,8 +235,8 @@ export default function AccountingSettlementsPage() {
           <Banknote className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mutabakat</h1>
-          <p className="text-sm text-gray-500">Yalnızca doğrulanmış nakit mutabakatlanır.</p>
+          <h1 className="text-2xl font-bold text-gray-900">التسويات</h1>
+          <p className="text-sm text-gray-500">تتم تسوية النقد المُتحقَّق منه فقط.</p>
         </div>
       </div>
 
@@ -247,13 +248,13 @@ export default function AccountingSettlementsPage() {
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
           <AlertTriangle className="w-10 h-10 text-gray-300" />
-          <p className="text-sm font-medium text-gray-500">Veriler yüklenemedi.</p>
-          <button onClick={loadOutstanding} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 underline">Tekrar dene</button>
+          <p className="text-sm font-medium text-gray-500">تعذّر تحميل البيانات.</p>
+          <button onClick={loadOutstanding} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 underline">{UI_AR.retry}</button>
         </div>
       ) : outstanding.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center gap-3 mb-8">
           <Inbox className="w-10 h-10 text-gray-300" />
-          <p className="text-sm font-medium text-gray-500">Bekleyen mutabakat yok.</p>
+          <p className="text-sm font-medium text-gray-500">لا تسويات معلّقة.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
@@ -271,7 +272,7 @@ export default function AccountingSettlementsPage() {
       {/* History (audit) */}
       <div className="flex items-center gap-2 mb-3">
         <History className="w-4 h-4 text-gray-500" />
-        <h2 className="text-sm font-bold text-gray-800">Mutabakat Geçmişi</h2>
+        <h2 className="text-sm font-bold text-gray-800">سجل التسويات</h2>
       </div>
 
       <PeriodPicker onChange={(q) => { setPeriod(q); setPage(1); }} />
@@ -282,7 +283,7 @@ export default function AccountingSettlementsPage() {
           onChange={(e) => onAgent(e.target.value)}
           className="text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-100 cursor-pointer"
         >
-          <option value="">Tüm temsilciler</option>
+          <option value="">كل المندوبين</option>
           {agentOptions.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
         </select>
         <select
@@ -290,7 +291,7 @@ export default function AccountingSettlementsPage() {
           onChange={(e) => onCurrency(e.target.value)}
           className="text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-100 cursor-pointer"
         >
-          <option value="">Tüm birimler</option>
+          <option value="">كل العملات</option>
           {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
@@ -298,7 +299,7 @@ export default function AccountingSettlementsPage() {
       {histLoading ? (
         <div className="bg-white rounded-2xl border border-gray-200 animate-pulse h-48" />
       ) : history.length === 0 ? (
-        <p className="text-sm text-gray-400 py-6 text-center bg-white border border-gray-200 rounded-2xl">Bu filtrelerde mutabakat yok.</p>
+        <p className="text-sm text-gray-400 py-6 text-center bg-white border border-gray-200 rounded-2xl">لا تسويات ضمن هذه الفلاتر.</p>
       ) : (
         <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden divide-y divide-gray-50">
           {history.map((s) => <HistoryRow key={s.id} s={s} />)}
@@ -306,11 +307,11 @@ export default function AccountingSettlementsPage() {
           {histMeta && (histMeta.hasPrevPage || histMeta.hasNextPage) && (
             <div className="flex items-center justify-between p-3">
               <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={!histMeta.hasPrevPage} className="flex items-center gap-1 text-sm font-semibold text-gray-600 disabled:opacity-40 hover:text-gray-900 transition-colors">
-                <ChevronLeft className="w-4 h-4" /> Önceki
+                <ChevronLeft className="w-4 h-4" /> {UI_AR.prev}
               </button>
-              <span className="text-xs text-gray-400">Sayfa {histMeta.page}</span>
+              <span className="text-xs text-gray-400">{UI_AR.page} {histMeta.page}</span>
               <button onClick={() => setPage((p) => p + 1)} disabled={!histMeta.hasNextPage} className="flex items-center gap-1 text-sm font-semibold text-gray-600 disabled:opacity-40 hover:text-gray-900 transition-colors">
-                Sonraki <ChevronRight className="w-4 h-4" />
+                {UI_AR.next} <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           )}

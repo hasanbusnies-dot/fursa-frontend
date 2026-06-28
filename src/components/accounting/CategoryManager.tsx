@@ -33,11 +33,11 @@ export function CategoryManager({
     setAdding(true);
     try {
       await accountingService.createCategory({ key: key.trim(), label: label.trim() });
-      toast.success('Kategori eklendi.');
+      toast.success('تمت إضافة الفئة.');
       setKey(''); setLabel('');
       onChanged();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Kategori eklenemedi.');
+      toast.error(err instanceof ApiError ? err.message : 'تعذّرت إضافة الفئة.');
     } finally {
       setAdding(false);
     }
@@ -49,25 +49,25 @@ export function CategoryManager({
       await accountingService.updateCategory(c.id, { isActive: !c.isActive });
       onChanged();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Güncellenemedi.');
+      toast.error(err instanceof ApiError ? err.message : 'تعذّر التحديث.');
     } finally {
       setBusyId(null);
     }
   };
 
   const remove = async (c: ExpenseCategory) => {
-    if (!confirm(`"${c.label}" kategorisi silinsin mi?`)) return;
+    if (!confirm(`حذف الفئة "${c.label}"؟`)) return;
     setBusyId(c.id);
     try {
       await accountingService.deleteCategory(c.id);
-      toast.success('Kategori silindi.');
+      toast.success('تم حذف الفئة.');
       onChanged();
     } catch (err) {
       // 409 → system category or still in use by expenses.
       if (err instanceof ApiError && err.status === 409) {
-        toast.error('Bu kategori silinemez (sistem kategorisi veya kullanımda). Bunun yerine pasifleştirin.');
+        toast.error('لا يمكن حذف هذه الفئة (فئة نظام أو قيد الاستخدام). قم بتعطيلها بدلاً من ذلك.');
       } else {
-        toast.error(err instanceof ApiError ? err.message : 'Silinemedi.');
+        toast.error(err instanceof ApiError ? err.message : 'تعذّر الحذف.');
       }
     } finally {
       setBusyId(null);
@@ -83,7 +83,7 @@ export function CategoryManager({
       >
         <span className="flex items-center gap-2 text-sm font-bold text-gray-800">
           <Settings className="w-4 h-4 text-gray-500" />
-          Gider Kategorileri
+          فئات المصروفات
         </span>
         {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
       </button>
@@ -99,11 +99,11 @@ export function CategoryManager({
                     {c.label}
                     {c.isSystem && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
-                        <Lock className="w-2.5 h-2.5" /> Sistem
+                        <Lock className="w-2.5 h-2.5" /> نظام
                       </span>
                     )}
                     {!c.isActive && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">Pasif</span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">مُعطَّل</span>
                     )}
                   </p>
                   <p className="text-[11px] text-gray-400" dir="ltr">{c.key}</p>
@@ -114,14 +114,14 @@ export function CategoryManager({
                     disabled={busyId === c.id}
                     className="text-xs font-semibold text-gray-600 hover:text-gray-900 px-2.5 py-1.5 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
                   >
-                    {c.isActive ? 'Pasifleştir' : 'Aktifleştir'}
+                    {c.isActive ? 'تعطيل' : 'تفعيل'}
                   </button>
                   {!c.isSystem && (
                     <button
                       onClick={() => remove(c)}
                       disabled={busyId === c.id}
                       className="w-8 h-8 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
-                      aria-label="Sil"
+                      aria-label="حذف"
                     >
                       {busyId === c.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                     </button>
@@ -133,24 +133,24 @@ export function CategoryManager({
 
           {/* Add custom */}
           <div className="rounded-xl bg-gray-50 border border-gray-200 p-3">
-            <p className="text-xs font-semibold text-gray-500 mb-2">Özel kategori ekle</p>
+            <p className="text-xs font-semibold text-gray-500 mb-2">إضافة فئة مخصصة</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <input
                 value={key}
                 onChange={(e) => setKey(e.target.value)}
-                placeholder="anahtar (ör. ofis_kira)"
+                placeholder="المفتاح (مثال: ofis_kira)"
                 dir="ltr"
                 className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 transition-colors"
               />
               <input
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
-                placeholder="etiket (ör. Ofis Kirası)"
+                placeholder="التسمية (مثال: إيجار المكتب)"
                 className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 transition-colors"
               />
             </div>
             {key !== '' && !keyValid && (
-              <p className="text-xs text-red-500 mt-1.5">Anahtar harfle başlamalı; harf, rakam ve alt çizgi içerebilir.</p>
+              <p className="text-xs text-red-500 mt-1.5">يجب أن يبدأ المفتاح بحرف، ويمكن أن يحتوي على أحرف وأرقام وشرطة سفلية.</p>
             )}
             <button
               onClick={add}
@@ -158,7 +158,7 @@ export function CategoryManager({
               className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50"
             >
               {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              Ekle
+              إضافة
             </button>
           </div>
         </div>

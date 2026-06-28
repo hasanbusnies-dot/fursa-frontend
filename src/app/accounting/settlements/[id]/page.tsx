@@ -17,18 +17,19 @@ import { CopyableId } from '@/components/accounting/CopyableId';
 import { ApiError } from '@/services/api';
 import { formatMoney } from '@/lib/money';
 import { cn } from '@/lib/utils';
+import { VERIFICATION_STATUS_AR, UI_AR } from '@/lib/staff-labels';
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
-  PENDING_VERIFICATION: { label: 'Bekliyor',   cls: 'bg-amber-100 text-amber-800' },
-  VERIFIED:             { label: 'Doğrulandı',  cls: 'bg-green-100 text-green-700' },
-  REJECTED:             { label: 'Reddedildi',  cls: 'bg-red-100 text-red-700'     },
+  PENDING_VERIFICATION: { label: VERIFICATION_STATUS_AR.PENDING_VERIFICATION, cls: 'bg-amber-100 text-amber-800' },
+  VERIFIED:             { label: VERIFICATION_STATUS_AR.VERIFIED,             cls: 'bg-green-100 text-green-700' },
+  REJECTED:             { label: VERIFICATION_STATUS_AR.REJECTED,             cls: 'bg-red-100 text-red-700'     },
 };
 
 function formatDateTime(s?: string | null): string {
   if (!s) return '—';
   const t = new Date(s);
   if (Number.isNaN(t.getTime())) return '—';
-  return t.toLocaleString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return t.toLocaleString('ar', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 // ── Settled-collection row (read-only — already verified & settled) ─────────────────
@@ -56,10 +57,10 @@ function CollectionRow({ c }: { c: SettlementCollection }) {
       <div className="mt-3">
         <ContractDoc
           url={c.receiptUrl ?? null}
-          label="Makbuzu Görüntüle"
-          emptyLabel="Makbuz yok"
-          expiredLabel="Bağlantının süresi doldu, sayfayı yenileyin."
-          alt="Tahsilat makbuzu"
+          label="عرض الإيصال"
+          emptyLabel="لا يوجد إيصال"
+          expiredLabel="انتهت صلاحية الرابط، حدّث الصفحة."
+          alt="إيصال التحصيل"
           dir="ltr"
         />
       </div>
@@ -95,7 +96,7 @@ export default function SettlementDetailPage() {
   return (
     <div>
       <Link href="/accounting/settlements" className="inline-flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-gray-700 mb-4">
-        <ChevronLeft className="w-4 h-4" /> Mutabakat
+        <ChevronLeft className="w-4 h-4" /> التسويات
       </Link>
 
       {loading ? (
@@ -108,13 +109,13 @@ export default function SettlementDetailPage() {
       ) : notFound ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
           <Inbox className="w-10 h-10 text-gray-300" />
-          <p className="text-sm font-medium text-gray-500">Mutabakat bulunamadı.</p>
+          <p className="text-sm font-medium text-gray-500">لم يتم العثور على التسوية.</p>
         </div>
       ) : error || !detail ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
           <AlertTriangle className="w-10 h-10 text-gray-300" />
-          <p className="text-sm font-medium text-gray-500">Mutabakat yüklenemedi.</p>
-          <button onClick={load} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 underline">Tekrar dene</button>
+          <p className="text-sm font-medium text-gray-500">تعذّر تحميل التسوية.</p>
+          <button onClick={load} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 underline">{UI_AR.retry}</button>
         </div>
       ) : (
         <>
@@ -126,7 +127,7 @@ export default function SettlementDetailPage() {
                   <Banknote className="w-5 h-5 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="text-xl font-bold text-gray-900 truncate">{detail.agentName || 'Temsilci'}</h1>
+                  <h1 className="text-xl font-bold text-gray-900 truncate">{detail.agentName || 'مندوب'}</h1>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5">
                     <p className="text-[11px] text-gray-400 flex items-center gap-1.5">
                       <CalendarDays className="w-3 h-3 shrink-0" /> {formatDateTime(detail.settledAt)}
@@ -147,13 +148,13 @@ export default function SettlementDetailPage() {
 
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
               <div className="rounded-xl bg-gray-50 border border-gray-100 p-3">
-                <p className="text-[11px] text-gray-500 mb-0.5">Tahsilat sayısı</p>
+                <p className="text-[11px] text-gray-500 mb-0.5">عدد التحصيلات</p>
                 <p className="font-bold text-gray-900 flex items-center gap-1.5">
                   <ReceiptText className="w-4 h-4 text-gray-400" /> {detail.collectionCount ?? detail.collections.length}
                 </p>
               </div>
               <div className="rounded-xl bg-gray-50 border border-gray-100 p-3">
-                <p className="text-[11px] text-gray-500 mb-0.5">Teslim alan</p>
+                <p className="text-[11px] text-gray-500 mb-0.5">المُستلِم</p>
                 <p className="font-bold text-gray-900 truncate">{detail.receivedByName || '—'}</p>
                 {detail.receivedByPhone && (
                   <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1" dir="ltr">
@@ -163,7 +164,7 @@ export default function SettlementDetailPage() {
               </div>
               {detail.note && (
                 <div className="rounded-xl bg-gray-50 border border-gray-100 p-3 col-span-2 sm:col-span-1">
-                  <p className="text-[11px] text-gray-500 mb-0.5">Not</p>
+                  <p className="text-[11px] text-gray-500 mb-0.5">ملاحظة</p>
                   <p className="font-medium text-gray-700 truncate">{detail.note}</p>
                 </div>
               )}
@@ -173,18 +174,18 @@ export default function SettlementDetailPage() {
               href={`/accounting/verification/${detail.agentId}?status=all`}
               className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 hover:text-emerald-700"
             >
-              <UserRound className="w-4 h-4" /> Temsilcinin tüm tahsilat geçmişi <ArrowRight className="w-3.5 h-3.5" />
+              <UserRound className="w-4 h-4" /> سجل تحصيلات المندوب الكامل <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
           {/* Collections covered */}
           <div className="flex items-center gap-2 mb-3">
             <ReceiptText className="w-4 h-4 text-gray-500" />
-            <h2 className="text-sm font-bold text-gray-800">Kapsanan Tahsilatlar</h2>
+            <h2 className="text-sm font-bold text-gray-800">التحصيلات المشمولة</h2>
           </div>
 
           {detail.collections.length === 0 ? (
-            <p className="text-sm text-gray-400 py-6 text-center bg-white border border-gray-200 rounded-2xl">Bu mutabakatta tahsilat yok.</p>
+            <p className="text-sm text-gray-400 py-6 text-center bg-white border border-gray-200 rounded-2xl">لا تحصيلات في هذه التسوية.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {detail.collections.map((c) => <CollectionRow key={c.id} c={c} />)}

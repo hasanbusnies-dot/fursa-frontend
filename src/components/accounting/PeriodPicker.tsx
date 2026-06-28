@@ -18,11 +18,11 @@ function shiftMonth(ym: string, delta: number): string {
 }
 function monthLabel(ym: string): string {
   const [y, m] = ym.split('-').map(Number);
-  return new Date(y, m - 1, 1).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+  return new Date(y, m - 1, 1).toLocaleDateString('ar', { month: 'long', year: 'numeric' });
 }
 
-/** Month-stepper / custom-range picker (Turkish). Emits the active AccountingQuery via
- *  onChange — month mode always has one; range mode emits null until "Uygula". Defaults
+/** Month-stepper / custom-range picker (Arabic). Emits the active AccountingQuery via
+ *  onChange — month mode always has one; range mode emits null until "تطبيق". Defaults
  *  to the current month on mount. */
 export function PeriodPicker({ onChange }: { onChange: (q: AccountingQuery | null) => void }) {
   const [mode, setMode]   = useState<Mode>('month');
@@ -51,7 +51,7 @@ export function PeriodPicker({ onChange }: { onChange: (q: AccountingQuery | nul
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-4 mb-6">
       <div className="flex gap-1 mb-4 bg-gray-100 rounded-xl p-1 w-fit">
-        {([['month', 'Ay'], ['range', 'Tarih aralığı']] as [Mode, string][]).map(([m, label]) => (
+        {([['month', 'شهر'], ['range', 'نطاق تاريخي']] as [Mode, string][]).map(([m, label]) => (
           <button
             key={m}
             onClick={() => setMode(m)}
@@ -70,7 +70,7 @@ export function PeriodPicker({ onChange }: { onChange: (q: AccountingQuery | nul
           <button
             onClick={() => setMonth((m) => shiftMonth(m, -1))}
             className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors"
-            aria-label="Önceki ay"
+            aria-label="الشهر السابق"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -81,20 +81,20 @@ export function PeriodPicker({ onChange }: { onChange: (q: AccountingQuery | nul
             onClick={() => setMonth((m) => shiftMonth(m, 1))}
             disabled={atCurrentMonth}
             className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            aria-label="Sonraki ay"
+            aria-label="الشهر التالي"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
           {!atCurrentMonth && (
             <button onClick={() => setMonth(thisMonth)} className="text-xs font-semibold text-orange-600 hover:text-orange-700">
-              Bu ay
+              هذا الشهر
             </button>
           )}
         </div>
       ) : (
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Başlangıç</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">من</label>
             <input
               type="date"
               value={fromInput}
@@ -104,7 +104,7 @@ export function PeriodPicker({ onChange }: { onChange: (q: AccountingQuery | nul
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Bitiş</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">إلى</label>
             <input
               type="date"
               value={toInput}
@@ -118,7 +118,7 @@ export function PeriodPicker({ onChange }: { onChange: (q: AccountingQuery | nul
             disabled={!rangeValid}
             className="px-5 py-2 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600 transition-colors disabled:opacity-50"
           >
-            Uygula
+            تطبيق
           </button>
         </div>
       )}
