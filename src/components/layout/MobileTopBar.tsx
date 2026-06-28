@@ -31,7 +31,7 @@ export function useMobileTitle(title: string | null | undefined) {
 const ROOT_PATHS = new Set<string>(['/', '/listings', '/account', '/account/favorites']);
 // Pages that manage their own chrome / should never show the bar.
 const HIDE_EXACT = new Set<string>(['/login', '/register', '/listings/create']);
-const HIDE_PREFIXES = ['/m/', '/agent', '/accounting'];
+const HIDE_PREFIXES = ['/m/', '/agent', '/accounting', '/staff'];
 
 /**
  * True when the mobile back bar should appear on this route. Shared with the

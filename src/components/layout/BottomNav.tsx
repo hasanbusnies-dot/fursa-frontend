@@ -18,6 +18,7 @@ export function BottomNav() {
   if (pathname.startsWith('/m/')) return null;
   if (pathname.startsWith('/agent')) return null; // staff tool — uses its own in-panel tab bar
   if (pathname.startsWith('/accounting')) return null; // staff tool — no consumer chrome
+  if (pathname.startsWith('/staff')) return null; // staff portal — no consumer chrome
 
   return (
     <nav className="block md:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-gray-200 shadow-[0_-2px_12px_rgba(0,0,0,0.07)]">
