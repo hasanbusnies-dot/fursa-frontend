@@ -10,7 +10,12 @@ import {
   BODY_TYPE_OPTIONS, DRIVETRAIN_OPTIONS, FROM_WHO_OPTIONS,
 } from './schema';
 
-interface Props { form: UseFormReturn<WizardFormData, any, WizardFormData> }
+interface Props {
+  form: UseFormReturn<WizardFormData, any, WizardFormData>;
+  /** When set, make/model come from the catalog selection and are shown read-only
+   *  instead of the static-catalog dropdowns. */
+  lockedMakeModel?: { make: string; model: string };
+}
 
 const inputCls = (err?: string) =>
   `w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-1 transition-colors ${
@@ -37,7 +42,7 @@ function Field({ label, error, required, children }: {
   );
 }
 
-export function Step1VehicleInfo({ form }: Props) {
+export function Step1VehicleInfo({ form, lockedMakeModel }: Props) {
   const { register, setValue, watch, formState: { errors } } = form;
   const condition = watch('condition');
   const warranty  = watch('warranty');
@@ -81,6 +86,24 @@ export function Step1VehicleInfo({ form }: Props) {
       </Field>
 
       {/* ── Make / Series / Model ── */}
+      {lockedMakeModel ? (
+        // Make + model come from the catalog selection; show them read-only and keep series editable.
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Field label="الماركة">
+            <div className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-700 font-medium">
+              {lockedMakeModel.make || '—'}
+            </div>
+          </Field>
+          <Field label="السلسلة" error={errors.series?.message}>
+            <input {...register('series')} placeholder="مثال: Camry" className={inputCls(errors.series?.message)} />
+          </Field>
+          <Field label="الموديل">
+            <div className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-700 font-medium">
+              {lockedMakeModel.model || '—'}
+            </div>
+          </Field>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Field label="الماركة" required error={errors.make?.message}>
           <select
@@ -129,6 +152,7 @@ export function Step1VehicleInfo({ form }: Props) {
           )}
         </Field>
       </div>
+      )}
 
       {/* ── Year / Gear Count ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

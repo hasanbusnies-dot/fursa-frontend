@@ -26,7 +26,9 @@ export interface CreateListingPayload {
   plateNumber?: string;
   damageReport?: Record<string, { status: string; detail?: string }>;
   technicalSpecs?: string[];
-  attributes?:  Record<string, string>;
+  // Category-specific fields → Listing.attributes JSONB. Values are widget-shaped
+  // (string | string[] | { min?, max? } | boolean), so the value type is unknown.
+  attributes?:  Record<string, unknown>;
   images?:      ListingImage[];
   phoneNumber?:     string;
   showPhoneNumber?: boolean;

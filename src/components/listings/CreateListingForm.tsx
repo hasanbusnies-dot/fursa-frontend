@@ -10,7 +10,12 @@ import { listingsService, type CreateListingPayload } from '@/services/listings.
 import { ApiError } from '@/services/api';
 import { useAuth } from '@/hooks/use-auth';
 import { StepIndicator } from './StepIndicator';
-import { Step0CategorySelect } from './wizard/Step0CategorySelect';
+import {
+  Step0Catalog,
+  initialCatalogState,
+  catalogStepIncomplete,
+  type CatalogState,
+} from './wizard/Step0Catalog';
 import { Step1VehicleInfo } from './wizard/Step1VehicleInfo';
 import { Step2AdDetails }   from './wizard/Step2AdDetails';
 import { Step3DamageReport } from './wizard/Step3DamageReport';
@@ -24,14 +29,22 @@ import {
   SVG_PANELS,
   type WizardFormData,
   type DamageReportState,
-  WIZARD_STEP_LABELS,
-  STEP_TRIGGER_FIELDS,
 } from './wizard/schema';
 
 type SubmitPhase = 'idle' | 'uploading' | 'creating';
 
 // Backward-compat re-export so existing DetailsStep.tsx import doesn't break
 export type ListingFormData = WizardFormData;
+
+// A wizard step. `trigger` lists the RHF fields validated before advancing; `customNav`
+// marks the review step which renders its own submit button.
+interface StepDef {
+  key: string;
+  label: string;
+  trigger?: (keyof WizardFormData)[];
+  node: React.ReactNode;
+  customNav?: boolean;
+}
 
 export interface CreateListingFormProps {
   /** Submit handler. Defaults to the regular POST /listings. The agent store flow
@@ -52,14 +65,9 @@ export function CreateListingForm({
   const router = useRouter();
   const submitListing = createListing ?? listingsService.create;
   const { isAuthenticated } = useAuth();
-  const [step, setStep] = useState(1);
-  const totalSteps = WIZARD_STEP_LABELS.length;
+  const [stepIdx, setStepIdx] = useState(0);
 
   // ── Client-side auth guard ───────────────────────────────────────────────
-  // Replaces the proxy.ts middleware guard, which depended on a client-only
-  // cookie the server couldn't reliably see (caused a login → /listings/create
-  // redirect loop). `mounted` defers the decision until after hydration so the
-  // Zustand store has rehydrated and we don't redirect a logged-in user.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   useEffect(() => {
@@ -69,14 +77,13 @@ export function CreateListingForm({
   }, [mounted, isAuthenticated, router]);
 
   // ── React-Hook-Form (all scalar fields) ───────────────────────────────────
-  // Cast needed: z.preprocess() makes Zod's input type diverge from output type,
-  // which confuses @hookform/resolvers's inference. Runtime behaviour is correct.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const form = useForm<WizardFormData, any, WizardFormData>({
     resolver: zodResolver(wizardSchema) as any,
     defaultValues: {
       currency:        'SYP',
       categoryId:      '',
+      categoryKind:    'GENERIC',
       condition:       'USED',
       heavyDamage:     false,
       country:         'سوريا',
@@ -85,32 +92,114 @@ export function CreateListingForm({
       acceptsOffers:   true,
     },
   });
+  const { setValue } = form;
 
   // ── Out-of-RHF state ─────────────────────────────────────────────────────
+  const [catalog, setCatalog]           = useState<CatalogState>(initialCatalogState);
   const [damageReport, setDamageReport] = useState<DamageReportState>(getDefaultDamageReport);
   const [photos, setPhotos]             = useState<File[]>([]);
   const [submitPhase, setSubmitPhase]   = useState<SubmitPhase>('idle');
 
   const isSubmitting = submitPhase !== 'idle';
 
+  // Catalog brand/model nodes (vehicle path) → canonical make/model.
+  const brandNode = catalog.picked.find((p) => p.type === 'BRAND');
+  const modelNode = catalog.picked.find((p) => p.type === 'MODEL');
+
+  // ── Sync catalog selection → RHF (categoryId, kind, make/model) ────────────
+  useEffect(() => {
+    setValue('categoryId', catalog.categoryId ?? '', { shouldValidate: false });
+    setValue('categoryKind', catalog.isVehicle ? 'VEHICLE' : 'GENERIC', { shouldValidate: false });
+    if (catalog.isVehicle) {
+      setValue('make',  brandNode?.name ?? '', { shouldValidate: false });
+      setValue('model', modelNode?.name ?? '', { shouldValidate: false });
+    } else {
+      setValue('make',  '', { shouldValidate: false });
+      setValue('model', '', { shouldValidate: false });
+    }
+  }, [catalog.categoryId, catalog.isVehicle, brandNode?.name, modelNode?.name, setValue]);
+
+  // ── Step list (depends on whether the chosen category is a vehicle) ────────
+  const steps: StepDef[] = [
+    {
+      key: 'catalog',
+      label: 'الفئة',
+      node: <Step0Catalog state={catalog} onChange={setCatalog} />,
+    },
+    ...(catalog.isVehicle ? [{
+      key: 'vehicle',
+      label: 'معلومات المركبة',
+      trigger: ['condition', 'year'] as (keyof WizardFormData)[],
+      node: (
+        <Step1VehicleInfo
+          form={form}
+          lockedMakeModel={{ make: brandNode?.name ?? '', model: modelNode?.name ?? '' }}
+        />
+      ),
+    }] : []),
+    {
+      key: 'details',
+      label: 'تفاصيل الإعلان',
+      trigger: ['title', 'description', 'price', 'currency', 'country', 'city'],
+      node: <Step2AdDetails form={form} />,
+    },
+    ...(catalog.isVehicle ? [
+      { key: 'damage', label: 'تقرير الأضرار',
+        node: <Step3DamageReport damageReport={damageReport} onChange={setDamageReport} /> },
+      { key: 'specs',  label: 'المواصفات الفنية',
+        node: <Step4TechSpecs form={form} /> },
+    ] : []),
+    { key: 'photos',  label: 'الصور',
+      node: <Step5Photos photos={photos} onChange={setPhotos} /> },
+    { key: 'contact', label: 'معلومات التواصل',
+      node: <Step6ContactInfo form={form} /> },
+    {
+      key: 'review', label: 'مراجعة', customNav: true,
+      node: (
+        <Step6Review
+          form={form}
+          catalog={catalog}
+          damageReport={damageReport}
+          photos={photos}
+          isSubmitting={isSubmitting}
+          submitPhase={submitPhase}
+          onSubmit={handlePublish}
+        />
+      ),
+    },
+  ];
+
+  const totalSteps = steps.length;
+  // Clamp in case the step list shrank (vehicle → generic) while on a later step.
+  const safeIdx = Math.min(stepIdx, totalSteps - 1);
+  const current = steps[safeIdx];
+
   // ── Navigation ─────────────────────────────────────────────────────────────
   async function handleNext() {
-    const fields = STEP_TRIGGER_FIELDS[step];
-    if (fields && !(await form.trigger(fields))) {
+    if (current.key === 'catalog' && catalogStepIncomplete(catalog)) {
+      toast.error('يرجى إكمال اختيار الفئة وتعبئة الحقول المطلوبة.');
+      return;
+    }
+    if (current.trigger && !(await form.trigger(current.trigger))) {
       toast.error('يرجى تصحيح الأخطاء المحددة قبل المتابعة.');
       return;
     }
-    setStep((s) => s + 1);
+    setStepIdx(Math.min(safeIdx + 1, totalSteps - 1));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function handleBack() {
-    setStep((s) => s - 1);
+    setStepIdx(Math.max(0, safeIdx - 1));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // ── Submit ─────────────────────────────────────────────────────────────────
   async function handlePublish() {
+    if (catalogStepIncomplete(catalog)) {
+      toast.error('يرجى إكمال اختيار الفئة وتعبئة الحقول المطلوبة.');
+      setStepIdx(0);
+      return;
+    }
     const valid = await form.trigger();
     if (!valid) {
       toast.error('بعض الحقول المطلوبة غير مكتملة. يرجى مراجعة النموذج.');
@@ -118,6 +207,7 @@ export function CreateListingForm({
     }
 
     const data = form.getValues();
+    const isVehicle = catalog.isVehicle;
 
     try {
       // Upload photos → get CDN URLs
@@ -128,7 +218,7 @@ export function CreateListingForm({
         imagePayload = urls.map((url, i) => ({ url, sortOrder: i, isPrimary: i === 0 }));
       }
 
-      // Build damage report payload (only non-original panels)
+      // Build damage report payload (only non-original panels) — vehicle path only.
       const damagePayload = Object.fromEntries(
         SVG_PANELS
           .filter((p) => (damageReport[p.key]?.status ?? 'ORIGINAL') !== 'ORIGINAL')
@@ -138,9 +228,8 @@ export function CreateListingForm({
           }),
       );
 
-      // Send all vehicle fields inside vehicleDetails in addition to top-level,
-      // because the backend may store (and return) them under vehicleDetails.
-      const vehicleDetails = {
+      // Vehicle write-through — make/model come from the catalog brand/model selection.
+      const vehicleDetails = isVehicle ? {
         make:           data.make           || undefined,
         series:         data.series         || undefined,
         model:          data.model          || undefined,
@@ -162,8 +251,10 @@ export function CreateListingForm({
         fromWho:        data.fromWho        || undefined,
         damageReport:   Object.keys(damagePayload).length > 0 ? damagePayload : undefined,
         technicalSpecs: data.technicalSpecs?.length ? data.technicalSpecs : undefined,
-      };
-      const hasVehicleDetails = true; // always include since make/model/year are required
+      } : undefined;
+
+      // Category-specific attributes (generic categories) → Listing.attributes JSONB.
+      const attributes = Object.keys(catalog.attributes).length ? catalog.attributes : undefined;
 
       setSubmitPhase('creating');
       await submitListing({
@@ -177,20 +268,24 @@ export function CreateListingForm({
         district:      data.district   || undefined,
         neighborhood:  data.neighborhood || undefined,
         condition:     data.condition,
-        make:          data.make       || undefined,
-        series:        data.series     || undefined,
-        model:         data.model      || undefined,
-        chassis:       data.chassis    || undefined,
-        year:          data.year       || undefined,
-        mileage:       data.mileage    ?? undefined,
-        seats:         data.seats      ?? undefined,
-        color:         data.color      || undefined,
-        heavyDamage:   data.heavyDamage,
-        plateNumber:   data.plateNumber || undefined,
-        damageReport:  Object.keys(damagePayload).length > 0 ? damagePayload : undefined,
-        technicalSpecs:data.technicalSpecs?.length ? data.technicalSpecs : undefined,
+        attributes,
+        // Vehicle-only top-level fields
+        ...(isVehicle ? {
+          make:         data.make       || undefined,
+          series:       data.series     || undefined,
+          model:        data.model      || undefined,
+          chassis:      data.chassis    || undefined,
+          year:         data.year       || undefined,
+          mileage:      data.mileage    ?? undefined,
+          seats:        data.seats      ?? undefined,
+          color:        data.color      || undefined,
+          heavyDamage:  data.heavyDamage,
+          plateNumber:  data.plateNumber || undefined,
+          damageReport:  Object.keys(damagePayload).length > 0 ? damagePayload : undefined,
+          technicalSpecs:data.technicalSpecs?.length ? data.technicalSpecs : undefined,
+          vehicleDetails,
+        } : {}),
         images:          imagePayload.length ? imagePayload : undefined,
-        vehicleDetails:  hasVehicleDetails ? vehicleDetails : undefined,
         phoneNumber:     data.phoneNumber || undefined,
         showPhoneNumber: data.showPhoneNumber ?? true,
         acceptsOffers:   data.acceptsOffers ?? true,
@@ -211,10 +306,9 @@ export function CreateListingForm({
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
-  // Logged-out users are being redirected (above); render nothing to avoid a
-  // flash of the form. Pre-hydration (mounted=false) we still render the form so
-  // the server and first client render match.
   if (mounted && !isAuthenticated) return null;
+
+  const isReview = !!current.customNav;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4" dir="rtl">
@@ -226,46 +320,22 @@ export function CreateListingForm({
             <span className="text-blue-600">أضف</span> إعلان
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            الخطوة {step} من {totalSteps} — {WIZARD_STEP_LABELS[step - 1]}
+            الخطوة {safeIdx + 1} من {totalSteps} — {current.label}
           </p>
         </div>
 
         {/* Step indicator */}
-        <StepIndicator steps={[...WIZARD_STEP_LABELS]} current={step} />
+        <StepIndicator steps={steps.map((s) => s.label)} current={safeIdx + 1} />
 
         {/* Step card */}
         <div className="mt-6 bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
-          {step === 1 && (
-            <Step0CategorySelect
-              form={form}
-              onCategorySelected={() => {
-                setStep(2);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-            />
-          )}
-          {step === 2 && <Step1VehicleInfo  form={form} />}
-          {step === 3 && <Step2AdDetails    form={form} />}
-          {step === 4 && <Step3DamageReport damageReport={damageReport} onChange={setDamageReport} />}
-          {step === 5 && <Step4TechSpecs    form={form} />}
-          {step === 6 && <Step5Photos       photos={photos}   onChange={setPhotos} />}
-          {step === 7 && <Step6ContactInfo  form={form} />}
-          {step === 8 && (
-            <Step6Review
-              form={form}
-              damageReport={damageReport}
-              photos={photos}
-              isSubmitting={isSubmitting}
-              submitPhase={submitPhase}
-              onSubmit={handlePublish}
-            />
-          )}
+          {current.node}
         </div>
 
-        {/* Navigation bar: hidden on step 1 (auto-advances on category click) and on review step */}
-        {step > 1 && step < totalSteps && (
+        {/* Navigation bar (hidden on the review step, which submits itself) */}
+        {!isReview && (
           <div className="flex items-center justify-between mt-5">
-            {step > 1 ? (
+            {safeIdx > 0 ? (
               <button
                 type="button"
                 onClick={handleBack}
@@ -283,14 +353,14 @@ export function CreateListingForm({
               disabled={isSubmitting}
               className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors disabled:opacity-50 shadow-sm"
             >
-              {step === totalSteps - 1 ? 'مراجعة' : 'التالي'}
+              {safeIdx === totalSteps - 2 ? 'مراجعة' : 'التالي'}
               <ChevronLeft className="w-4 h-4" />
             </button>
           </div>
         )}
 
-        {/* Back button on review step (step 8) */}
-        {step === totalSteps && (
+        {/* Back button on review step */}
+        {isReview && (
           <div className="flex justify-end mt-5">
             <button
               type="button"

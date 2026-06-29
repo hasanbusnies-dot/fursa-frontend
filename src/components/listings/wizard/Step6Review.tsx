@@ -5,6 +5,31 @@ import type { UseFormReturn } from 'react-hook-form';
 import { Send, Loader2, MapPin, AlertTriangle, CheckCircle } from 'lucide-react';
 import type { WizardFormData, DamageReportState } from './schema';
 import { SVG_PANELS, STATUS_LABELS } from './schema';
+import type { CatalogState } from './Step0Catalog';
+import type { CatalogFilterDef } from '@/services/catalog.service';
+
+// Human-readable rendering of a stored attribute value, keyed by the filter widget.
+function formatAttr(def: CatalogFilterDef, value: unknown): string | null {
+  if (value == null || value === '') return null;
+  switch (def.widget) {
+    case 'SELECT':
+      return def.options?.find((o) => o.value === value)?.labelAr ?? String(value);
+    case 'MULTISELECT': {
+      const arr = (value as string[]) ?? [];
+      if (!arr.length) return null;
+      return arr.map((v) => def.options?.find((o) => o.value === v)?.labelAr ?? v).join('، ');
+    }
+    case 'RANGE': {
+      const r = value as { min?: number; max?: number };
+      if (r.min == null && r.max == null) return null;
+      return `${r.min ?? ''} — ${r.max ?? ''}`.trim();
+    }
+    case 'BOOLEAN':
+      return value ? 'نعم' : 'لا';
+    default:
+      return String(value);
+  }
+}
 
 const ENUM_AR: Record<string, string> = {
   USED: 'مستعمل', NEW: 'جديد',
@@ -22,6 +47,7 @@ function tr(v: string | undefined | null, fallback = ''): string {
 
 interface Props {
   form: UseFormReturn<WizardFormData, any, WizardFormData>;
+  catalog: CatalogState;
   damageReport: DamageReportState;
   photos: File[];
   isSubmitting: boolean;
@@ -39,8 +65,15 @@ function SpecRow({ label, value }: { label: string; value?: string | number | nu
   );
 }
 
-export function Step6Review({ form, damageReport, photos, isSubmitting, submitPhase, onSubmit }: Props) {
+export function Step6Review({ form, catalog, damageReport, photos, isSubmitting, submitPhase, onSubmit }: Props) {
   const d = form.getValues();
+  const isVehicle = catalog.isVehicle;
+  const categoryTrail = catalog.picked.map((p) => p.nameAr).join(' › ');
+  // Generic attributes to display: each visible (non-LOCATION) filter that has a value.
+  const attrRows = catalog.filters
+    .filter((f) => f.widget !== 'LOCATION')
+    .map((f) => ({ label: f.labelAr, value: formatAttr(f, catalog.attributes[f.key]) }))
+    .filter((r) => r.value !== null);
   const [heroUrl, setHeroUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -117,7 +150,17 @@ export function Step6Review({ form, damageReport, photos, isSubmitting, submitPh
             )}
           </div>
 
-          {/* Specs table */}
+          {/* Specs table — vehicle fields, or category attributes for generic listings */}
+          {!isVehicle ? (
+          <div className="px-5 py-4 border-t sm:border-t-0 sm:border-s border-gray-100">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{categoryTrail || 'التفاصيل'}</p>
+            {attrRows.length === 0 ? (
+              <p className="text-xs text-gray-400">لا توجد تفاصيل إضافية.</p>
+            ) : (
+              attrRows.map((r) => <SpecRow key={r.label} label={r.label} value={r.value} />)
+            )}
+          </div>
+          ) : (
           <div className="px-5 py-4 border-t sm:border-t-0 sm:border-s border-gray-100">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">معلومات المركبة</p>
             <SpecRow label="الماركة"        value={d.make} />
@@ -144,9 +187,11 @@ export function Step6Review({ form, damageReport, photos, isSubmitting, submitPh
               </div>
             )}
           </div>
+          )}
         </div>
 
-        {/* Damage + Tech specs footer */}
+        {/* Damage + Tech specs footer (vehicle listings only) */}
+        {isVehicle && (
         <div className="grid grid-cols-1 sm:grid-cols-2 border-t border-gray-100">
 
           {/* Damage summary */}
@@ -190,6 +235,7 @@ export function Step6Review({ form, damageReport, photos, isSubmitting, submitPh
             )}
           </div>
         </div>
+        )}
       </div>
 
       {/* Submit button */}

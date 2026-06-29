@@ -171,15 +171,19 @@ function numOpt(min?: number, max?: number) {
 const currentYear = new Date().getFullYear();
 
 export const wizardSchema = z.object({
-  // Step 1 — Vehicle Info
+  // Catalog discriminator — set from the doushesh catalog selection. 'VEHICLE' ⇒ the
+  // car-shaped steps (vehicle info / damage / tech specs) apply and make/model/year are
+  // required; 'GENERIC' ⇒ category-specific attributes drive the form instead.
+  categoryKind: z.enum(['VEHICLE', 'GENERIC']).default('GENERIC'),
+
+  // Step 1 — Vehicle Info (make/model/year required only on the VEHICLE path — see superRefine)
   categoryId:   z.string().min(1, 'يرجى اختيار فئة'),
   condition:    z.enum(['NEW', 'USED']),
-  make:         z.string().min(1, 'الماركة مطلوبة'),
+  make:         z.string().optional(),
   series:       z.string().optional(),
-  model:        z.string().min(1, 'الموديل مطلوب'),
+  model:        z.string().optional(),
   chassis:      z.string().optional(),
-  year:         z.number({ message: 'أدخل سنة صحيحة' }).int()
-                  .min(1900, 'السنة قديمة جداً').max(currentYear + 1, 'سنة غير صحيحة'),
+  year:         numOpt(1900, currentYear + 1),
   mileage:      numOpt(0),
   seats:        numOpt(1, 20),
   color:          z.string().optional(),
@@ -213,16 +217,13 @@ export const wizardSchema = z.object({
   // Step 6 — Contact Info
   phoneNumber:     z.string().optional(),
   showPhoneNumber: z.boolean().default(true),
+}).superRefine((d, ctx) => {
+  // On the vehicle path, make/model/year are mandatory (they come from the catalog
+  // brand/model selection + the vehicle-info step). Skipped entirely for generic categories.
+  if (d.categoryKind !== 'VEHICLE') return;
+  if (!d.make)  ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['make'],  message: 'الماركة مطلوبة' });
+  if (!d.model) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['model'], message: 'الموديل مطلوب' });
+  if (d.year == null) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['year'], message: 'السنة مطلوبة' });
 });
 
 export type WizardFormData = z.infer<typeof wizardSchema>;
-
-export const WIZARD_STEP_LABELS = [
-  'الفئة', 'معلومات المركبة', 'تفاصيل الإعلان', 'تقرير الأضرار', 'المواصفات الفنية', 'الصور', 'معلومات التواصل', 'مراجعة',
-] as const;
-
-export const STEP_TRIGGER_FIELDS: Partial<Record<number, (keyof WizardFormData)[]>> = {
-  1: ['categoryId'],
-  2: ['condition', 'make', 'model', 'year'],
-  3: ['title', 'description', 'price', 'currency', 'country', 'city'],
-};
