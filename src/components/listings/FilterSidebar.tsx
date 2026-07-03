@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import type { Category } from '@/types';
 import type { ApiResponse } from '@/types';
 import { api } from '@/services/api';
+import { catalogService, type CatalogFilterDef } from '@/services/catalog.service';
 import {
   FUEL_TYPE_OPTIONS, TRANSMISSION_OPTIONS, BODY_TYPE_OPTIONS,
   DRIVETRAIN_OPTIONS, FROM_WHO_OPTIONS, CAR_COLORS, SYRIAN_GOVERNORATES,
@@ -1210,6 +1211,10 @@ export interface FilterValues {
   minPrice:          string;
   maxPrice:          string;
   currency:          'SYP' | 'USD';
+  // Catalog-driven category attribute filters (non-vehicle categories, e.g. real-estate),
+  // keyed by the catalog filter `key` (rooms/area/heating/deed/fromWho/…). Rendered from
+  // GET /catalog/.../filters. Price + city/district still ride the dedicated fields above.
+  attributes:        Record<string, unknown>;
   minYear:           string;
   maxYear:           string;
   minMileage:        string;
@@ -1429,7 +1434,7 @@ export interface FilterValues {
 
 export const EMPTY_FILTERS: FilterValues = {
   categoryId: '', make: '', model: '', city: '', district: '',
-  minPrice: '', maxPrice: '', currency: 'SYP',
+  minPrice: '', maxPrice: '', currency: 'SYP', attributes: {},
   minYear: '', maxYear: '', minMileage: '', maxMileage: '',
   minRange: '', maxRange: '',
   fuelTypes: [], transmissions: [], conditions: [],
@@ -1502,6 +1507,7 @@ export const EMPTY_FILTERS: FilterValues = {
 export function hasActiveFilters(f: FilterValues): boolean {
   return !!(
     f.categoryId || f.make || f.model || f.city || f.district ||
+    Object.keys(f.attributes ?? {}).length ||
     f.minPrice || f.maxPrice || f.minYear || f.maxYear ||
     f.minMileage || f.maxMileage || f.minRange || f.maxRange ||
     f.fuelTypes.length || f.transmissions.length || f.conditions.length ||
@@ -1944,14 +1950,238 @@ function CategoryNode({ cat, depth, selectedId, onSelect }: {
 
 // ── FilterSidebar (main export) ───────────────────────────────────────────────
 
+// ── Catalog-driven filter view ────────────────────────────────────────────────
+// Renders the current category's INHERITED catalog filter set (GET /catalog/.../filters)
+// as browse widgets — used for real-estate so the sidebar shows rooms/area/floor/heating/
+// deed/الناشر (owner·office·developer) instead of the vehicle facets. Price + governorate/
+// district ride the dedicated FilterValues fields (so they narrow today); the remaining
+// category attributes are collected into `attributes` for backend attribute-narrowing
+// (tracked separately) — for now they render, hold state, and survive apply/clear.
+function CatalogFilterView({ slug, applied, onApply }: {
+  slug: string;
+  applied: FilterValues;
+  onApply: (f: FilterValues) => void;
+}) {
+  const [defs, setDefs]   = useState<CatalogFilterDef[] | null>(null);
+  const [draft, setDraft] = useState<FilterValues>(applied);
+
+  // Resync the draft if the parent pushes a new applied set (e.g. chip removal / clear).
+  useEffect(() => { setDraft(applied); }, [applied]);
+
+  // Load the leaf's inherited filter defs.
+  useEffect(() => {
+    let cancelled = false;
+    setDefs(null);
+    catalogService.getFilters(slug)
+      .then((d) => { if (!cancelled) setDefs(d); })
+      .catch(() => { if (!cancelled) setDefs([]); });
+    return () => { cancelled = true; };
+  }, [slug]);
+
+  const setField = <K extends keyof FilterValues>(key: K, value: FilterValues[K]) =>
+    setDraft((d) => ({ ...d, [key]: value }));
+
+  // Write a category attribute, pruning empties so `hasActiveFilters` stays accurate.
+  const setAttr = (key: string, value: unknown) =>
+    setDraft((d) => {
+      const attributes = { ...d.attributes };
+      const isEmpty =
+        value == null || value === '' ||
+        (Array.isArray(value) && value.length === 0) ||
+        (typeof value === 'object' && !Array.isArray(value) &&
+          Object.values(value as Record<string, unknown>).every((v) => v === '' || v == null));
+      if (isEmpty) delete attributes[key]; else attributes[key] = value;
+      return { ...d, attributes };
+    });
+
+  const isActive = hasActiveFilters(draft);
+  const apply    = () => onApply(draft);
+  const clear    = () => onApply({ ...EMPTY_FILTERS, categoryId: applied.categoryId });
+
+  // Price rides minPrice/maxPrice; a LOCATION widget (if any) is handled by the dedicated
+  // governorate/district fields — both are excluded from the generic attribute loop.
+  const attrDefs = (defs ?? []).filter((f) => f.key !== 'price' && f.widget !== 'LOCATION');
+
+  const label = (f: CatalogFilterDef) => `${f.labelAr}${f.unit ? ` (${f.unit})` : ''}`;
+  const inputCls =
+    'w-full px-3 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-colors';
+
+  return (
+    <div className="h-full flex flex-col">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+
+        {/* ── Price ── */}
+        <div className="px-3 pt-4 pb-2 space-y-2">
+          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">السعر</p>
+          <div className="flex border border-gray-300 rounded-lg overflow-hidden w-full">
+            {(['SYP', 'USD'] as const).map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setField('currency', c)}
+                className={cn(
+                  'flex-1 py-1.5 text-xs font-semibold transition-colors',
+                  draft.currency === c ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50',
+                )}
+              >
+                {c === 'USD' ? '$ دولار' : 'ل.س'}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="number" inputMode="numeric" placeholder="من"
+              value={draft.minPrice} onChange={(e) => setField('minPrice', e.target.value)}
+              onWheel={(e) => e.currentTarget.blur()} className={inputCls}
+            />
+            <span className="text-gray-400">—</span>
+            <input
+              type="number" inputMode="numeric" placeholder="إلى"
+              value={draft.maxPrice} onChange={(e) => setField('maxPrice', e.target.value)}
+              onWheel={(e) => e.currentTarget.blur()} className={inputCls}
+            />
+          </div>
+        </div>
+
+        {/* ── Location ── */}
+        <div className="px-3 pt-2 pb-2 space-y-2 border-t border-gray-100">
+          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">الموقع</p>
+          <select value={draft.city} onChange={(e) => setField('city', e.target.value)} className={inputCls}>
+            <option value="">كل المحافظات</option>
+            {SYRIAN_GOVERNORATES.map((g) => <option key={g} value={g}>{g}</option>)}
+          </select>
+          <input
+            type="text" placeholder="المنطقة (اختياري)"
+            value={draft.district} onChange={(e) => setField('district', e.target.value)} className={inputCls}
+          />
+        </div>
+
+        {/* ── Category filters (from the catalog) ── */}
+        {defs === null ? (
+          <div className="flex items-center gap-2 px-3 py-6 text-sm text-gray-400">
+            <Loader2 className="w-4 h-4 animate-spin" /> جارٍ تحميل الفلاتر…
+          </div>
+        ) : (
+          attrDefs.map((f) => (
+            <div key={f.key} className="px-3 pt-2 pb-2 space-y-1.5 border-t border-gray-100">
+              {f.widget === 'BOOLEAN' ? (
+                <label className="flex items-center justify-between cursor-pointer">
+                  <span className="text-[13px] font-medium text-gray-700">{f.labelAr}</span>
+                  <input
+                    type="checkbox" className="w-4 h-4 accent-blue-600"
+                    checked={!!draft.attributes[f.key]}
+                    onChange={(e) => setAttr(f.key, e.target.checked)}
+                  />
+                </label>
+              ) : (<>
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{label(f)}</p>
+
+                {f.widget === 'SELECT' && (
+                  <select
+                    value={(draft.attributes[f.key] as string) ?? ''}
+                    onChange={(e) => setAttr(f.key, e.target.value)}
+                    className={inputCls}
+                  >
+                    <option value="">الكل</option>
+                    {f.options?.map((o) => <option key={o.value} value={o.value}>{o.labelAr}</option>)}
+                  </select>
+                )}
+
+                {f.widget === 'MULTISELECT' && (
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {f.options?.map((o) => {
+                      const arr = (draft.attributes[f.key] as string[]) ?? [];
+                      const on = arr.includes(o.value);
+                      return (
+                        <label
+                          key={o.value}
+                          className={cn(
+                            'flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-[12px] cursor-pointer transition-colors',
+                            on ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:border-gray-300',
+                          )}
+                        >
+                          <input
+                            type="checkbox" className="accent-blue-600"
+                            checked={on}
+                            onChange={() => setAttr(f.key, on ? arr.filter((v) => v !== o.value) : [...arr, o.value])}
+                          />
+                          {o.labelAr}
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {f.widget === 'RANGE' && (() => {
+                  const val = (draft.attributes[f.key] as { min?: string; max?: string }) ?? {};
+                  return (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number" inputMode="numeric" placeholder="من"
+                        value={val.min ?? ''} onChange={(e) => setAttr(f.key, { ...val, min: e.target.value })}
+                        onWheel={(e) => e.currentTarget.blur()} className={inputCls}
+                      />
+                      <span className="text-gray-400">—</span>
+                      <input
+                        type="number" inputMode="numeric" placeholder="إلى"
+                        value={val.max ?? ''} onChange={(e) => setAttr(f.key, { ...val, max: e.target.value })}
+                        onWheel={(e) => e.currentTarget.blur()} className={inputCls}
+                      />
+                    </div>
+                  );
+                })()}
+
+                {f.widget === 'TEXT' && (
+                  <input
+                    type="text"
+                    value={(draft.attributes[f.key] as string) ?? ''}
+                    onChange={(e) => setAttr(f.key, e.target.value)}
+                    className={inputCls}
+                  />
+                )}
+              </>)}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* ── Sticky footer ── */}
+      <div className="shrink-0 border-t border-gray-100 p-3 bg-white space-y-1.5">
+        <button type="button" onClick={apply}
+          className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold py-2.5 rounded-xl transition-colors text-sm"
+        >
+          <Search className="w-4 h-4" />
+          بحث
+        </button>
+        {isActive && (
+          <button type="button" onClick={clear}
+            className="w-full flex items-center justify-center gap-1.5 text-xs text-gray-400 hover:text-red-500 py-1.5 transition-colors"
+          >
+            <RotateCcw className="w-3 h-3" />
+            مسح الفلاتر
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 interface FilterSidebarProps {
   categories: Category[];
   applied: FilterValues;
   onApply: (f: FilterValues) => void;
+  /** Catalog root slug of the current page (e.g. 'real-estate' | 'vehicles'), resolved by
+   *  the category page. When 'real-estate' we render the CATEGORY's catalog filter set
+   *  instead of the hand-built vehicle facets below. */
+  catalogRoot?: string;
 }
 
-export function FilterSidebar({ categories, applied, onApply }: FilterSidebarProps) {
+export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }: FilterSidebarProps) {
   const pathname     = usePathname();
+  // Current catalog leaf slug — the last segment of /category/<…>/<slug>.
+  const currentSlug  = pathname.startsWith('/category/')
+    ? decodeURIComponent(pathname.split('/').filter(Boolean).pop() ?? '')
+    : '';
   const isRentalElectric = pathname.includes('/vehicles/rentals/electric');
   const isElectric   = pathname.includes('/electric') && !isRentalElectric;
   const isMotorcycle = pathname.includes('/motorcycles');
@@ -2339,6 +2569,13 @@ export function FilterSidebar({ categories, applied, onApply }: FilterSidebarPro
       العودة لجميع الفئات
     </button>
   );
+
+  // ── Catalog-driven categories (real-estate) render their own inherited filter set,
+  // bypassing the hand-built vehicle facets entirely. `catalogRoot` is resolved by the
+  // page, so there's no flash of vehicle filters while the leaf's defs load. ──
+  if (catalogRoot === 'real-estate' && currentSlug) {
+    return <CatalogFilterView slug={currentSlug} applied={applied} onApply={onApply} />;
+  }
 
   return (
     <div className="h-full flex flex-col">

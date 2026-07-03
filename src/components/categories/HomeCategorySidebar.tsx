@@ -1,127 +1,82 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
-import { Clock, ChevronDown, LayoutGrid } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { SIDEBAR_CATEGORIES, type SubCategory, type RootCategory } from '@/data/sidebar-categories';
+import { useRouter } from 'next/navigation';
+import {
+  Clock, LayoutGrid, Tag,
+  Building2, Car, Wrench, Sofa, Shirt, PlugZap, Smartphone, UtensilsCrossed,
+  Sparkles, Briefcase, Baby, PawPrint, GraduationCap, Factory, Hash, Dumbbell,
+  Gamepad2, BookOpen, type LucideIcon,
+} from 'lucide-react';
+import { catalogService, type CatalogNode } from '@/services/catalog.service';
 
-// ── SubItem — renders a plain link or an expandable nested group ──────────────
+// Per-root icon + color, keyed by the stable catalog root slug. Falls back to a
+// neutral Tag mark for any root not listed (so new catalog roots still render).
+const ROOT_META: Record<string, { icon: LucideIcon; color: string; bg: string }> = {
+  'real-estate':                { icon: Building2,       color: 'text-red-600',     bg: 'bg-red-50'     },
+  'vehicles':                   { icon: Car,             color: 'text-blue-600',    bg: 'bg-blue-50'    },
+  'services':                   { icon: Wrench,          color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  'furniture-home-accessories': { icon: Sofa,            color: 'text-orange-600',  bg: 'bg-orange-50'  },
+  'fashion':                    { icon: Shirt,           color: 'text-pink-600',    bg: 'bg-pink-50'    },
+  'electric-appliances':        { icon: PlugZap,         color: 'text-purple-600',  bg: 'bg-purple-50'  },
+  'electronic-devices':         { icon: Smartphone,      color: 'text-cyan-600',    bg: 'bg-cyan-50'    },
+  'food-and-drinks':            { icon: UtensilsCrossed, color: 'text-yellow-600',  bg: 'bg-yellow-50'  },
+  'health-and-beauty':          { icon: Sparkles,        color: 'text-teal-600',    bg: 'bg-teal-50'    },
+  'job-listings':               { icon: Briefcase,       color: 'text-indigo-600',  bg: 'bg-indigo-50'  },
+  'kids-and-baby':              { icon: Baby,            color: 'text-pink-600',    bg: 'bg-pink-50'    },
+  'pets-and-plants':            { icon: PawPrint,        color: 'text-teal-600',    bg: 'bg-teal-50'    },
+  'private-lessons':            { icon: GraduationCap,   color: 'text-yellow-600',  bg: 'bg-yellow-50'  },
+  'professional-equipment':     { icon: Factory,         color: 'text-purple-600',  bg: 'bg-purple-50'  },
+  'special-numbers':            { icon: Hash,            color: 'text-gray-600',    bg: 'bg-gray-100'   },
+  'sports-and-outdoor':         { icon: Dumbbell,        color: 'text-blue-600',    bg: 'bg-blue-50'    },
+  'video-games':                { icon: Gamepad2,        color: 'text-indigo-600',  bg: 'bg-indigo-50'  },
+  'books-and-stationery':       { icon: BookOpen,        color: 'text-emerald-600', bg: 'bg-emerald-50' },
+};
 
-const ORANGE_PARENTS = new Set(['مركبات تجارية', 'مركبات للإيجار', 'مركبات بحرية', 'مركبات متضررة', 'كرفانات', 'مركبات كلاسيكية', 'مركبات جوية', 'عقارات سكنية', 'عقارات تجارية', 'أراضي', 'أبنية / عمارات', 'ملكية مشتركة (تايم شير)', 'منشآت سياحية']);
+// ── SubItem — a level-2 subcategory row. Always a navigation link; clicking
+// drills down to the category page (no inline list expansion in the sidebar). ──
 
-function SubItem({ sub, depth = 0 }: { sub: SubCategory; depth?: number }) {
-  const pathname   = usePathname();
-  const isActive   = pathname === sub.path;
-  const isAncestor = !isActive && pathname.startsWith(sub.path + '/');
-  const [open, setOpen] = useState(() => isAncestor);
-
-  const rowPadding = depth === 0 ? 'px-4' : depth === 1 ? 'pl-8 pr-4' : 'pl-12 pr-4';
-  const textBase   = depth === 0 ? 'text-sm' : 'text-[13px]';
-  const dotColor   = depth === 0 ? 'bg-gray-300' : 'bg-gray-200';
-
-  const useOrange  = ORANGE_PARENTS.has(sub.title);
-  const nestedBg   = useOrange
-    ? 'bg-orange-50/70 border-b border-orange-200'
-    : depth >= 1
-      ? 'bg-orange-50/40 border-b border-orange-100'
-      : 'bg-slate-50 border-b border-gray-200';
-
-  // Leaf link
-  if (!sub.children?.length) {
-    return (
-      <Link
-        href={sub.path}
-        className={cn(
-          `flex items-center gap-2 ${rowPadding} py-1.5 ${textBase} transition-colors`,
-          depth > 0
-            ? isActive
-              ? 'text-orange-600 font-semibold bg-orange-50'
-              : 'text-gray-500 hover:text-orange-600 hover:bg-orange-100/50'
-            : isActive
-              ? 'text-blue-600 font-semibold bg-blue-50'
-              : 'text-gray-600 hover:text-blue-600 hover:bg-blue-100/40',
-        )}
-      >
-        <span className={`w-1 h-1 rounded-full ${dotColor} shrink-0`} />
-        {sub.title}
-      </Link>
-    );
-  }
-
-  // Expandable row
+function SubItem({ node }: { node: CatalogNode }) {
   return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className={cn(
-          `w-full flex items-center gap-2 ${rowPadding} py-1.5 ${textBase} transition-colors`,
-          isActive || isAncestor
-            ? 'text-orange-600 bg-orange-50/60'
-            : 'text-gray-600 hover:text-blue-600 hover:bg-blue-100/40',
-        )}
-      >
-        <span className={`w-1 h-1 rounded-full ${dotColor} shrink-0`} />
-        <span className="flex-1 text-start">{sub.title}</span>
-        <ChevronDown
-          className={cn(
-            'w-3 h-3 text-gray-400 transition-transform duration-200 shrink-0',
-            open && 'rotate-180 text-blue-500',
-          )}
-        />
-      </button>
-
-      {open && (
-        <div className={cn('border-t border-gray-100/60 py-2', nestedBg)}>
-          {sub.children.map((child) => (
-            <SubItem key={child.path} sub={child} depth={depth + 1} />
-          ))}
-        </div>
-      )}
-    </div>
+    <Link
+      href={`/category/${node.slug}`}
+      className="flex items-center gap-2 px-4 py-1.5 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-100/40 transition-colors"
+    >
+      <span className="w-1 h-1 rounded-full bg-gray-300 shrink-0" />
+      {node.nameAr}
+    </Link>
   );
 }
 
-// ── Accordion card ────────────────────────────────────────────────────────────
+// ── Root group — ALWAYS expanded. The heading links to the category page; its
+// level-2 children are passed in already-resolved (see HomeCategorySidebar), so the
+// sub-list paints together with the heading — no second-wave fetch, no pop-in. ──
 
-function AccordionCard({ cat }: { cat: RootCategory }) {
-  const [open, setOpen] = useState(false);
-  const Icon = cat.icon;
+function RootGroup({ root, subs }: { root: CatalogNode; subs: CatalogNode[] }) {
+  const meta = ROOT_META[root.slug] ?? { icon: Tag, color: 'text-gray-500', bg: 'bg-gray-100' };
+  const Icon = meta.icon;
 
   return (
-    <div
-      className={cn(
-        'rounded-xl border transition-colors overflow-hidden',
-        open ? 'border-blue-200 bg-white' : 'border-gray-200 bg-white',
-      )}
-    >
-      {/* Header */}
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
+    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+      {/* Header — links to the category page */}
+      <Link
+        href={`/category/${root.slug}`}
         className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-gray-50/80 transition-colors"
       >
-        <div className={`w-7 h-7 rounded-lg ${cat.iconBg} flex items-center justify-center shrink-0`}>
-          <Icon className={`w-3.5 h-3.5 ${cat.iconColor}`} />
+        <div className={`w-7 h-7 rounded-lg ${meta.bg} flex items-center justify-center shrink-0`}>
+          <Icon className={`w-3.5 h-3.5 ${meta.color}`} />
         </div>
         <span className="flex-1 text-sm font-semibold text-gray-800 text-start">
-          {cat.title}
+          {root.nameAr}
         </span>
-        <ChevronDown
-          className={cn(
-            'w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0',
-            open && 'rotate-180 text-blue-500',
-          )}
-        />
-      </button>
+      </Link>
 
-      {/* Subcategory list */}
-      {open && (
+      {/* Subcategory list — always shown */}
+      {subs.length > 0 && (
         <div className="border-t border-gray-100 border-b border-gray-200 bg-slate-50 py-2">
-          {cat.children.map((sub) => (
-            <SubItem key={sub.path} sub={sub} />
+          {subs.map((sub) => (
+            <SubItem key={sub.slug} node={sub} />
           ))}
         </div>
       )}
@@ -131,8 +86,26 @@ function AccordionCard({ cat }: { cat: RootCategory }) {
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
+type RootWithChildren = { root: CatalogNode; children: CatalogNode[] };
+
 export function HomeCategorySidebar() {
   const router = useRouter();
+  const [groups, setGroups] = useState<RootWithChildren[] | null>(null);
+
+  // Fetch roots AND every root's level-2 children up front, then commit once — so the
+  // whole tree paints expanded in a single render. The old code fetched roots first and
+  // let each RootGroup fetch its own children on mount (1+N), which made the sub-lists
+  // pop in a second or two after the headings on every homepage load.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const roots = await catalogService.getChildren(null);
+      const childLists = await Promise.all(roots.map((r) => catalogService.getChildren(r.slug)));
+      if (cancelled) return;
+      setGroups(roots.map((root, i) => ({ root, children: childLists[i] })));
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3">
@@ -175,11 +148,25 @@ export function HomeCategorySidebar() {
         كل الإعلانات
       </button>
 
-      {/* ── Category accordion cards ── */}
+      {/* ── Category groups (catalog-driven, always expanded) ── */}
       <div className="space-y-1.5">
-        {SIDEBAR_CATEGORIES.map((cat) => (
-          <AccordionCard key={cat.title} cat={cat} />
-        ))}
+        {groups === null
+          ? Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                <div className="flex items-center gap-2.5 px-3 py-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-gray-100 animate-pulse shrink-0" />
+                  <div className="h-3.5 w-24 rounded bg-gray-100 animate-pulse" />
+                </div>
+                <div className="border-t border-gray-100 bg-slate-50 py-2 space-y-1.5">
+                  {Array.from({ length: 3 }).map((__, j) => (
+                    <div key={j} className="h-2.5 w-32 rounded bg-gray-100 animate-pulse mx-4" />
+                  ))}
+                </div>
+              </div>
+            ))
+          : groups.map(({ root, children }) => (
+              <RootGroup key={root.slug} root={root} subs={children} />
+            ))}
       </div>
 
     </div>

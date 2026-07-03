@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-geist);
+  --font-sans: var(--font-arabic);
 }
 
 :root {
@@ -11,12 +11,17 @@
 
 @layer base {
   html {
-    font-size: 87.5%; /* 14px base — scales all rem-based Tailwind spacing & text ~12% smaller */
+    /* 13px base. html font-size is the global zoom dial: because all Tailwind
+       spacing/sizing/text is rem-based, it scales the WHOLE page, not just text
+       — so it can't make font bigger AND layout denser at once. We keep it at a
+       legible 13px and drive density separately via tightened spacing/grid on
+       the layout itself (sahibinden's approach: readable text, compact shell). */
+    font-size: 81.25%;
   }
 
   @media (min-width: 1280px) {
     html {
-      font-size: 82%; /* slightly tighter on large desktop monitors */
+      font-size: 75%; /* 12px — slightly tighter on large desktop monitors */
     }
   }
 }

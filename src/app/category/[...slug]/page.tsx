@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Home, ChevronLeft, SlidersHorizontal, X, SearchX,
@@ -9,7 +9,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { listingsService } from '@/services/listings.service';
-import { categoriesService, FALLBACK_CATEGORIES } from '@/services/categories.service';
+import { categoriesService } from '@/services/categories.service';
+import { catalogService, type CatalogNode, type CatalogPathNode } from '@/services/catalog.service';
 import { savedSearchesService } from '@/services/saved-searches.service';
 import { ListingCard } from '@/components/listings/ListingCard';
 import { useMobileTitle } from '@/components/layout/MobileTopBar';
@@ -19,128 +20,10 @@ import { FilterSidebar, EMPTY_FILTERS, hasActiveFilters } from '@/components/lis
 import type { FilterValues } from '@/components/listings/FilterSidebar';
 import { RecommendationsPopover } from '@/components/layout/RecommendationsPopover';
 import { ComparePopover } from '@/components/layout/ComparePopover';
+import ProjectsLandingPage from '@/components/real-estate/ProjectsLandingPage';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
 import type { Category, Listing } from '@/types';
-
-// ── Slug → Arabic display name ────────────────────────────────────────────────
-
-const SLUG_AR: Record<string, string> = {
-  // real estate
-  'real-estate': 'عقارات',
-  residential: 'عقارات سكنية', land: 'أراضي', projects: 'مشاريع سكنية',
-  building: 'أبنية / عمارات', buildings: 'أبنية / عمارات',
-  timeshare: 'ملكية مشتركة', tourism: 'منشآت سياحية', tourist: 'منشآت سياحية',
-  'tourist-facility': 'منشآت سياحية',
-  'pools-for-rent': 'مسابح للإيجار',
-  'for-sale': 'للبيع', 'for-rent': 'للإيجار',
-  'daily-rental': 'إيجار سياحي يومي',
-  transfer: 'عقار للفرغ / التنازل',
-  'transfer-sale': 'عقار تجاري للفرغ / التنازل',
-  'transfer-rent': 'عقار تجاري للاستثمار',
-  share: 'أرض للمشاركة',
-  // vehicles
-  realestate: 'عقارات', vehicles: 'مركبات', parts: 'قطع غيار وإكسسوارات وتعديل',
-  shopping: 'سوق المستعمل والجديد', industrial: 'آلات صناعية ومعدات',
-  services: 'حرفيون وخدمات', tutors: 'مدرسون خصوصيون', jobs: 'وظائف',
-  pets: 'عالم الحيوان', helpers: 'باحثون عن مساعدين',
-  cars: 'سيارات', 'suv-pickup': 'سيارات عائلية (SUV) وبيكاب', electric: 'سيارات كهربائية',
-  motorcycles: 'دراجات نارية', minivan: 'ميني فان وفان', commercial: 'مركبات تجارية',
-  minibus: 'ميكروباص وحافلة متوسطة', bus: 'حافلة (باص)', truck: 'شاحنة وشاحنة خفيفة',
-  'tractor-truck': 'رأس تريلا (قاطرة)', trailer: 'مقطورة (دورسيه)',
-  'small-trailer': 'عربة مقطورة', bodywork: 'هياكل وتجهيزات خارجية',
-  'tow-truck': 'سيارة إنقاذ وسحب', 'commercial-plates': 'خطوط ولوحات تجارية',
-  rentals: 'مركبات للإيجار', marine: 'مركبات بحرية', damaged: 'سيارات متضررة',
-  caravans: 'كرفانات', caravan: 'كرفانات للإيجار', classic: 'سيارات كلاسيكية', aircraft: 'مركبات جوية',
-  air: 'مركبات جوية', helicopter: 'مروحية (هليكوبتر)', paramotor: 'باراموتور',
-  airplane: 'طائرة', glider: 'طائرة شراعية ومايكرولايت',
-  towable: 'كرفان سحب (مقطورة)', motorhome: 'عربة سكن بمحرك (موتورهوم)',
-  // classic sub-routes (slug alone is ambiguous — full-path overrides used instead)
-  'classic-cars': 'سيارات كلاسيكية', 'classic-suv': 'سيارات الدفع الرباعي كلاسيكية',
-  'classic-motorcycles': 'دراجات نارية كلاسيكية', 'classic-commercial': 'مركبات تجارية كلاسيكية',
-  'bus-minibus': 'باصات وميكروباص للإيجار',
-  'trucks':      'شاحنات للإيجار',
-  atv: 'دبابات (ATV)', utv: 'دبابات (UTV)', disabled: 'سيارات ذوي الاحتياجات الخاصة',
-  auto: 'معدات السيارات', motorcycle: 'معدات الدراجات النارية',
-  computers: 'حواسيب', phones: 'هواتف محمولة وإكسسوارات', cameras: 'كاميرات وتصوير',
-  'home-decor': 'ديكور المنزل', 'home-electronics': 'إلكترونيات منزلية',
-  appliances: 'أجهزة منزلية كهربائية', clothing: 'أزياء وإكسسوارات', watches: 'ساعات',
-  'mother-baby': 'أم وطفل', 'personal-care': 'عناية شخصية ومستحضرات تجميل',
-  'hobbies-toys': 'هوايات وألعاب', gaming: 'مستلزمات اللاعبين (Gaming)',
-  'books-media': 'كتب، مجلات وأفلام', music: 'موسيقى', sports: 'رياضة',
-  jewelry: 'مجوهرات وحلي', collectibles: 'مقتنيات', antiques: 'أنتيكات',
-  'garden-diy': 'حدائق ومعدات بناء', 'technical-electronics': 'إلكترونيات تقنية',
-  office: 'مكتب وقرطاسية', 'food-beverage': 'أطعمة ومشروبات', others: 'كل شيء آخر',
-  'heavy-machinery': 'آلات ثقيلة', agriculture: 'آلات زراعية',
-  manufacturing: 'صناعة', energy: 'كهرباء وطاقة',
-  'home-renovation': 'تجديد وديكور المنزل', transport: 'نقل وشحن',
-  'auto-service': 'صيانة وخدمات السيارات',
-  'highschool-uni': 'ثانوي وجامعي', 'primary-middle': 'ابتدائي وإعدادي',
-  languages: 'لغات أجنبية', driving: 'قيادة', arts: 'فنون', dance: 'رقص',
-  theater: 'مسرح وتمثيل', 'personal-development': 'تنمية بشرية',
-  vocational: 'دروس مهنية', 'special-education': 'تربية خاصة',
-  'child-development': 'تنمية الطفل', diction: 'فن الخطابة والنطق', photography: 'تصوير',
-  legal: 'محاماة واستشارات قانونية', education: 'تعليم', entertainment: 'ترفيه وأنشطة',
-  beauty: 'تجميل وعناية', it: 'تكنولوجيا المعلومات وتطوير البرمجيات', hr: 'موارد بشرية',
-  construction: 'بناء وإنشاءات', management: 'إدارة وأعمال', security: 'حراسة وأمن',
-  logistics: 'لوجستيات ونقل', retail: 'مبيعات وتجزئة', finance: 'محاسبة، مالية وبنوك',
-  engineering: 'هندسة', 'customer-service': 'خدمة عملاء',
-  admin: 'إدارة مكاتب وأعمال إدارية', 'part-time': 'دوام جزئي وأعمال إضافية',
-  marketing: 'تسويق وإدارة منتجات', media: 'راديو، سينما وتلفزيون',
-  hospitality: 'مطاعم وفنادق', health: 'صحة', sales: 'مبيعات',
-  maintenance: 'صيانة وتصليح', design: 'تصميم وإبداع', textile: 'نسيج وملابس',
-  accessories: 'إكسسوارات ومعدات', food: 'أعلاف وطعام', aquarium: 'أسماك زينة',
-  poultry: 'دواجن', cattle: 'مواشي (أبقار)', sheep: 'مواشي (أغنام)',
-  'marine-life': 'كائنات بحرية',
-  babysitter: 'جليسة أطفال ورضع', 'elderly-care': 'رعاية مسنين ومرضى',
-  cleaning: 'عاملة نظافة ومساعدة منزلية',
-};
-
-function slugToAr(slug: string): string {
-  return SLUG_AR[slug] ?? slug;
-}
-
-// Display-title overrides for rental subcategories whose backend name is shorter
-// than what we want to show. Keyed by the last URL slug segment.
-const RENTAL_DISPLAY_TITLES: Record<string, string> = {
-  trucks:     'شاحنات، شاحنات خفيفة وقاطرات للإيجار',
-  'tow-truck': 'سيارات سطحة وناقلات للإيجار',
-  aircraft:   'طائرات للإيجار',
-  caravan:    'كرفانات وبيوت متنقلة للإيجار',
-  electric:   'مركبات كهربائية للإيجار',
-};
-
-// Full-path overrides for pages where the last slug alone is ambiguous (e.g. "for-sale"
-// appears under many categories). Keyed by slugArr.join('/').
-const PATH_TITLE_OVERRIDES: Record<string, string> = {
-  'vehicles/marine/for-sale':    'مركبات بحرية للبيع',
-  'vehicles/marine/for-rent':    'مركبات بحرية للإيجار',
-  'vehicles/damaged/cars':       'سيارات متضررة',
-  'vehicles/damaged/suv':        'سيارات الدفع الرباعي، SUV وبيك أب متضررة',
-  'vehicles/damaged/motorcycles': 'دراجات نارية متضررة',
-  'vehicles/damaged/minivans':    'ميني فان وفان مغلق متضرر',
-  'vehicles/damaged/commercial':  'مركبات تجارية متضررة',
-  'vehicles/classic/cars':        'سيارات كلاسيكية',
-  'vehicles/classic/suv':         'سيارات الدفع الرباعي كلاسيكية',
-  'vehicles/classic/motorcycles': 'دراجات نارية كلاسيكية',
-  'vehicles/classic/commercial':  'مركبات تجارية كلاسيكية',
-  'vehicles/air/helicopter':      'مروحية (هليكوبتر)',
-  'vehicles/air/paramotor':       'باراموتور',
-  'vehicles/air/airplane':        'طائرة',
-  'vehicles/air/glider':          'طائرة شراعية ومايكرولايت',
-};
-
-// ── Category tree helpers ─────────────────────────────────────────────────────
-
-function flattenTree(cats: Category[]): Category[] {
-  return cats.flatMap((c) => [c, ...flattenTree(c.children ?? [])]);
-}
-
-function findCategoryBySlug(cats: Category[], slug: string): Category | null {
-  return flattenTree(cats).find(
-    (c) => c.slug === slug || c.slug?.endsWith(`/${slug}`) || c.name === slugToAr(slug),
-  ) ?? null;
-}
 
 // ── Table layout ──────────────────────────────────────────────────────────────
 
@@ -450,26 +333,79 @@ function SaveSearchModal({
   );
 }
 
+// ── Child-category box (desktop branch aside) ──────────────────────────────────
+// Styled to match the homepage HomeCategorySidebar box. Sits in the right-side
+// slot on intermediate (branch) pages; each child links one level deeper.
+function ChildCategoryBox({ title, nodes }: { title: string; nodes: CatalogNode[] }) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/80">
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider leading-none">{title}</p>
+      </div>
+      <div className="py-2">
+        {nodes.map((n) => (
+          <Link
+            key={n.slug}
+            href={`/category/${n.slug}`}
+            className="flex items-center justify-between gap-2 px-4 py-1.5 text-sm text-gray-700 hover:text-blue-600 hover:bg-blue-100/40 transition-colors"
+          >
+            <span className="flex items-center gap-2 min-w-0">
+              <span className="w-1 h-1 rounded-full bg-gray-300 shrink-0" />
+              <span className="truncate">{n.nameAr}</span>
+            </span>
+            <span className="text-xs text-gray-400 shrink-0">{n.count.toLocaleString()}</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function CategoryPage() {
   const params          = useParams();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
-  const slugArr      = Array.isArray(params.slug) ? params.slug : [params.slug as string];
-  const lastSlug     = slugArr[slugArr.length - 1] ?? '';
-  const isRentalsRoute = slugArr.includes('rentals');
-  const fullSlugPath = slugArr.join('/');
-  const pageTitle    = PATH_TITLE_OVERRIDES[fullSlugPath]
-    ?? ((isRentalsRoute && RENTAL_DISPLAY_TITLES[lastSlug])
-      ? RENTAL_DISPLAY_TITLES[lastSlug]
-      : slugToAr(lastSlug));
+  const searchParams  = useSearchParams();
+  const forceListings = searchParams.get('view') === 'listings';
 
+  const slugArr  = Array.isArray(params.slug) ? params.slug : [params.slug as string];
+  const lastSlug = slugArr[slugArr.length - 1] ?? '';
+
+  // ── Off-plan-projects: mode switch (custom landing vs filtered listings) ──────
+  // The catalog node `off-plan-projects` (مشاريع قيد التطوير) keeps the old dedicated
+  // ProjectsLandingPage design. Bare URL → the landing; any search param (or ?view=listings)
+  // → the normal catalog listings view for the leaf, so the landing's search/city links
+  // stay inside the catalog. (The old /category/real-estate/projects route also still
+  // renders the landing directly, as an alias.)
+  const isOffPlanProjects   = lastSlug === 'off-plan-projects';
+  const projectCity         = searchParams.get('city')     ?? '';
+  const projectDistrict     = searchParams.get('district') ?? '';
+  const projectSearchActive = isOffPlanProjects && (
+    forceListings ||
+    !!(projectCity || projectDistrict || searchParams.get('rooms') || searchParams.get('status'))
+  );
+  const showProjectsLanding = isOffPlanProjects && !projectSearchActive;
+
+  // ── Catalog resolution — drives drill-down (branch) vs listings (leaf) ───────
+  // The last URL segment is the catalog node slug. getPath gives the breadcrumb
+  // chain (and the categoryId for listing queries); getChildren gives the nodes
+  // to drill into. No children ⇒ leaf ⇒ show listings.
+  const [catalogStatus, setCatalogStatus] = useState<'loading' | 'notfound' | 'branch' | 'leaf'>('loading');
+  const [catalogPath,   setCatalogPath]   = useState<CatalogPathNode[]>([]);
+  const [childNodes,    setChildNodes]    = useState<CatalogNode[]>([]);
+
+  const pageTitle    = catalogPath[catalogPath.length - 1]?.nameAr ?? '';
   useMobileTitle(pageTitle);
-  const isRealEstate = slugArr[0] === 'real-estate';
-  const isRentalSuv  = slugArr.includes('rentals') && slugArr.includes('suv-pickup');
+  const isRealEstate = catalogPath[0]?.slug === 'real-estate';
+  const isRentalSuv  = false;
   const tableCols    = isRealEstate ? REALESTATE_TABLE_COLS    : VEHICLE_TABLE_COLS;
   const tableHeaders = isRealEstate ? REALESTATE_TABLE_HEADERS : VEHICLE_TABLE_HEADERS;
+  // Branch nodes drill down (child-category box on desktop); leaf nodes — and a
+  // branch viewed with ?view=listings — show the filters + listings view.
+  const isBranchView   = catalogStatus === 'branch' && !forceListings;
+  const showListings    = catalogStatus === 'leaf' || (catalogStatus === 'branch' && forceListings);
 
   // ── Categories ──────────────────────────────────────────────────────────────
   const [categories, setCategories] = useState<Category[]>([]);
@@ -484,99 +420,60 @@ export default function CategoryPage() {
 
   useEffect(() => {
     setSlugResolved(false);
+    setCatalogStatus('loading');
     setLoading(true);
     setListings([]);
     setTotal(0);
     setMeta(null);
-    categoriesService.getTree().catch(() => []).then((tree) => {
-      // Walk from most-specific slug to least-specific until one resolves.
-      // Handles frontend-only deep routes (e.g. /commercial/minibus) whose
-      // categories don't exist in the backend tree — falls back to the parent
-      // (commercial) so the fetch still returns only relevant listings.
-      //
-      // For routes with 3+ slug segments, skip any top-level (root) category
-      // match — e.g. /vehicles/rentals/bus-minibus must not fall back to
-      // "vehicles", which would return every vehicle listing.
-      const isDeepRoute = slugArr.length >= 3;
-      let matched: Category | null = null;
-      let matchedAtIndex = -1;
-      for (let i = slugArr.length - 1; i >= 0; i--) {
-        const candidate = findCategoryBySlug(tree, slugArr[i]);
-        if (!candidate) continue;
-        if (isDeepRoute && !candidate.parentId) continue; // skip root-level fallback
-        matched = candidate;
-        matchedAtIndex = i;
-        break;
-      }
 
-      // For /rentals/* deep routes the 'rentals' parent is far too broad — it
-      // includes every vehicle type for rent. Always use FALLBACK so the backend
-      // receives an unknown ID and returns 0 results instead of all rentals.
-      if (isDeepRoute && slugArr.includes('rentals')) {
-        matched = null;
-        for (let i = slugArr.length - 1; i >= 0; i--) {
-          const fb = findCategoryBySlug(FALLBACK_CATEGORIES, slugArr[i]);
-          if (!fb || !fb.parentId) continue;
-          matched = fb;
-          break;
-        }
-      }
+    let cancelled = false;
+    Promise.all([
+      catalogService.getPath(lastSlug),
+      catalogService.getChildren(lastSlug),
+    ]).then(([path, kids]) => {
+      if (cancelled) return;
+      if (!path.length) { setCatalogStatus('notfound'); return; }
 
-      // Same guard for /damaged/* — always use FALLBACK so slugs like 'cars'
-      // don't resolve to the generic cars category and return all car listings.
-      if (isDeepRoute && slugArr.includes('damaged')) {
-        matched = null;
-        for (let i = slugArr.length - 1; i >= 0; i--) {
-          const fb = findCategoryBySlug(FALLBACK_CATEGORIES, slugArr[i]);
-          if (!fb || !fb.parentId) continue;
-          matched = fb;
-          break;
-        }
-      }
+      // The listing's category is the deepest CATEGORY-type node in the path
+      // (a leaf may be a BRAND/MODEL node); fall back to the leaf id. The backend
+      // subtree-expands categoryId, so this narrows to the whole CATEGORY subtree.
+      const deepestCategory = [...path].reverse().find((n) => n.type === 'CATEGORY');
+      const id = (deepestCategory ?? path[path.length - 1]).id;
 
-      // Same guard for /classic/* — slugs like 'cars' and 'suv' would otherwise
-      // resolve to the generic cars/suv backend categories, returning unrelated
-      // modern car listings. Always force the FALLBACK sub-category ID.
-      if (isDeepRoute && slugArr.includes('classic') && !slugArr.includes('rentals')) {
-        matched = null;
-        for (let i = slugArr.length - 1; i >= 0; i--) {
-          const fb = findCategoryBySlug(FALLBACK_CATEGORIES, slugArr[i]);
-          if (!fb || !fb.parentId) continue;
-          matched = fb;
-          break;
-        }
-      }
+      // Vehicle listings are filed under the CATEGORY node (e.g. cars) with
+      // make/model held as vehicleDetails attributes — NOT under BRAND/MODEL
+      // category nodes. So drilling into a BRAND/MODEL must narrow via make/model
+      // (the catalog node's Latin `name`, e.g. "BMW" / "A6"), not categoryId.
+      const brand = path.find((n) => n.type === 'BRAND');
+      const model = path.find((n) => n.type === 'MODEL');
 
-      // Same guard for /caravans/* — always force FALLBACK sub-category ID so
-      // the backend receives an unknown ID and returns 0 results.
-      if (isDeepRoute && slugArr.includes('caravans')) {
-        matched = null;
-        for (let i = slugArr.length - 1; i >= 0; i--) {
-          const fb = findCategoryBySlug(FALLBACK_CATEGORIES, slugArr[i]);
-          if (!fb || !fb.parentId) continue;
-          matched = fb;
-          break;
-        }
-      }
-
-      // Same guard for /air/* — slugs like 'airplane' or 'glider' must not
-      // resolve to unrelated backend categories. Always force FALLBACK ID.
-      if (isDeepRoute && slugArr.includes('air') && !slugArr.includes('rentals')) {
-        matched = null;
-        for (let i = slugArr.length - 1; i >= 0; i--) {
-          const fb = findCategoryBySlug(FALLBACK_CATEGORIES, slugArr[i]);
-          if (!fb || !fb.parentId) continue;
-          matched = fb;
-          break;
-        }
-      }
-
-      const id = matched?.id ?? '';
+      setCatalogPath(path);
+      setChildNodes(kids);
       setResolvedCategoryId(id);
-      setFilters({ ...EMPTY_FILTERS, categoryId: id });
+      setFilters({
+        ...EMPTY_FILTERS,
+        categoryId: id,
+        make:  brand?.name ?? '',
+        model: model?.name ?? '',
+      });
+      setCatalogStatus(kids.length ? 'branch' : 'leaf');
       setSlugResolved(true);
+    }).catch(() => {
+      if (!cancelled) setCatalogStatus('notfound');
     });
-  }, [slugArr.join('/')]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    return () => { cancelled = true; };
+  }, [lastSlug]);
+
+  // ── Off-plan-projects: seed city/district from the URL into the filters ───────
+  // The landing's search + city tiles link back here with ?city=…&district=…; sync those
+  // into the filter state so the listings narrow (city/district are backend-supported;
+  // rooms/status ride the URL but don't server-narrow yet — the known attribute gap).
+  useEffect(() => {
+    if (!isOffPlanProjects || !slugResolved) return;
+    setFilters((f) => ({ ...f, city: projectCity, district: projectDistrict }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slugResolved, isOffPlanProjects, projectCity, projectDistrict]);
 
   // ── UI state ────────────────────────────────────────────────────────────────
   const [viewMode,       setViewMode]       = useState<'grid' | 'list'>('list');
@@ -609,9 +506,13 @@ export default function CategoryPage() {
   useEffect(() => { setPage(1); }, [filters, sortBy]);
 
   useEffect(() => {
-    // Don't fetch until the slug has been resolved to a categoryId (prevents
-    // an initial empty-filter request that returns all listings).
+    // Don't fetch until the slug has been resolved to a categoryId (prevents an
+    // initial empty-filter request that returns all listings). Both branch and
+    // leaf nodes fetch: a branch shows its category's listings alongside the
+    // child-category box; a leaf shows listings alongside filters.
     if (!slugResolved) return;
+    // Bare off-plan-projects renders the custom landing (below) — skip the wasted fetch.
+    if (showProjectsLanding) { setLoading(false); return; }
 
     let cancelled = false;
     setLoading(true);
@@ -735,15 +636,21 @@ export default function CategoryPage() {
   }, [listings, resolvedCategoryId]);
 
   // ── Breadcrumbs ──────────────────────────────────────────────────────────────
-  const crumbs = slugArr.map((seg, i) => ({
-    label: slugToAr(seg),
-    href:  '/category/' + slugArr.slice(0, i + 1).join('/'),
+  // Built from the catalog path (root → current node), each segment a link to
+  // that node. Grows automatically as you drill deeper.
+  const crumbs = catalogPath.map((n) => ({
+    label: n.nameAr,
+    href:  `/category/${n.slug}`,
   }));
 
   // ── Reset all to slug baseline ───────────────────────────────────────────────
   const clearFilters = useCallback(() => {
     setFilters({ ...EMPTY_FILTERS, categoryId: resolvedCategoryId });
   }, [resolvedCategoryId]);
+
+  // Bare off-plan-projects → the dedicated projects landing (hero + city tiles + featured
+  // + developer CTA). Search params fall through to the normal listings view below.
+  if (showProjectsLanding) return <ProjectsLandingPage />;
 
   return (
     <>
@@ -808,21 +715,72 @@ export default function CategoryPage() {
             ))}
           </nav>
 
-          {/* ── Mobile filter button ── */}
-          <div className="flex items-center justify-between mb-4 lg:hidden">
-            <h1 className="text-xl font-bold text-gray-900">{pageTitle}</h1>
-            <button
-              onClick={() => setSidebarOpen((o) => !o)}
-              className="flex items-center gap-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl px-4 py-2 hover:bg-gray-100 transition-colors"
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              تصفية
-              {isActive && <span className="w-2 h-2 bg-orange-500 rounded-full inline-block" />}
-            </button>
-          </div>
+          {/* ── Loading (resolving the catalog node) ── */}
+          {catalogStatus === 'loading' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {Array.from({ length: 9 }).map((_, i) => (
+                <div key={i} className="h-[52px] rounded-xl border border-gray-200 bg-white animate-pulse" />
+              ))}
+            </div>
+          )}
 
-          {/* ── Mobile full-screen filter overlay ── */}
-          {sidebarOpen && (
+          {/* ── Unknown slug ── */}
+          {catalogStatus === 'notfound' && (
+            <div className="flex flex-col items-center justify-center py-28 text-gray-400 gap-3">
+              <SearchX className="w-10 h-10" />
+              <p className="text-base font-medium text-gray-600">الفئة غير موجودة</p>
+              <Link href="/" className="text-sm text-blue-600 hover:underline font-medium">العودة إلى الرئيسية</Link>
+            </div>
+          )}
+
+          {/* ── Mobile drill-down: full-width child grid (branch only). On
+              desktop the children live in the right-side box instead. ── */}
+          {isBranchView && (
+            <div className="lg:hidden">
+              <Link
+                href={`/category/${lastSlug}?view=listings`}
+                className="flex items-center justify-between gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3.5 mb-3 hover:bg-blue-100 transition-colors"
+              >
+                <span className="text-sm font-semibold text-blue-700">عرض جميع إعلانات {pageTitle}</span>
+                <ChevronLeft className="w-4 h-4 text-blue-400 shrink-0" />
+              </Link>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {childNodes.map((c) => (
+                  <Link
+                    key={c.slug}
+                    href={`/category/${c.slug}`}
+                    className="group flex items-center justify-between gap-3 bg-white rounded-xl border border-gray-200 px-4 py-3.5 hover:border-blue-300 hover:shadow-sm transition-all"
+                  >
+                    <span className="text-sm font-semibold text-gray-800 group-hover:text-blue-600">{c.nameAr}</span>
+                    <span className="flex items-center gap-2 shrink-0">
+                      <span className="text-xs text-gray-400">{c.count.toLocaleString()}</span>
+                      <ChevronLeft className="w-4 h-4 text-gray-300 group-hover:text-blue-400" />
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(isBranchView || showListings) && (<>
+
+          {/* ── Mobile filter button (listings view only) ── */}
+          {showListings && (
+            <div className="flex items-center justify-between mb-4 lg:hidden">
+              <h1 className="text-xl font-bold text-gray-900">{pageTitle}</h1>
+              <button
+                onClick={() => setSidebarOpen((o) => !o)}
+                className="flex items-center gap-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl px-4 py-2 hover:bg-gray-100 transition-colors"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                تصفية
+                {isActive && <span className="w-2 h-2 bg-orange-500 rounded-full inline-block" />}
+              </button>
+            </div>
+          )}
+
+          {/* ── Mobile full-screen filter overlay (listings view only) ── */}
+          {showListings && sidebarOpen && (
             <div className="lg:hidden fixed inset-0 z-[60] bg-white flex flex-col">
               <div className="shrink-0 flex items-center justify-between px-4 h-14 border-b border-gray-200">
                 <p className="text-base font-bold text-gray-900">فلاتر</p>
@@ -835,30 +793,41 @@ export default function CategoryPage() {
                   key={resolvedCategoryId || 'loading'}
                   categories={categories}
                   applied={filters}
+                  catalogRoot={catalogPath[0]?.slug ?? ''}
                   onApply={(f) => { handleApply(f); setSidebarOpen(false); }}
                 />
               </div>
             </div>
           )}
 
-          <div className="flex gap-6 items-start">
+          {/* Branch: 2-column is desktop-only (mobile uses the full-width grid
+              above). Leaf: 2-column on all sizes (mobile lists in the main area;
+              filters live in the overlay above). */}
+          <div className={cn('gap-6 items-start', isBranchView ? 'hidden lg:flex' : 'flex')}>
 
-            {/* ── Desktop sidebar ── */}
-            <aside className="hidden lg:block w-72 shrink-0 sticky top-6" style={{ height: 'calc(100vh - 3rem)' }}>
-              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden h-full">
-                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/80" style={{ height: '40px' }}>
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider leading-none">تصفية وترتيب</p>
+            {/* ── Right aside: child-category box (branch) or filters (leaf) ── */}
+            {isBranchView ? (
+              <aside className="hidden lg:block w-72 shrink-0 sticky top-6">
+                <ChildCategoryBox title={pageTitle} nodes={childNodes} />
+              </aside>
+            ) : (
+              <aside className="hidden lg:block w-72 shrink-0 sticky top-6" style={{ height: 'calc(100vh - 3rem)' }}>
+                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden h-full">
+                  <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/80" style={{ height: '40px' }}>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider leading-none">تصفية وترتيب</p>
+                  </div>
+                  <div style={{ height: 'calc(100% - 40px)' }}>
+                    <FilterSidebar
+                      key={resolvedCategoryId || 'loading'}
+                      categories={categories}
+                      applied={filters}
+                      catalogRoot={catalogPath[0]?.slug ?? ''}
+                      onApply={handleApply}
+                    />
+                  </div>
                 </div>
-                <div style={{ height: 'calc(100% - 40px)' }}>
-                  <FilterSidebar
-                    key={resolvedCategoryId || 'loading'}
-                    categories={categories}
-                    applied={filters}
-                    onApply={handleApply}
-                  />
-                </div>
-              </div>
-            </aside>
+              </aside>
+            )}
 
             {/* ── Main content ── */}
             <div className="flex-1 min-w-0">
@@ -892,20 +861,25 @@ export default function CategoryPage() {
 
               {/* ── Seller tabs + view toggles ── */}
               <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
-                <div className="flex gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden shrink-0">
-                  {SELLER_TABS.filter((tab) => !isRentalSuv || tab.value === '').map((tab) => (
-                    <button
-                      key={tab.value}
-                      onClick={() => setSellerTab(tab.value)}
-                      className={cn(
-                        'px-3.5 py-2 text-xs font-semibold transition-colors whitespace-nowrap',
-                        activeSellerTab === tab.value ? 'bg-orange-500 text-white' : 'text-gray-600 hover:bg-gray-50',
-                      )}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
+                {/* Seller tabs use car-dealer language (من معرض) — meaningless for
+                    real-estate, where "who's selling" is المالك / مكتب عقاري / شركة بناء
+                    and lives in the sidebar's catalog `الناشر` filter instead. */}
+                {!isRealEstate ? (
+                  <div className="flex gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden shrink-0">
+                    {SELLER_TABS.filter((tab) => !isRentalSuv || tab.value === '').map((tab) => (
+                      <button
+                        key={tab.value}
+                        onClick={() => setSellerTab(tab.value)}
+                        className={cn(
+                          'px-3.5 py-2 text-xs font-semibold transition-colors whitespace-nowrap',
+                          activeSellerTab === tab.value ? 'bg-orange-500 text-white' : 'text-gray-600 hover:bg-gray-50',
+                        )}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : <div />}
 
                 <div className="flex items-center gap-2 ms-auto">
                   {/* Grid / List toggle */}
@@ -1049,6 +1023,9 @@ export default function CategoryPage() {
               )}
             </div>
           </div>
+
+          </>)}
+
         </div>
       </div>
     </>

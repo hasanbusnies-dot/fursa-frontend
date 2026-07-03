@@ -10,11 +10,12 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { listingsService } from '@/services/listings.service';
+import { catalogService, type CatalogFilterDef } from '@/services/catalog.service';
 import { messagesService } from '@/services/messages.service';
 import { qaService, questionText, maskedAskerName, askerInitials, type Question } from '@/services/qa.service';
 import { offersService } from '@/services/offers.service';
 import { useAuthStore } from '@/store/auth.store';
-import type { Listing } from '@/types';
+import type { Listing, VehicleDetails } from '@/types';
 import { TECH_SPECS } from '@/components/listings/wizard/schema';
 import { FavoriteButton } from '@/components/listings/FavoriteButton';
 import { FavoriteSellerButton } from '@/components/listings/FavoriteSellerButton';
@@ -576,7 +577,46 @@ function tr(v: string | undefined | null): string {
 
 // ── Ad Specs Table ────────────────────────────────────────────────────────────
 
-function AdSpecsTable({ listing, compact = false }: { listing: Listing; compact?: boolean }) {
+// A listing is a "vehicle" (→ the bespoke spec table) when it carries vehicleDetails or a
+// top-level make; everything else (real-estate + generic) uses the attribute table below.
+function isVehicleListing(listing: Listing): boolean {
+  const vd = listing.vehicleDetails as VehicleDetails | undefined | null;
+  return !!vd || !!listing.make;
+}
+
+// Static fallback labels for attribute keys the catalog defs don't cover (e.g. legacy
+// keys). The live getFilters defs take precedence; this is only a safety net.
+const ATTR_LABEL_FALLBACK: Record<string, string> = {
+  rooms: 'عدد الغرف', area: 'المساحة', landArea: 'مساحة الأرض', livingRooms: 'عدد الصالونات',
+  buildingAge: 'عمر البناء', floor: 'الطابق', totalFloors: 'عدد طوابق البناء',
+  heating: 'التدفئة', bathrooms: 'عدد الحمامات', kitchen: 'المطبخ', balcony: 'شرفة / بلكون',
+  furnished: 'مفروش', elevator: 'مصعد', parking: 'موقف سيارة', deed: 'نوع الطابو',
+  frontage: 'واجهة', zoning: 'التنظيم', deposit: 'التأمين', usageStatus: 'حالة الإشغال',
+  buildingStatus: 'حالة البناء', fromWho: 'الناشر', seller: 'المعلن',
+};
+
+// Render a stored attribute value: booleans → نعم/لا, numbers get the def's unit
+// (area → "140 m²"), SELECT strings show as-is (already Arabic), arrays join, and a stray
+// legacy {min,max} object degrades gracefully.
+function formatAttrValue(value: unknown, unit?: string | null): string {
+  if (value == null || value === '') return NA;
+  if (typeof value === 'boolean') return value ? 'نعم' : 'لا';
+  if (Array.isArray(value)) return value.length ? value.join('، ') : NA;
+  if (typeof value === 'object') {
+    const o = value as { min?: unknown; max?: unknown };
+    const parts = [o.min, o.max].filter((x) => x != null && x !== '');
+    if (!parts.length) return NA;
+    return unit ? `${parts.join(' — ')} ${unit}` : parts.join(' — ');
+  }
+  const s = String(value);
+  return unit ? `${s} ${unit}` : s;
+}
+
+function AdSpecsTable({ listing, filterDefs, compact = false }: {
+  listing: Listing;
+  filterDefs?: CatalogFilterDef[];
+  compact?: boolean;
+}) {
   const vd  = listing.vehicleDetails as any;
   const raw = listing as any;
 
@@ -585,33 +625,84 @@ function AdSpecsTable({ listing, compact = false }: { listing: Listing; compact?
     return v ? 'يوجد' : 'لا يوجد';
   }
 
-  const make     = vd?.make        ?? raw.make        ?? vd?.brand     ?? raw.brand;
-  const model    = vd?.model       ?? raw.model       ?? vd?.modelName ?? raw.modelName;
-  const year     = vd?.year        ?? raw.year        ?? vd?.modelYear ?? raw.modelYear;
-  const mileage  = vd?.mileage     ?? raw.mileage     ?? vd?.mileageKm ?? raw.mileageKm ?? vd?.odometer ?? raw.odometer;
-  const heavyDmg = vd?.heavyDamageRecord ?? vd?.heavyDamage ?? raw.heavyDamage ?? raw.heavyDamageRecord;
-  const condition = vd?.condition  ?? raw.condition;
-
-  const rows: { label: string; value: string }[] = [
-    { label: 'رقم الإعلان',         value: '#' + listing.id.slice(-8).toUpperCase() },
-    { label: 'تاريخ الإعلان',       value: formatDate(listing.createdAt) },
-    { label: 'حالة المركبة',        value: tr(condition) },
-    { label: 'الماركة',             value: make    ?? NA },
-    { label: 'الموديل',             value: model   ?? NA },
-    { label: 'السنة',               value: year   != null ? String(year)   : NA },
-    { label: 'نوع الهيكل',          value: tr(vd?.bodyType) },
-    { label: 'قوة المحرك',          value: vd?.enginePower    != null ? `${vd.enginePower} hp`    : NA },
-    { label: 'سعة المحرك',          value: vd?.engineCapacity != null ? `${vd.engineCapacity} cc` : NA },
-    { label: 'نوع الوقود',          value: tr(vd?.fuelType) },
-    { label: 'نوع ناقل الحركة',     value: tr(vd?.transmission) },
-    { label: 'عدد السرعات',         value: vd?.gearCount != null ? `${vd.gearCount} سرعة` : NA },
-    { label: 'الدفع',               value: tr(vd?.drivetrain) },
-    { label: 'العداد (كم)',          value: mileage != null ? new Intl.NumberFormat('en-US').format(mileage) + ' كم' : NA },
-    { label: 'الكفالة',             value: boolVal(vd?.warranty) },
-    { label: 'سجل حوادث جسيمة',     value: boolVal(heavyDmg) },
-    { label: 'قابل للمقايضة',       value: boolVal(vd?.tradeIn) },
-    { label: 'المعلن',              value: tr(vd?.fromWho) },
+  const headRows: { label: string; value: string }[] = [
+    { label: 'رقم الإعلان',   value: '#' + listing.id.slice(-8).toUpperCase() },
+    { label: 'تاريخ الإعلان', value: formatDate(listing.createdAt) },
   ];
+
+  let rows: { label: string; value: string }[];
+
+  if (isVehicleListing(listing)) {
+    const make     = vd?.make        ?? raw.make        ?? vd?.brand     ?? raw.brand;
+    const model    = vd?.model       ?? raw.model       ?? vd?.modelName ?? raw.modelName;
+    const year     = vd?.year        ?? raw.year        ?? vd?.modelYear ?? raw.modelYear;
+    const mileage  = vd?.mileage     ?? raw.mileage     ?? vd?.mileageKm ?? raw.mileageKm ?? vd?.odometer ?? raw.odometer;
+    const heavyDmg = vd?.heavyDamageRecord ?? vd?.heavyDamage ?? raw.heavyDamage ?? raw.heavyDamageRecord;
+    const condition = vd?.condition  ?? raw.condition;
+
+    rows = [
+      ...headRows,
+      { label: 'حالة المركبة',        value: tr(condition) },
+      { label: 'الماركة',             value: make    ?? NA },
+      { label: 'الموديل',             value: model   ?? NA },
+      { label: 'السنة',               value: year   != null ? String(year)   : NA },
+      { label: 'نوع الهيكل',          value: tr(vd?.bodyType) },
+      { label: 'قوة المحرك',          value: vd?.enginePower    != null ? `${vd.enginePower} hp`    : NA },
+      { label: 'سعة المحرك',          value: vd?.engineCapacity != null ? `${vd.engineCapacity} cc` : NA },
+      { label: 'نوع الوقود',          value: tr(vd?.fuelType) },
+      { label: 'نوع ناقل الحركة',     value: tr(vd?.transmission) },
+      { label: 'عدد السرعات',         value: vd?.gearCount != null ? `${vd.gearCount} سرعة` : NA },
+      { label: 'الدفع',               value: tr(vd?.drivetrain) },
+      { label: 'العداد (كم)',          value: mileage != null ? new Intl.NumberFormat('en-US').format(mileage) + ' كم' : NA },
+      { label: 'الكفالة',             value: boolVal(vd?.warranty) },
+      { label: 'سجل حوادث جسيمة',     value: boolVal(heavyDmg) },
+      { label: 'قابل للمقايضة',       value: boolVal(vd?.tradeIn) },
+      { label: 'المعلن',              value: tr(vd?.fromWho) },
+    ];
+  } else {
+    // Real-estate / generic: render the listing's own attributes, labeled + ordered by
+    // the category's catalog filter defs. Browse-only/location facets aren't listing
+    // attributes, so they simply won't be present in `attributes` and are skipped.
+    const attrs = (listing.attributes ?? {}) as Record<string, unknown>;
+    // Hide internal markers (_seed/_seedKey) and any empty values, so the table never
+    // shows a "غير محدد" row for a non-vehicle listing.
+    const keys = Object.keys(attrs).filter(
+      (k) => !k.startsWith('_') && attrs[k] != null && attrs[k] !== '',
+    );
+    const unitByKey = new Map((filterDefs ?? []).map((d) => [d.key, d.unit ?? null]));
+    const labelByKey = new Map((filterDefs ?? []).map((d) => [d.key, d.labelAr]));
+
+    // Defs order first (natural reading order), then any leftover attribute keys.
+    const orderedDefKeys = (filterDefs ?? []).map((d) => d.key).filter((k) => keys.includes(k));
+    const leftoverKeys   = keys.filter((k) => !orderedDefKeys.includes(k));
+
+    rows = [
+      ...headRows,
+      ...[...orderedDefKeys, ...leftoverKeys].map((k) => ({
+        label: labelByKey.get(k) ?? ATTR_LABEL_FALLBACK[k] ?? k,
+        value: formatAttrValue(attrs[k], unitByKey.get(k)),
+      })),
+    ];
+  }
+
+  // A non-vehicle listing with no attributes beyond the two universal head rows: show a
+  // gentle empty state rather than a lone header pair.
+  const noExtraSpecs = !isVehicleListing(listing) && rows.length <= headRows.length;
+  if (noExtraSpecs) {
+    return (
+      <div>
+        <div className="divide-y divide-gray-100">
+          {headRows.map((row) => (
+            <div key={row.label} className="flex items-start justify-between gap-3 px-4 py-3 text-sm">
+              <span className="text-gray-500 shrink-0">{row.label}</span>
+              <span className="font-medium text-end text-gray-900">{row.value}</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-sm text-gray-400 text-center py-6">لا توجد مواصفات</p>
+      </div>
+    );
+  }
 
   // Mobile-only clean layout: aligned key/value rows (label start, value end),
   // no fixed-width column or vertical divider — graceful wrapping on narrow screens.
@@ -988,7 +1079,7 @@ const MOBILE_TABS: { id: TabId; label: string }[] = [
   { id: 'location',    label: 'الموقع' },
 ];
 
-function TabPanel({ listing, mobile = false }: { listing: Listing; mobile?: boolean }) {
+function TabPanel({ listing, filterDefs, mobile = false }: { listing: Listing; filterDefs?: CatalogFilterDef[]; mobile?: boolean }) {
   const [activeTab, setActiveTab] = useState<TabId>(mobile ? 'details' : 'description');
   const vd  = listing.vehicleDetails as any;
   const raw = listing as any;
@@ -1007,11 +1098,17 @@ function TabPanel({ listing, mobile = false }: { listing: Listing; mobile?: bool
     raw.technicalSpecs ?? raw.specs ?? raw.features
   ) as string[] | undefined;
 
+  // Damage report + technical specs are vehicle concepts. Non-vehicle listings drop those
+  // tabs entirely — leaving details (attribute table) + description + location (+ Q&A below).
+  const vehicle = isVehicleListing(listing);
+  const desktopTabs = vehicle ? TABS : TABS.filter((t) => t.id !== 'damage' && t.id !== 'specs');
+  const tabs = mobile ? MOBILE_TABS : desktopTabs;
+
   return (
     <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
       {/* Tab bar */}
       <div className="flex bg-gray-50/80 border-b border-gray-200 overflow-x-auto">
-        {(mobile ? MOBILE_TABS : TABS).map((tab) => (
+        {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -1034,20 +1131,20 @@ function TabPanel({ listing, mobile = false }: { listing: Listing; mobile?: bool
             <section>
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">تفاصيل الإعلان</p>
               <div className="rounded-xl border border-gray-200 overflow-hidden">
-                <AdSpecsTable listing={listing} compact />
+                <AdSpecsTable listing={listing} filterDefs={filterDefs} compact />
               </div>
             </section>
 
-            {/* (b) Damage & paint report — only if data present */}
-            {damage && (
+            {/* (b) Damage & paint report — vehicles only, and only if data present */}
+            {vehicle && damage && (
               <section>
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">تقرير الأضرار والطلاء</p>
                 <DamageMap damage={damage} />
               </section>
             )}
 
-            {/* (c) Equipment / technical specs — only if present */}
-            {techSpecs?.length ? (
+            {/* (c) Equipment / technical specs — vehicles only, and only if present */}
+            {vehicle && techSpecs?.length ? (
               <section>
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">المواصفات الفنية</p>
                 <TechSpecsGrid specs={techSpecs} />
@@ -1332,10 +1429,24 @@ export default function ListingDetailPage() {
   const [listing,  setListing]  = useState<Listing | null>(null);
   const [loading,  setLoading]  = useState(true);
   const [notFound, setNotFound] = useState(false);
+  // Catalog filter defs for the listing's category — used to LABEL + ORDER the attribute
+  // spec table for non-vehicle listings. Fetched once here and threaded into both the
+  // desktop and mobile spec tables.
+  const [filterDefs, setFilterDefs] = useState<CatalogFilterDef[]>([]);
 
   useEffect(() => {
     if (isAuthenticated) recommendationsService.trackView(id);
   }, [id, isAuthenticated]);
+
+  useEffect(() => {
+    const slug = listing?.category?.slug;
+    if (!listing || isVehicleListing(listing) || !slug) { setFilterDefs([]); return; }
+    let cancelled = false;
+    catalogService.getFilters(slug)
+      .then((defs) => { if (!cancelled) setFilterDefs(defs); })
+      .catch(() => { if (!cancelled) setFilterDefs([]); });
+    return () => { cancelled = true; };
+  }, [listing]);
 
   useEffect(() => {
     listingsService
@@ -1428,7 +1539,7 @@ export default function ListingDetailPage() {
                 <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/80">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">تفاصيل الإعلان</p>
                 </div>
-                <AdSpecsTable listing={listing} />
+                <AdSpecsTable listing={listing} filterDefs={filterDefs} />
               </div>
             </div>
 
@@ -1481,7 +1592,7 @@ export default function ListingDetailPage() {
           </div>
 
           {/* 5 — Tabs (3-tab sahibinden layout; tab 1 stacks table + damage + specs) */}
-          <TabPanel listing={listing} mobile />
+          <TabPanel listing={listing} filterDefs={filterDefs} mobile />
 
           {/* 6 — Q&A (last) */}
           <QASection listingId={listing.id} sellerId={listing.user?.id} initialQuestions={seededQuestions} />

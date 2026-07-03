@@ -86,12 +86,12 @@ export function RecentAds({ sectionClassName = 'max-w-7xl mx-auto px-4 sm:px-6 l
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
           <SkeletonCard />
           {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
           <ShowcasePlaceholderCard />
           {sortedListings.map((listing) => (
             <ListingCard key={listing.id} listing={listing} showCompare={false} isHomepageView={true} />

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist } from 'next/font/google';
+import { Cairo } from 'next/font/google';
 import { Toaster } from 'sonner';
 import './globals.css';
 import { Header } from '@/components/layout/Header';
@@ -9,9 +9,13 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { StaffRouteLock } from '@/components/layout/StaffRouteLock';
 import { SocketManager } from '@/components/providers/SocketManager';
 
-const geist = Geist({
-  subsets: ['latin'],
-  variable: '--font-geist',
+// App-wide UI face. Cairo is a modern Kufi-style Arabic sans — clean, widely
+// used for Arabic UI — and also carries Latin glyphs so brand names, codes, and
+// numerals stay in the same family. Self-hosted via next/font — no layout shift.
+// Cairo is a variable font, so omitting `weight` exposes its full weight axis.
+const cairo = Cairo({
+  subsets: ['arabic', 'latin'],
+  variable: '--font-arabic',
 });
 
 export const viewport: Viewport = {
@@ -29,7 +33,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" className={`${geist.variable} h-full`}>
+    <html lang="ar" dir="rtl" className={`${cairo.variable} h-full`}>
       <body className="min-h-full flex flex-col bg-gray-50 font-sans antialiased">
         <SocketManager />
         <StaffRouteLock />

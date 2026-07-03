@@ -87,14 +87,25 @@ export const initialCatalogState: CatalogState = {
   loading: false, resolving: false,
 };
 
+// Browse-only filter keys that must NOT appear as add-listing attribute fields:
+//   • price   → the listing's price is a SINGLE value + currency, entered in Step2AdDetails
+//               (a min–max range only makes sense when FILTERING the browse view).
+//   • adDate  → "listing date" is a browse-time facet, not a property of a new listing.
+//   • hasVideo → derived from whether media is attached, not a manual creation field.
+const BROWSE_ONLY_FILTER_KEYS = new Set(['price', 'adDate', 'hasVideo']);
+
+// Filters shown as creation fields: skip LOCATION (collected in the details step) and
+// the browse-only facets above.
+function isCreationFilter(f: CatalogFilterDef): boolean {
+  return f.widget !== 'LOCATION' && !BROWSE_ONLY_FILTER_KEYS.has(f.key);
+}
+
 // A leaf is selected once we have a resolved categoryId. For generic categories, every
-// required (non-LOCATION) filter must also be filled before the step is complete.
+// required creation filter must also be filled before the step is complete.
 export function catalogStepIncomplete(s: CatalogState): boolean {
   if (!s.categoryId) return true;
   if (s.isVehicle) return false; // vehicle attributes are collected in later steps
-  return s.filters.some(
-    (f) => f.isRequired && f.widget !== 'LOCATION' && isEmpty(s.attributes[f.key]),
-  );
+  return s.filters.some((f) => f.isRequired && isCreationFilter(f) && isEmpty(s.attributes[f.key]));
 }
 
 function isEmpty(v: unknown): boolean {
@@ -332,7 +343,7 @@ export function Step0Catalog({ state, onChange, error }: Props) {
     setOpenLevel(levelIdx >= 1 ? levelIdx : null);
   }, [state, onChange]);
 
-  const visibleFilters = state.filters.filter((f) => f.widget !== 'LOCATION');
+  const visibleFilters = state.filters.filter(isCreationFilter);
   const loadingRoots = state.levels.length === 0 && state.loading;
 
   return (
@@ -424,7 +435,7 @@ export function Step0Catalog({ state, onChange, error }: Props) {
 }
 
 function isWideWidget(w: CatalogFilterDef['widget']): boolean {
-  return w === 'MULTISELECT' || w === 'BOOLEAN' || w === 'RANGE';
+  return w === 'MULTISELECT' || w === 'BOOLEAN';
 }
 
 // ─── Root category card — colored top border + icon tile, hover-lift ────────────────
@@ -638,28 +649,21 @@ function FilterField({
     }
 
     case 'RANGE': {
-      const val = (value as { min?: number; max?: number }) ?? {};
-      const set = (k: 'min' | 'max', raw: string) =>
-        onChange({ ...val, [k]: raw ? Number(raw) : undefined });
+      // A RANGE filter is a min–max facet for BROWSING. When ADDING a listing you enter
+      // ONE value (e.g. frontage = 6 m, area = 120 m²), so render a single numeric input
+      // and store a single number — same principle as the price field. (Min–max lives in
+      // the browse FilterSidebar.)
+      const num = typeof value === 'number' || typeof value === 'string' ? String(value) : '';
       return (
         <Field label={label} required={def.isRequired} hint={def.hint}>
-          <div className="flex items-center gap-2">
-            <input
-              type="number" inputMode="numeric"
-              placeholder={def.range?.min != null ? String(def.range.min) : 'من'}
-              value={val.min ?? ''} onChange={(e) => set('min', e.target.value)}
-              onWheel={(e) => e.currentTarget.blur()}
-              className={inputCls()}
-            />
-            <span className="text-gray-400">—</span>
-            <input
-              type="number" inputMode="numeric"
-              placeholder={def.range?.max != null ? String(def.range.max) : 'إلى'}
-              value={val.max ?? ''} onChange={(e) => set('max', e.target.value)}
-              onWheel={(e) => e.currentTarget.blur()}
-              className={inputCls()}
-            />
-          </div>
+          <input
+            type="number" inputMode="numeric"
+            placeholder={def.range?.min != null ? `مثال: ${def.range.min}` : ''}
+            value={num}
+            onChange={(e) => onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+            onWheel={(e) => e.currentTarget.blur()}
+            className={inputCls()}
+          />
         </Field>
       );
     }

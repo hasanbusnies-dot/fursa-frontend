@@ -10,9 +10,9 @@ import {
 import { cn } from '@/lib/utils';
 import { SYRIAN_GOVERNORATES } from '@/components/listings/wizard/schema';
 import { listingsService } from '@/services/listings.service';
-import { categoriesService } from '@/services/categories.service';
+import { catalogService } from '@/services/catalog.service';
 import { api } from '@/services/api';
-import type { ApiResponse, Category } from '@/types';
+import type { ApiResponse } from '@/types';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -33,10 +33,6 @@ interface FeaturedProject {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function flattenTree(cats: Category[]): Category[] {
-  return cats.flatMap((c) => [c, ...flattenTree(c.children ?? [])]);
-}
 
 function formatPrice(price: number, currency: 'SYP' | 'USD' = 'USD') {
   const n = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(price));
@@ -206,14 +202,12 @@ export default function ProjectsLandingPage() {
 
     // ── City counts ────────────────────────────────────────────────────────────
     async function loadCityCounts() {
+      // Resolve the off-plan-projects catalog node so the per-city counts reflect PROJECTS
+      // only (not every listing in the city). The catalog restructure renamed the node —
+      // the old name/slug lookup ('مشاريع سكنية' / 'projects') no longer matched.
       let catId: string | undefined;
       try {
-        const tree = await categoriesService.getTree();
-        const flat = flattenTree(tree);
-        const cat  = flat.find(
-          (c) => c.name === 'مشاريع سكنية' || c.slug === 'projects' || c.slug?.endsWith('/projects'),
-        );
-        catId = cat?.id;
+        catId = await catalogService.resolveCategoryId('off-plan-projects');
       } catch { /* proceed without category filter */ }
 
       if (cancelled) return;
@@ -263,7 +257,9 @@ export default function ProjectsLandingPage() {
     if (rooms)    qs.set('rooms',    rooms);
     if (status)   qs.set('status',   status);
     const q = qs.toString();
-    router.push(`/category/real-estate/projects/search${q ? `?${q}` : ''}`);
+    // Stay inside the catalog: off-plan-projects with search params renders the filtered
+    // projects listings (bare URL = this landing).
+    router.push(`/category/off-plan-projects${q ? `?${q}` : ''}`);
   }
 
   return (
@@ -374,7 +370,7 @@ export default function ProjectsLandingPage() {
             <p className="text-sm text-gray-500 mt-0.5">تصفّح المشاريع حسب المدينة</p>
           </div>
           <Link
-            href="/category/real-estate/projects/search"
+            href="/category/off-plan-projects?view=listings"
             className="text-sm font-semibold text-orange-500 hover:text-orange-600 flex items-center gap-1 transition-colors"
           >
             عرض الكل <ArrowLeft className="w-3.5 h-3.5" />
@@ -385,7 +381,7 @@ export default function ProjectsLandingPage() {
           {FEATURED_CITIES.map((city) => (
             <Link
               key={city.name}
-              href={`/category/real-estate/projects/search?city=${encodeURIComponent(city.name)}`}
+              href={`/category/off-plan-projects?city=${encodeURIComponent(city.name)}`}
               className="group"
             >
               <div className={cn(
@@ -410,7 +406,7 @@ export default function ProjectsLandingPage() {
             <p className="text-sm text-gray-500 mt-0.5">أبرز المشاريع المتاحة حالياً</p>
           </div>
           <Link
-            href="/category/real-estate/projects/search"
+            href="/category/off-plan-projects?view=listings"
             className="text-sm font-semibold text-orange-500 hover:text-orange-600 flex items-center gap-1 transition-colors"
           >
             عرض الكل <ArrowLeft className="w-3.5 h-3.5" />
