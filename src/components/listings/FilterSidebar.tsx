@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import type { Category } from '@/types';
 import type { ApiResponse } from '@/types';
 import { api } from '@/services/api';
-import { catalogService, type CatalogFilterDef } from '@/services/catalog.service';
+import { catalogService, VEHICLES_ROOT_SLUG, type CatalogFilterDef } from '@/services/catalog.service';
 import {
   FUEL_TYPE_OPTIONS, TRANSMISSION_OPTIONS, BODY_TYPE_OPTIONS,
   DRIVETRAIN_OPTIONS, FROM_WHO_OPTIONS, CAR_COLORS, SYRIAN_GOVERNORATES,
@@ -1952,8 +1952,8 @@ function CategoryNode({ cat, depth, selectedId, onSelect }: {
 
 // ── Catalog-driven filter view ────────────────────────────────────────────────
 // Renders the current category's INHERITED catalog filter set (GET /catalog/.../filters)
-// as browse widgets — used for real-estate so the sidebar shows rooms/area/floor/heating/
-// deed/الناشر (owner·office·developer) instead of the vehicle facets. Price + governorate/
+// as browse widgets — used for all non-vehicle categories instead of the vehicle facets
+// (e.g. real-estate: rooms/area/floor/heating/deed/الناشر). Price + governorate/
 // district ride the dedicated FilterValues fields (so they narrow today); the remaining
 // category attributes are collected into `attributes` for backend attribute-narrowing
 // (tracked separately) — for now they render, hold state, and survive apply/clear.
@@ -2171,8 +2171,8 @@ interface FilterSidebarProps {
   applied: FilterValues;
   onApply: (f: FilterValues) => void;
   /** Catalog root slug of the current page (e.g. 'real-estate' | 'vehicles'), resolved by
-   *  the category page. When 'real-estate' we render the CATEGORY's catalog filter set
-   *  instead of the hand-built vehicle facets below. */
+   *  the category page. Any root other than 'vehicles' renders the CATEGORY's catalog
+   *  filter set instead of the hand-built vehicle facets below. */
   catalogRoot?: string;
 }
 
@@ -2570,10 +2570,12 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
     </button>
   );
 
-  // ── Catalog-driven categories (real-estate) render their own inherited filter set,
-  // bypassing the hand-built vehicle facets entirely. `catalogRoot` is resolved by the
-  // page, so there's no flash of vehicle filters while the leaf's defs load. ──
-  if (catalogRoot === 'real-estate' && currentSlug) {
+  // ── Every non-vehicle catalog category renders its own inherited filter set
+  // (real-estate, private-lessons, jobs, …), bypassing the hand-built vehicle facets
+  // entirely — new backend filter defs show up here with no frontend change. The
+  // vehicle tree keeps the rich bespoke sidebar below. `catalogRoot` is resolved by
+  // the page, so there's no flash of vehicle filters while the leaf's defs load. ──
+  if (catalogRoot && catalogRoot !== VEHICLES_ROOT_SLUG && currentSlug) {
     return <CatalogFilterView slug={currentSlug} applied={applied} onApply={onApply} />;
   }
 

@@ -10,7 +10,7 @@ import {
 import { toast } from 'sonner';
 import { listingsService } from '@/services/listings.service';
 import { categoriesService } from '@/services/categories.service';
-import { catalogService, type CatalogNode, type CatalogPathNode } from '@/services/catalog.service';
+import { catalogService, VEHICLES_ROOT_SLUG, type CatalogNode, type CatalogPathNode } from '@/services/catalog.service';
 import { savedSearchesService } from '@/services/saved-searches.service';
 import { ListingCard } from '@/components/listings/ListingCard';
 import { useMobileTitle } from '@/components/layout/MobileTopBar';
@@ -399,6 +399,7 @@ export default function CategoryPage() {
   const pageTitle    = catalogPath[catalogPath.length - 1]?.nameAr ?? '';
   useMobileTitle(pageTitle);
   const isRealEstate = catalogPath[0]?.slug === 'real-estate';
+  const isVehicles   = catalogPath[0]?.slug === VEHICLES_ROOT_SLUG;
   const isRentalSuv  = false;
   const tableCols    = isRealEstate ? REALESTATE_TABLE_COLS    : VEHICLE_TABLE_COLS;
   const tableHeaders = isRealEstate ? REALESTATE_TABLE_HEADERS : VEHICLE_TABLE_HEADERS;
@@ -861,10 +862,11 @@ export default function CategoryPage() {
 
               {/* ── Seller tabs + view toggles ── */}
               <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
-                {/* Seller tabs use car-dealer language (من معرض) — meaningless for
-                    real-estate, where "who's selling" is المالك / مكتب عقاري / شركة بناء
-                    and lives in the sidebar's catalog `الناشر` filter instead. */}
-                {!isRealEstate ? (
+                {/* Seller tabs use car-dealer language (من معرض) — only meaningful for
+                    vehicles. Other categories express "who's publishing" through their
+                    own catalog filters (e.g. real-estate's الناشر: المالك / مكتب عقاري /
+                    شركة بناء) in the sidebar instead. */}
+                {isVehicles ? (
                   <div className="flex gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden shrink-0">
                     {SELLER_TABS.filter((tab) => !isRentalSuv || tab.value === '').map((tab) => (
                       <button
