@@ -96,7 +96,7 @@ function filtersToSearch(f: FilterValues, page = 1, extras?: Record<string, stri
 
 function SkeletonCard() {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-card shadow-pebble overflow-hidden">
       <div className="bg-gray-200 h-44 w-full animate-pulse" />
       <div className="p-4 space-y-2.5">
         <div className="bg-gray-200 h-4 rounded-md w-3/4 animate-pulse" />
@@ -109,8 +109,8 @@ function SkeletonCard() {
 
 function SkeletonRow() {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-3 flex gap-4 animate-pulse">
-      <div className="w-40 h-28 rounded-lg bg-gray-200 shrink-0" />
+    <div className="bg-white rounded-card shadow-pebble p-3 flex gap-4 animate-pulse">
+      <div className="w-40 h-28 rounded-field bg-gray-200 shrink-0" />
       <div className="flex-1 space-y-2.5 py-1">
         <div className="h-4 bg-gray-200 rounded w-2/3" />
         <div className="h-5 bg-gray-200 rounded w-1/4" />
@@ -136,7 +136,7 @@ const lbl = (v: string) => ENUM_LABEL[v] ?? v;
 interface ChipProps { label: string; onRemove: () => void; }
 function Chip({ label, onRemove }: ChipProps) {
   return (
-    <span className="inline-flex items-center gap-1 bg-orange-50 border border-orange-200 text-orange-700 text-xs font-medium px-2.5 py-1 rounded-full">
+    <span className="inline-flex items-center gap-1 bg-orange-50 border border-orange-200 text-orange-700 text-xs font-medium px-2.5 py-1 rounded-btn">
       {label}
       <button type="button" onClick={onRemove} className="hover:text-orange-900 leading-none">
         <X className="w-3 h-3" />
@@ -212,7 +212,7 @@ function SkeletonTableRow() {
       style={{ gridTemplateColumns: TABLE_COLS }}
     >
       <div className="pl-3 py-3 pr-2">
-        <div className="w-[76px] h-[58px] rounded-lg bg-gray-200" />
+        <div className="w-[76px] h-[58px] rounded-field bg-gray-200" />
       </div>
       {/* 8 data columns: make, title, yıl, km, renk, fiyat, tarih, şehir */}
       {[100, 180, 40, 72, 48, 96, 56, 80].map((w, i) => (
@@ -269,7 +269,7 @@ function ListingRow({ listing, activeCategoryId }: { listing: Listing; activeCat
 
       {/* ① Thumbnail */}
       <div className="pl-3 py-3 pr-2 shrink-0">
-        <div className="relative w-full h-[58px] rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+        <div className="relative w-full h-[58px] rounded-field overflow-hidden bg-gray-100 border border-gray-200">
           {primary?.url ? (
             <img
               src={primary.url}
@@ -283,7 +283,7 @@ function ListingRow({ listing, activeCategoryId }: { listing: Listing; activeCat
           )}
           <div className="absolute top-0.5 left-0.5 flex flex-col gap-0.5">
             {showVitrin && (
-              <span className="bg-yellow-400 text-yellow-900 text-[8px] font-extrabold px-1 py-px rounded leading-none">★</span>
+              <span className="bg-yellow-400 text-yellow-900 text-[8px] font-extrabold px-1 py-px rounded-full font-heading leading-none">★</span>
             )}
             {urgent && (
               <span className="animate-pulse bg-red-500 text-white text-[8px] font-extrabold px-1 py-px rounded leading-none">🔥</span>
@@ -308,7 +308,7 @@ function ListingRow({ listing, activeCategoryId }: { listing: Listing; activeCat
       <div className="px-3 py-2.5 min-w-0 flex flex-col justify-center">
         <div className="flex items-start gap-1.5 mb-1.5">
           {showVitrin && (
-            <span className="shrink-0 bg-yellow-400 text-yellow-900 text-[9px] font-extrabold px-1.5 py-0.5 rounded leading-none mt-px">
+            <span className="shrink-0 bg-yellow-400 text-yellow-900 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full font-heading leading-none mt-px">
               ★ واجهة
             </span>
           )}
@@ -318,7 +318,7 @@ function ListingRow({ listing, activeCategoryId }: { listing: Listing; activeCat
             </span>
           )}
           {urgent && (
-            <span className="shrink-0 animate-pulse bg-red-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded leading-none mt-px">
+            <span className="shrink-0 animate-pulse bg-yellow-400 text-yellow-900 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full font-heading leading-none mt-px">
               عاجل
             </span>
           )}
@@ -394,10 +394,10 @@ function ListingRow({ listing, activeCategoryId }: { listing: Listing; activeCat
 function ListingsPageSkeleton() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-6">
         <div className="flex gap-6 items-start">
           <div
-            className="hidden lg:block w-72 shrink-0 bg-white rounded-2xl border border-gray-200 animate-pulse"
+            className="hidden lg:block w-72 shrink-0 bg-white rounded-card shadow-pebble animate-pulse"
             style={{ height: 'calc(100vh - 3rem)' }}
           />
           <div className="flex-1 min-w-0">
@@ -830,7 +830,7 @@ function ListingsContent() {
             style={{ height: 'calc(100vh - 3rem)' }}
           >
             <div
-              className="bg-white rounded-2xl border border-gray-200 overflow-hidden h-full"
+              className="bg-white rounded-card shadow-pebble overflow-hidden h-full"
             >
               <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/80" style={{ height: '40px' }}>
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wider leading-none">
@@ -911,7 +911,7 @@ function ListingsContent() {
             {/* ── Seller tabs + view toggles row ── */}
             <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
               {/* Seller type tabs */}
-              <div className="flex gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden shrink-0">
+              <div className="flex gap-0 bg-white shadow-pebble rounded-card overflow-hidden shrink-0">
                 {SELLER_TABS.map((tab) => (
                   <button
                     key={tab.value}
@@ -931,7 +931,7 @@ function ListingsContent() {
               {/* View toggles + sort */}
               <div className="flex items-center gap-2 ms-auto">
                 {/* Grid / List toggle */}
-                <div className="flex bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <div className="flex bg-white shadow-pebble rounded-card overflow-hidden">
                   <button
                     onClick={() => setViewMode('grid')}
                     className={cn(
@@ -969,13 +969,13 @@ function ListingsContent() {
                 <div className="relative" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={() => setSortOpen((o) => !o)}
-                    className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors max-w-[200px]"
+                    className="flex items-center gap-1.5 bg-white shadow-pebble rounded-card px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors max-w-[200px]"
                   >
                     <span className="truncate">{activeSortLabel}</span>
                     <ChevronDown className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                   </button>
                   {sortOpen && (
-                    <div className="absolute end-0 top-full mt-1 w-72 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden">
+                    <div className="absolute end-0 top-full mt-1 w-72 bg-white shadow-pebble rounded-card shadow-lg z-20 overflow-hidden">
                       <p className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 text-right">
                         ترتيب متقدم
                       </p>
@@ -1042,7 +1042,7 @@ function ListingsContent() {
                     {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
                   </div>
                   {/* Desktop: table skeleton */}
-                  <div className="hidden md:block bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="hidden md:block bg-white rounded-card shadow-pebble shadow-sm overflow-hidden">
                     <TableHeader />
                     <div className="divide-y divide-gray-100">
                       {Array.from({ length: 8 }).map((_, i) => <SkeletonTableRow key={i} />)}
@@ -1127,7 +1127,7 @@ function ListingsContent() {
                   ))}
                 </div>
                 {/* Desktop: table layout (unchanged) */}
-                <div className="hidden md:block bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="hidden md:block bg-white rounded-card shadow-pebble shadow-sm overflow-hidden">
                   <TableHeader />
                   <div className="divide-y divide-gray-100">
                     {[...displayListings].sort((a, b) => {

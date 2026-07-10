@@ -545,7 +545,7 @@ function LevelPicker({
       </button>
 
       {open && (
-        <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+        <div className="absolute z-20 mt-1 w-full bg-white shadow-pebble rounded-card shadow-lg overflow-hidden">
           <div className="relative p-2 border-b border-gray-100">
             <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             <input

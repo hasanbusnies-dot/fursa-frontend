@@ -126,7 +126,7 @@ export default function ComparePage() {
 
       {/* ── Sticky page header ────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
               href="/listings"
@@ -154,7 +154,7 @@ export default function ComparePage() {
       </div>
 
       {/* ── Comparison table ──────────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-8">
         <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
           <div style={{ display: 'grid', gridTemplateColumns: gridCols, minWidth: 620 }}>
 

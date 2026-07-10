@@ -73,10 +73,10 @@ export function ListingCard({
       <Link
         href={`/listings/${listing.id}`}
         className={cn(
-          'group flex flex-row md:block bg-white rounded-xl overflow-hidden transition-all hover:shadow-md',
+          'group flex flex-row md:block bg-white rounded-card overflow-hidden transition-all',
           isHomepageVitrin
-            ? 'ring-2 ring-yellow-400 shadow-sm hover:ring-yellow-500'
-            : 'border border-gray-200 hover:border-gray-300',
+            ? 'ring-2 ring-yellow-400 shadow-pebble hover:ring-yellow-500'
+            : 'shadow-pebble hover:shadow-pebble-hover',
         )}
       >
         <div className="relative h-28 w-28 shrink-0 md:h-36 md:w-full bg-gray-100 overflow-hidden">
@@ -89,7 +89,7 @@ export function ListingCard({
           )}
           {isHomepageVitrin && (
             <div className="absolute top-2 left-2 z-10">
-              <div className="bg-yellow-400 text-yellow-900 text-[11px] font-extrabold px-2 py-0.5 rounded shadow-md flex items-center gap-1 tracking-wide">
+              <div className="bg-yellow-400 text-yellow-900 text-[11px] font-extrabold font-heading px-2 py-0.5 rounded-full shadow-md flex items-center gap-1 tracking-wide">
                 ★ VİTRİN
               </div>
             </div>
@@ -153,12 +153,12 @@ export function ListingCard({
     <Link
       href={`/listings/${listing.id}`}
       className={cn(
-        'group flex flex-row md:block bg-white rounded-xl overflow-hidden transition-all hover:shadow-md',
+        'group flex flex-row md:block bg-white rounded-card overflow-hidden transition-all',
         highlight
-          ? 'ring-2 ring-orange-400 shadow-lg bg-orange-50/10 hover:ring-orange-500'
+          ? 'ring-2 ring-amber-400 shadow-lg bg-yellow-400/5 hover:ring-yellow-400'
           : showVitrin
-            ? 'ring-2 ring-yellow-400 shadow-sm hover:ring-yellow-500'
-            : 'border border-gray-200 hover:border-gray-300',
+            ? 'ring-2 ring-yellow-400 shadow-pebble hover:ring-yellow-500'
+            : 'shadow-pebble hover:shadow-pebble-hover',
       )}
     >
       {/* Image */}
@@ -178,13 +178,13 @@ export function ListingCard({
         {/* Top-left badge stack */}
         <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
           {showVitrin && (
-            <div className="bg-yellow-400 text-yellow-900 text-[11px] font-extrabold px-2 py-0.5 rounded shadow-md flex items-center gap-1 tracking-wide">
+            <div className="bg-yellow-400 text-yellow-900 text-[11px] font-extrabold font-heading px-2 py-0.5 rounded-full shadow-md flex items-center gap-1 tracking-wide">
               ★ VİTRİN
             </div>
           )}
           {urgent && (
-            <div className="animate-pulse bg-red-500 text-white text-[11px] font-extrabold px-2 py-0.5 rounded shadow-md flex items-center gap-1 tracking-wide">
-              🚨 عاجل
+            <div className="animate-pulse bg-yellow-400 text-yellow-900 text-[11px] font-extrabold font-heading px-2 py-0.5 rounded-full shadow-md flex items-center gap-1 tracking-wide">
+              ⚡ عاجل
             </div>
           )}
         </div>

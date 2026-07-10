@@ -143,7 +143,7 @@ export default function VitrinPage() {
           {DOPINGS.map((d) => (
             <div
               key={d.title}
-              className="group relative bg-white rounded-2xl border border-gray-200 p-6 hover:border-blue-300 hover:shadow-xl transition-all duration-200"
+              className="group relative bg-white rounded-card shadow-pebble p-6 hover:border-blue-300 hover:shadow-xl transition-all duration-200"
             >
               {d.badge && (
                 <span className={`absolute top-4 start-4 text-[11px] font-bold px-2.5 py-0.5 rounded-full ${d.badgeColor}`}>

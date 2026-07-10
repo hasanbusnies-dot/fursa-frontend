@@ -167,8 +167,8 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-xl bg-yellow-400 flex items-center justify-center">
+              <Zap className="w-4 h-4 text-yellow-900" />
             </div>
             <div>
               <h2 className="text-base font-bold text-gray-900 leading-none">شراء ترقية</h2>
@@ -233,7 +233,7 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
 
                     {/* Price — aligned to the left edge (end in RTL) */}
                     <div className="shrink-0 text-end">
-                      <p className="text-sm font-extrabold text-orange-600">{opt.basePrice} ل.س</p>
+                      <p className="text-sm font-extrabold text-yellow-900">{opt.basePrice} ل.س</p>
                       <p className="text-[10px] text-gray-400">
                         {opt.timed ? '/ أسبوع' : opt.fixedDurationLabel ? 'ثابت' : 'لمرة واحدة'}
                       </p>
@@ -265,7 +265,7 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
                     )}
                   >
                     <p className="text-sm font-bold text-gray-900">{d.label}</p>
-                    <p className="text-xs text-orange-600 font-semibold mt-0.5">
+                    <p className="text-xs text-yellow-900 font-semibold mt-0.5">
                       {Math.round(selectedType.basePrice * d.multiplier)} ل.س
                     </p>
                   </button>
@@ -286,7 +286,7 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
               </div>
               <div className="border-t border-gray-200 pt-2 flex justify-between items-baseline">
                 <span className="text-sm font-bold text-gray-800">المجموع</span>
-                <span className="text-xl font-extrabold text-orange-600">{price} ل.س</span>
+                <span className="text-xl font-extrabold text-yellow-900">{price} ل.س</span>
               </div>
             </div>
           </div>
@@ -296,7 +296,7 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
             type="button"
             onClick={handlePurchase}
             disabled={purchasing}
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-extrabold text-sm py-3.5 rounded-xl shadow-md transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-yellow-900 font-extrabold text-sm py-3.5 rounded-xl shadow-md transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {purchasing ? (
               <>

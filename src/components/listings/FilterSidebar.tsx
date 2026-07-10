@@ -1722,12 +1722,12 @@ function RangeInputs({ minVal, maxVal, onMin, onMax, ph = ['Min', 'Max'] }: {
     <div className="flex items-center gap-1.5">
       <input type="number" value={minVal} onChange={(e) => onMin(e.target.value)}
         placeholder={ph[0]}
-        className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+        className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
       />
       <span className="text-gray-300 text-xs shrink-0">—</span>
       <input type="number" value={maxVal} onChange={(e) => onMax(e.target.value)}
         placeholder={ph[1]}
-        className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+        className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
       />
     </div>
   );
@@ -1817,7 +1817,7 @@ function ModelCombobox({ make, value, onChange, onCommit }: {
             if (e.key === 'Enter' && input.trim()) { e.preventDefault(); commit(input); }
             if (e.key === 'Escape') setOpen(false);
           }}
-          className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 pr-7 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300 transition-colors"
+          className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 pr-7 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300 transition-colors"
         />
         {input ? (
           <button
@@ -1837,7 +1837,7 @@ function ModelCombobox({ make, value, onChange, onCommit }: {
 
       {/* Dropdown */}
       {showDropdown && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white shadow-pebble rounded-card shadow-lg overflow-hidden">
           <div className="max-h-48 overflow-y-auto">
             {filtered.map((model) => (
               <button
@@ -2705,7 +2705,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
               <select
                 value={draft.city}
                 onChange={(e) => set('city', e.target.value)}
-                className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
               >
                 <option value="">جميع المحافظات</option>
                 {SYRIAN_GOVERNORATES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -2715,7 +2715,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 value={draft.district}
                 onChange={(e) => set('district', e.target.value)}
                 placeholder="المنطقة / الحي"
-                className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
               />
             </div>
           </Accordion>
@@ -2791,7 +2791,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.motoType}
                   onChange={(e) => set('motoType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {MOTO_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -2802,7 +2802,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.engineCapacity}
                   onChange={(e) => set('engineCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {ENGINE_CAPACITIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -2813,7 +2813,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.enginePower}
                   onChange={(e) => set('enginePower', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {ENGINE_POWERS.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -2833,7 +2833,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.cylinderCount}
                   onChange={(e) => set('cylinderCount', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CYLINDER_COUNTS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -2873,7 +2873,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.origin}
                   onChange={(e) => set('origin', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {MOTO_ORIGINS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -2889,7 +2889,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.minivanBodyType}
                   onChange={(e) => set('minivanBodyType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {MINIVAN_BODY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -2900,7 +2900,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.minivanChassis}
                   onChange={(e) => set('minivanChassis', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {MINIVAN_CHASSIS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -2911,7 +2911,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.minivanEnginePower}
                   onChange={(e) => set('minivanEnginePower', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {MINIVAN_ENGINE_POWERS.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -2922,7 +2922,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.minivanEngineCapacity}
                   onChange={(e) => set('minivanEngineCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {MINIVAN_ENGINE_CAPACITIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -2933,7 +2933,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.seatCount}
                   onChange={(e) => set('seatCount', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {SEAT_COUNTS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -2987,7 +2987,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.minibusEngineCapacity}
                   onChange={(e) => set('minibusEngineCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {MINIBUS_ENGINE_CAPACITIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -2998,7 +2998,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.minibusEnginePower}
                   onChange={(e) => set('minibusEnginePower', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {MINIBUS_ENGINE_POWERS.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -3009,7 +3009,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.minibusSeatCount}
                   onChange={(e) => set('minibusSeatCount', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {MINIBUS_SEAT_COUNTS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -3020,7 +3020,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.roofType}
                   onChange={(e) => set('roofType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {ROOF_TYPES.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -3031,7 +3031,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.minibusChassis}
                   onChange={(e) => set('minibusChassis', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {MINIBUS_CHASSIS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -3090,7 +3090,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.seatLayout}
                   onChange={(e) => set('seatLayout', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {SEAT_LAYOUTS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -3101,7 +3101,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.seatbackScreen}
                   onChange={(e) => set('seatbackScreen', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {SEATBACK_SCREENS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -3112,7 +3112,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.gearCount}
                   onChange={(e) => set('gearCount', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {GEAR_COUNTS.map((g) => <option key={g} value={g}>{g}</option>)}
@@ -3169,7 +3169,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.tractorEngineCapacity}
                   onChange={(e) => set('tractorEngineCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {MINIBUS_ENGINE_CAPACITIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -3180,7 +3180,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.tractorEnginePower}
                   onChange={(e) => set('tractorEnginePower', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {MINIBUS_ENGINE_POWERS.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -3191,7 +3191,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.tractorBed}
                   onChange={(e) => set('tractorBed', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TRACTOR_BEDS.map((b) => <option key={b} value={b}>{b}</option>)}
@@ -3202,7 +3202,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.tractorTrailerIncluded}
                   onChange={(e) => set('tractorTrailerIncluded', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TRACTOR_TRAILER_INCLUDED.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -3252,7 +3252,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.truckEngineCapacity}
                   onChange={(e) => set('truckEngineCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {MINIBUS_ENGINE_CAPACITIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -3263,7 +3263,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.truckEnginePower}
                   onChange={(e) => set('truckEnginePower', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {MINIBUS_ENGINE_POWERS.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -3274,7 +3274,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.superstructureType}
                   onChange={(e) => set('superstructureType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {SUPERSTRUCTURE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -3285,7 +3285,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.payloadCapacity}
                   onChange={(e) => set('payloadCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {PAYLOAD_CAPACITIES.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -3296,7 +3296,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.truckDrivetrain}
                   onChange={(e) => set('truckDrivetrain', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TRUCK_DRIVETRAINS.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -3365,7 +3365,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalEngineCapacity}
                   onChange={(e) => set('rentalEngineCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_CAR_ENGINE_CAPACITIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -3376,7 +3376,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalTransmission}
                   onChange={(e) => set('rentalTransmission', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_CAR_TRANSMISSIONS.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -3387,7 +3387,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalFuelType}
                   onChange={(e) => set('rentalFuelType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_CAR_FUEL_TYPES.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -3398,7 +3398,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.bodyType}
                   onChange={(e) => set('bodyType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {BODY_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -3420,7 +3420,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.withChauffeur}
                   onChange={(e) => set('withChauffeur', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CHAUFFEUR_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -3431,7 +3431,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalDepositType}
                   onChange={(e) => set('rentalDepositType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_DEPOSIT_TYPES.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -3442,7 +3442,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalPaymentMethod}
                   onChange={(e) => set('rentalPaymentMethod', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -3491,7 +3491,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalEngineCapacity}
                   onChange={(e) => set('rentalEngineCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_CAR_ENGINE_CAPACITIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -3502,7 +3502,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalTransmission}
                   onChange={(e) => set('rentalTransmission', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_CAR_TRANSMISSIONS.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -3513,7 +3513,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalFuelType}
                   onChange={(e) => set('rentalFuelType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_CAR_FUEL_TYPES.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -3524,7 +3524,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.suvTractionType}
                   onChange={(e) => set('suvTractionType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {SUV_TRACTION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -3546,7 +3546,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.withChauffeur}
                   onChange={(e) => set('withChauffeur', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CHAUFFEUR_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -3557,7 +3557,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalDepositType}
                   onChange={(e) => set('rentalDepositType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_DEPOSIT_TYPES.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -3568,7 +3568,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalPaymentMethod}
                   onChange={(e) => set('rentalPaymentMethod', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -3617,7 +3617,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalEngineCapacity}
                   onChange={(e) => set('rentalEngineCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_CAR_ENGINE_CAPACITIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -3628,7 +3628,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalTransmission}
                   onChange={(e) => set('rentalTransmission', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_CAR_TRANSMISSIONS.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -3639,7 +3639,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalMinivanBodyType}
                   onChange={(e) => set('rentalMinivanBodyType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_MINIVAN_BODY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -3650,7 +3650,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalFuelType}
                   onChange={(e) => set('rentalFuelType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_CAR_FUEL_TYPES.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -3661,7 +3661,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.suvTractionType}
                   onChange={(e) => set('suvTractionType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {SUV_TRACTION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -3683,7 +3683,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.withChauffeur}
                   onChange={(e) => set('withChauffeur', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CHAUFFEUR_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -3694,7 +3694,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalDepositType}
                   onChange={(e) => set('rentalDepositType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_DEPOSIT_TYPES.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -3705,7 +3705,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalPaymentMethod}
                   onChange={(e) => set('rentalPaymentMethod', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -3738,7 +3738,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalMotoYear}
                   onChange={(e) => set('rentalMotoYear', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_MOTORCYCLE_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
@@ -3749,7 +3749,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalEngineCapacity}
                   onChange={(e) => set('rentalEngineCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_MOTORCYCLE_ENGINE_CAPS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -3760,7 +3760,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalTransmission}
                   onChange={(e) => set('rentalTransmission', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_MOTORCYCLE_TRANSMISSIONS.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -3771,7 +3771,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalDepositType}
                   onChange={(e) => set('rentalDepositType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_DEPOSIT_TYPES.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -3782,7 +3782,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalPaymentMethod}
                   onChange={(e) => set('rentalPaymentMethod', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -3831,7 +3831,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalClassicBodyType}
                   onChange={(e) => set('rentalClassicBodyType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_CLASSIC_BODY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -3842,7 +3842,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalTransmission}
                   onChange={(e) => set('rentalTransmission', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_CAR_TRANSMISSIONS.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -3853,7 +3853,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalFuelType}
                   onChange={(e) => set('rentalFuelType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_CAR_FUEL_TYPES.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -3875,7 +3875,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.withChauffeur}
                   onChange={(e) => set('withChauffeur', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CHAUFFEUR_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -3886,7 +3886,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalDepositType}
                   onChange={(e) => set('rentalDepositType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_DEPOSIT_TYPES.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -3897,7 +3897,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalPaymentMethod}
                   onChange={(e) => set('rentalPaymentMethod', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -3954,7 +3954,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalTransmission}
                   onChange={(e) => set('rentalTransmission', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_BUS_TRANSMISSIONS.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -3965,7 +3965,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalFuelType}
                   onChange={(e) => set('rentalFuelType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_BUS_FUEL_TYPES.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -3976,7 +3976,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.withChauffeur}
                   onChange={(e) => set('withChauffeur', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CHAUFFEUR_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -3987,7 +3987,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalDepositType}
                   onChange={(e) => set('rentalDepositType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_DEPOSIT_TYPES.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -3998,7 +3998,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalPaymentMethod}
                   onChange={(e) => set('rentalPaymentMethod', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -4055,7 +4055,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalTruckType}
                   onChange={(e) => set('rentalTruckType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_TRUCK_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -4066,7 +4066,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalTransmission}
                   onChange={(e) => set('rentalTransmission', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_TRUCK_GEAR_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -4077,7 +4077,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalFuelType}
                   onChange={(e) => set('rentalFuelType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_TRUCK_FUEL_TYPES.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -4088,7 +4088,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.withChauffeur}
                   onChange={(e) => set('withChauffeur', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_TRUCK_CHAUFFEUR.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -4099,7 +4099,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalDepositType}
                   onChange={(e) => set('rentalDepositType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_TRUCK_DEPOSIT_TYPES.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -4110,7 +4110,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalPaymentMethod}
                   onChange={(e) => set('rentalPaymentMethod', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_TRUCK_PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -4143,7 +4143,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalTransmission}
                   onChange={(e) => set('rentalTransmission', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_TRUCK_GEAR_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -4154,7 +4154,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalFuelType}
                   onChange={(e) => set('rentalFuelType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_TRUCK_FUEL_TYPES.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -4165,7 +4165,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.withChauffeur}
                   onChange={(e) => set('withChauffeur', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_TRUCK_CHAUFFEUR.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -4213,7 +4213,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalDepositType}
                   onChange={(e) => set('rentalDepositType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_AIRCRAFT_DEPOSIT_TYPES.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -4254,7 +4254,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                   <select
                     value={draft.caravanYear}
                     onChange={(e) => set('caravanYear', e.target.value)}
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                   >
                     <option value="">الكل</option>
                     {RENTAL_CARAVAN_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
@@ -4266,7 +4266,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentalDepositType}
                   onChange={(e) => set('rentalDepositType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_CARAVAN_DEPOSIT_TYPES.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -4277,7 +4277,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.caravanInsurance}
                   onChange={(e) => set('caravanInsurance', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENTAL_CARAVAN_INSURANCE.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -4296,14 +4296,14 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                     value={draft.minYear}
                     onChange={(e) => set('minYear', e.target.value)}
                     placeholder="أدنى حد"
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
                   />
                   <input
                     type="number"
                     value={draft.maxYear}
                     onChange={(e) => set('maxYear', e.target.value)}
                     placeholder="أقصى حد"
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
                   />
                 </div>
               </Accordion>
@@ -4312,7 +4312,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.towableType}
                   onChange={(e) => set('towableType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TOWABLE_CARAVAN_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -4323,7 +4323,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.towableBedCapacity}
                   onChange={(e) => set('towableBedCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TOWABLE_BED_CAPACITIES.map((b) => <option key={b} value={b}>{b}</option>)}
@@ -4334,7 +4334,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.towableWeight}
                   onChange={(e) => set('towableWeight', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TOWABLE_WEIGHT_OPTIONS.map((w) => <option key={w} value={w}>{w}</option>)}
@@ -4345,7 +4345,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.towableMonoblock}
                   onChange={(e) => set('towableMonoblock', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TOWABLE_BOOL_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -4356,7 +4356,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.towableMover}
                   onChange={(e) => set('towableMover', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TOWABLE_BOOL_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -4367,7 +4367,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.towableCondition}
                   onChange={(e) => set('towableCondition', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TOWABLE_CONDITION_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -4378,7 +4378,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.towableExchange}
                   onChange={(e) => set('towableExchange', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TOWABLE_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -4397,14 +4397,14 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                     value={draft.minYear}
                     onChange={(e) => set('minYear', e.target.value)}
                     placeholder="أدنى حد"
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
                   />
                   <input
                     type="number"
                     value={draft.maxYear}
                     onChange={(e) => set('maxYear', e.target.value)}
                     placeholder="أقصى حد"
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
                   />
                 </div>
               </Accordion>
@@ -4416,14 +4416,14 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                     value={draft.minMileage}
                     onChange={(e) => set('minMileage', e.target.value)}
                     placeholder="أدنى حد"
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
                   />
                   <input
                     type="number"
                     value={draft.maxMileage}
                     onChange={(e) => set('maxMileage', e.target.value)}
                     placeholder="أقصى حد"
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
                   />
                 </div>
               </Accordion>
@@ -4443,7 +4443,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicCondition}
                   onChange={(e) => set('classicCondition', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_CONDITION_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -4454,7 +4454,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicEngineCapacity}
                   onChange={(e) => set('classicEngineCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_ENGINE_CAPACITIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -4465,7 +4465,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicEnginePower}
                   onChange={(e) => set('classicEnginePower', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_ENGINE_POWERS.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -4476,7 +4476,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicGear}
                   onChange={(e) => set('classicGear', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_GEAR_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
@@ -4487,7 +4487,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicBodyType}
                   onChange={(e) => set('classicBodyType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_BODY_TYPES.map((b) => <option key={b} value={b}>{b}</option>)}
@@ -4498,7 +4498,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicOrigin}
                   onChange={(e) => set('classicOrigin', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_ORIGIN_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -4509,7 +4509,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicFuel}
                   onChange={(e) => set('classicFuel', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_FUEL_TYPES.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -4520,7 +4520,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicSeller}
                   onChange={(e) => set('classicSeller', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -4531,7 +4531,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicExchange}
                   onChange={(e) => set('classicExchange', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -4550,14 +4550,14 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                     value={draft.minYear}
                     onChange={(e) => set('minYear', e.target.value)}
                     placeholder="أدنى حد"
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
                   />
                   <input
                     type="number"
                     value={draft.maxYear}
                     onChange={(e) => set('maxYear', e.target.value)}
                     placeholder="أقصى حد"
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
                   />
                 </div>
               </Accordion>
@@ -4569,14 +4569,14 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                     value={draft.minMileage}
                     onChange={(e) => set('minMileage', e.target.value)}
                     placeholder="أدنى حد"
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
                   />
                   <input
                     type="number"
                     value={draft.maxMileage}
                     onChange={(e) => set('maxMileage', e.target.value)}
                     placeholder="أقصى حد"
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
                   />
                 </div>
               </Accordion>
@@ -4596,7 +4596,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicCondition}
                   onChange={(e) => set('classicCondition', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_CONDITION_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -4607,7 +4607,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicEngineCapacity}
                   onChange={(e) => set('classicEngineCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_SUV_ENGINE_CAPACITIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -4618,7 +4618,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicEnginePower}
                   onChange={(e) => set('classicEnginePower', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_ENGINE_POWERS.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -4629,7 +4629,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicGear}
                   onChange={(e) => set('classicGear', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_GEAR_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
@@ -4640,7 +4640,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicDoors}
                   onChange={(e) => set('classicDoors', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_DOOR_OPTIONS.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -4651,7 +4651,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicFuel}
                   onChange={(e) => set('classicFuel', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_FUEL_TYPES.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -4662,7 +4662,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicSeller}
                   onChange={(e) => set('classicSeller', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -4673,7 +4673,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicExchange}
                   onChange={(e) => set('classicExchange', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -4692,14 +4692,14 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                     value={draft.minYear}
                     onChange={(e) => set('minYear', e.target.value)}
                     placeholder="أدنى حد"
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
                   />
                   <input
                     type="number"
                     value={draft.maxYear}
                     onChange={(e) => set('maxYear', e.target.value)}
                     placeholder="أقصى حد"
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
                   />
                 </div>
               </Accordion>
@@ -4711,14 +4711,14 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                     value={draft.minMileage}
                     onChange={(e) => set('minMileage', e.target.value)}
                     placeholder="أدنى حد"
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
                   />
                   <input
                     type="number"
                     value={draft.maxMileage}
                     onChange={(e) => set('maxMileage', e.target.value)}
                     placeholder="أقصى حد"
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
                   />
                 </div>
               </Accordion>
@@ -4738,7 +4738,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicMotoType}
                   onChange={(e) => set('classicMotoType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_MOTO_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -4749,7 +4749,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicMotoCondition}
                   onChange={(e) => set('classicMotoCondition', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_MOTO_CONDITION_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -4760,7 +4760,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicMotoEngineCapacity}
                   onChange={(e) => set('classicMotoEngineCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_MOTO_ENGINE_CAPACITIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -4771,7 +4771,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicMotoSeller}
                   onChange={(e) => set('classicMotoSeller', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_MOTO_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -4782,7 +4782,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicMotoExchange}
                   onChange={(e) => set('classicMotoExchange', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_MOTO_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -4801,14 +4801,14 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                     value={draft.minYear}
                     onChange={(e) => set('minYear', e.target.value)}
                     placeholder="أدنى حد"
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
                   />
                   <input
                     type="number"
                     value={draft.maxYear}
                     onChange={(e) => set('maxYear', e.target.value)}
                     placeholder="أقصى حد"
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
                   />
                 </div>
               </Accordion>
@@ -4820,14 +4820,14 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                     value={draft.minMileage}
                     onChange={(e) => set('minMileage', e.target.value)}
                     placeholder="أدنى حد"
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
                   />
                   <input
                     type="number"
                     value={draft.maxMileage}
                     onChange={(e) => set('maxMileage', e.target.value)}
                     placeholder="أقصى حد"
-                    className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white placeholder:text-gray-300"
+                    className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white placeholder:text-gray-300"
                   />
                 </div>
               </Accordion>
@@ -4847,7 +4847,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicCommercialCondition}
                   onChange={(e) => set('classicCommercialCondition', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_COMMERCIAL_CONDITION_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -4858,7 +4858,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicCommercialEngineCapacity}
                   onChange={(e) => set('classicCommercialEngineCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_COMMERCIAL_ENGINE_CAPACITIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -4869,7 +4869,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicCommercialEnginePower}
                   onChange={(e) => set('classicCommercialEnginePower', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_COMMERCIAL_ENGINE_POWERS.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -4880,7 +4880,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicCommercialGear}
                   onChange={(e) => set('classicCommercialGear', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_COMMERCIAL_GEAR_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
@@ -4891,7 +4891,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicCommercialFuel}
                   onChange={(e) => set('classicCommercialFuel', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_COMMERCIAL_FUEL_TYPES.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -4902,7 +4902,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicCommercialSeller}
                   onChange={(e) => set('classicCommercialSeller', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_COMMERCIAL_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -4913,7 +4913,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.classicCommercialExchange}
                   onChange={(e) => set('classicCommercialExchange', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {CLASSIC_COMMERCIAL_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -4930,12 +4930,12 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                   <input
                     type="number" placeholder="من" value={draft.minYear}
                     onChange={(e) => set('minYear', e.target.value)}
-                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                    className="w-1/2 text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white"
                   />
                   <input
                     type="number" placeholder="إلى" value={draft.maxYear}
                     onChange={(e) => set('maxYear', e.target.value)}
-                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                    className="w-1/2 text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white"
                   />
                 </div>
               </Accordion>
@@ -4944,7 +4944,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.helicopterSeller}
                   onChange={(e) => set('helicopterSeller', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {HELICOPTER_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -4955,7 +4955,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.helicopterExchange}
                   onChange={(e) => set('helicopterExchange', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {HELICOPTER_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -4972,12 +4972,12 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                   <input
                     type="number" placeholder="من" value={draft.minYear}
                     onChange={(e) => set('minYear', e.target.value)}
-                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                    className="w-1/2 text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white"
                   />
                   <input
                     type="number" placeholder="إلى" value={draft.maxYear}
                     onChange={(e) => set('maxYear', e.target.value)}
-                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                    className="w-1/2 text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white"
                   />
                 </div>
               </Accordion>
@@ -4986,7 +4986,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.paramotorSeller}
                   onChange={(e) => set('paramotorSeller', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {PARAMOTOR_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -4997,7 +4997,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.paramotorExchange}
                   onChange={(e) => set('paramotorExchange', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {PARAMOTOR_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -5014,12 +5014,12 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                   <input
                     type="number" placeholder="من" value={draft.minYear}
                     onChange={(e) => set('minYear', e.target.value)}
-                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                    className="w-1/2 text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white"
                   />
                   <input
                     type="number" placeholder="إلى" value={draft.maxYear}
                     onChange={(e) => set('maxYear', e.target.value)}
-                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                    className="w-1/2 text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white"
                   />
                 </div>
               </Accordion>
@@ -5028,7 +5028,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.airplaneSeller}
                   onChange={(e) => set('airplaneSeller', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {AIRPLANE_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -5039,7 +5039,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.airplaneExchange}
                   onChange={(e) => set('airplaneExchange', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {AIRPLANE_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -5056,12 +5056,12 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                   <input
                     type="number" placeholder="من" value={draft.minYear}
                     onChange={(e) => set('minYear', e.target.value)}
-                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                    className="w-1/2 text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white"
                   />
                   <input
                     type="number" placeholder="إلى" value={draft.maxYear}
                     onChange={(e) => set('maxYear', e.target.value)}
-                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                    className="w-1/2 text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white"
                   />
                 </div>
               </Accordion>
@@ -5070,7 +5070,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.gliderSeller}
                   onChange={(e) => set('gliderSeller', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {GLIDER_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -5081,7 +5081,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.gliderExchange}
                   onChange={(e) => set('gliderExchange', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {GLIDER_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -5097,7 +5097,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.atvYear}
                   onChange={(e) => set('atvYear', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {ATV_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
@@ -5109,12 +5109,12 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                   <input
                     type="number" placeholder="من" value={draft.minMileage}
                     onChange={(e) => set('minMileage', e.target.value)}
-                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                    className="w-1/2 text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white"
                   />
                   <input
                     type="number" placeholder="إلى" value={draft.maxMileage}
                     onChange={(e) => set('maxMileage', e.target.value)}
-                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                    className="w-1/2 text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white"
                   />
                 </div>
               </Accordion>
@@ -5134,7 +5134,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.atvType}
                   onChange={(e) => set('atvType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {ATV_TYPE_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -5145,7 +5145,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.atvEngineCapacity}
                   onChange={(e) => set('atvEngineCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {ATV_ENGINE_CAPACITY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -5156,7 +5156,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.atvCylinders}
                   onChange={(e) => set('atvCylinders', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {ATV_CYLINDER_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -5167,7 +5167,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.atvGear}
                   onChange={(e) => set('atvGear', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {ATV_GEAR_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
@@ -5178,7 +5178,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.atvDrivetrain}
                   onChange={(e) => set('atvDrivetrain', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {ATV_DRIVETRAIN_OPTIONS.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -5189,7 +5189,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.atvPowerTransmission}
                   onChange={(e) => set('atvPowerTransmission', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {ATV_POWER_TRANSMISSION_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -5200,7 +5200,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.atvCapacity}
                   onChange={(e) => set('atvCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {ATV_CAPACITY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -5211,7 +5211,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.atvBrakes}
                   onChange={(e) => set('atvBrakes', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {ATV_BRAKE_OPTIONS.map((b) => <option key={b} value={b}>{b}</option>)}
@@ -5222,7 +5222,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.atvCooling}
                   onChange={(e) => set('atvCooling', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {ATV_COOLING_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -5233,7 +5233,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.atvSeller}
                   onChange={(e) => set('atvSeller', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {ATV_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -5244,7 +5244,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.atvExchange}
                   onChange={(e) => set('atvExchange', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {ATV_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -5261,12 +5261,12 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                   <input
                     type="number" placeholder="من" value={draft.minYear}
                     onChange={(e) => set('minYear', e.target.value)}
-                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                    className="w-1/2 text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white"
                   />
                   <input
                     type="number" placeholder="إلى" value={draft.maxYear}
                     onChange={(e) => set('maxYear', e.target.value)}
-                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                    className="w-1/2 text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white"
                   />
                 </div>
               </Accordion>
@@ -5276,12 +5276,12 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                   <input
                     type="number" placeholder="من" value={draft.minMileage}
                     onChange={(e) => set('minMileage', e.target.value)}
-                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                    className="w-1/2 text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white"
                   />
                   <input
                     type="number" placeholder="إلى" value={draft.maxMileage}
                     onChange={(e) => set('maxMileage', e.target.value)}
-                    className="w-1/2 text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400"
+                    className="w-1/2 text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white"
                   />
                 </div>
               </Accordion>
@@ -5301,7 +5301,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.utvEngineCapacity}
                   onChange={(e) => set('utvEngineCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {UTV_ENGINE_CAPACITY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -5312,7 +5312,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.utvGear}
                   onChange={(e) => set('utvGear', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {UTV_GEAR_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
@@ -5323,7 +5323,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.utvDrivetrain}
                   onChange={(e) => set('utvDrivetrain', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {UTV_DRIVETRAIN_OPTIONS.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -5334,7 +5334,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.utvCooling}
                   onChange={(e) => set('utvCooling', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {UTV_COOLING_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -5345,7 +5345,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.utvFuel}
                   onChange={(e) => set('utvFuel', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {UTV_FUEL_OPTIONS.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -5356,7 +5356,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.utvSeller}
                   onChange={(e) => set('utvSeller', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {UTV_SELLER_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -5367,7 +5367,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.utvExchange}
                   onChange={(e) => set('utvExchange', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {UTV_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -5383,7 +5383,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.marineSellerType}
                   onChange={(e) => set('marineSellerType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {MARINE_SELLER_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -5394,7 +5394,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.marineCondition}
                   onChange={(e) => set('marineCondition', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {MARINE_CONDITION_TYPES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -5405,7 +5405,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.marineExchange}
                   onChange={(e) => set('marineExchange', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {MARINE_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -5420,7 +5420,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
               <select
                 value={draft.marineSellerType}
                 onChange={(e) => set('marineSellerType', e.target.value)}
-                className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
               >
                 <option value="">الكل</option>
                 {MARINE_SELLER_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -5434,7 +5434,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
               <select
                 value={draft.damagedExchange}
                 onChange={(e) => set('damagedExchange', e.target.value)}
-                className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
               >
                 <option value="">الكل</option>
                 {DAMAGED_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -5449,7 +5449,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.damagedYear}
                   onChange={(e) => set('damagedYear', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {DAMAGED_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
@@ -5468,7 +5468,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.damagedGear}
                   onChange={(e) => set('damagedGear', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {DAMAGED_SUV_GEAR_TYPES.map((g) => <option key={g} value={g}>{g}</option>)}
@@ -5479,7 +5479,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.damagedFuel}
                   onChange={(e) => set('damagedFuel', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {DAMAGED_SUV_FUEL_TYPES.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -5490,7 +5490,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.damagedExchange}
                   onChange={(e) => set('damagedExchange', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {DAMAGED_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -5501,7 +5501,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.damagedParkingFee}
                   onChange={(e) => set('damagedParkingFee', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {DAMAGED_PARKING_FEE.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -5512,7 +5512,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.damagedSalesStatus}
                   onChange={(e) => set('damagedSalesStatus', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {DAMAGED_SALES_STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -5523,7 +5523,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.damagedDamageCause}
                   onChange={(e) => set('damagedDamageCause', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {DAMAGED_DAMAGE_CAUSE.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -5534,7 +5534,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.damagedSeller}
                   onChange={(e) => set('damagedSeller', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {DAMAGED_SELLER_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -5549,7 +5549,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.damagedYear}
                   onChange={(e) => set('damagedYear', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {DAMAGED_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
@@ -5568,7 +5568,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.damagedMotoStatus}
                   onChange={(e) => set('damagedMotoStatus', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {DAMAGED_MOTORCYCLE_STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -5579,7 +5579,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.damagedExchange}
                   onChange={(e) => set('damagedExchange', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {DAMAGED_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -5590,7 +5590,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.damagedSeller}
                   onChange={(e) => set('damagedSeller', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {DAMAGED_SELLER_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -5604,7 +5604,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
               <select
                 value={draft.damagedExchange}
                 onChange={(e) => set('damagedExchange', e.target.value)}
-                className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
               >
                 <option value="">الكل</option>
                 {DAMAGED_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -5617,7 +5617,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
               <select
                 value={draft.damagedExchange}
                 onChange={(e) => set('damagedExchange', e.target.value)}
-                className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
               >
                 <option value="">الكل</option>
                 {DAMAGED_EXCHANGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -5657,7 +5657,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.bodyType}
                   onChange={(e) => set('bodyType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {BODY_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -5730,7 +5730,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.zoningStatus}
                   onChange={(e) => set('zoningStatus', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {ZONING_STATUSES.map((z) => <option key={z} value={z}>{z}</option>)}
@@ -5741,7 +5741,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.kaks}
                   onChange={(e) => set('kaks', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {KAKS_VALUES.map((k) => <option key={k} value={k}>{k}</option>)}
@@ -5752,7 +5752,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.gabari}
                   onChange={(e) => set('gabari', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {GABARI_VALUES.map((g) => <option key={g} value={g}>{g}</option>)}
@@ -5763,7 +5763,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.landDeedStatus}
                   onChange={(e) => set('landDeedStatus', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {LAND_DEED_STATUSES.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -5837,7 +5837,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.kaks}
                   onChange={(e) => set('kaks', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {KAKS_VALUES.map((k) => <option key={k} value={k}>{k}</option>)}
@@ -5848,7 +5848,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.gabari}
                   onChange={(e) => set('gabari', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {GABARI_VALUES.map((g) => <option key={g} value={g}>{g}</option>)}
@@ -5859,7 +5859,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.landDeedStatus}
                   onChange={(e) => set('landDeedStatus', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {LAND_DEED_STATUSES.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -5892,7 +5892,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.zoningStatus}
                   onChange={(e) => set('zoningStatus', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {LAND_RENT_ZONING_STATUSES.map((z) => <option key={z} value={z}>{z}</option>)}
@@ -5903,7 +5903,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.kaks}
                   onChange={(e) => set('kaks', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {LAND_RENT_KAKS_VALUES.map((k) => <option key={k} value={k}>{k}</option>)}
@@ -5914,7 +5914,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.gabari}
                   onChange={(e) => set('gabari', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {GABARI_VALUES.map((g) => <option key={g} value={g}>{g}</option>)}
@@ -5929,7 +5929,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.landDeedStatus}
                   onChange={(e) => set('landDeedStatus', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {LAND_DEED_STATUSES.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -5962,7 +5962,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.totalFloors}
                   onChange={(e) => set('totalFloors', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {BUILDING_FLOOR_COUNTS.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -5973,7 +5973,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.apartmentsPerFloor}
                   onChange={(e) => set('apartmentsPerFloor', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {APARTMENTS_PER_FLOOR.map((a) => <option key={a} value={a}>{a}</option>)}
@@ -5984,7 +5984,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.heatingType}
                   onChange={(e) => set('heatingType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {BUILDING_HEATING_TYPES.map((h) => <option key={h} value={h}>{h}</option>)}
@@ -5995,7 +5995,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.buildingAge}
                   onChange={(e) => set('buildingAge', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {BUILDING_AGE_OPTIONS.map((a) => <option key={a} value={a}>{a}</option>)}
@@ -6010,7 +6010,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.parkingType}
                   onChange={(e) => set('parkingType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {BUILDING_PARKING_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -6021,7 +6021,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.deedStatus}
                   onChange={(e) => set('deedStatus', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {BUILDING_DEED_STATUSES.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -6058,7 +6058,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.totalFloors}
                   onChange={(e) => set('totalFloors', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {BUILDING_FLOOR_COUNTS.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -6069,7 +6069,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.apartmentsPerFloor}
                   onChange={(e) => set('apartmentsPerFloor', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {APARTMENTS_PER_FLOOR.map((a) => <option key={a} value={a}>{a}</option>)}
@@ -6080,7 +6080,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.heatingType}
                   onChange={(e) => set('heatingType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {BUILDING_HEATING_TYPES.map((h) => <option key={h} value={h}>{h}</option>)}
@@ -6091,7 +6091,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.buildingAge}
                   onChange={(e) => set('buildingAge', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {BUILDING_AGE_OPTIONS.map((a) => <option key={a} value={a}>{a}</option>)}
@@ -6106,7 +6106,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.parkingType}
                   onChange={(e) => set('parkingType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {BUILDING_PARKING_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -6121,7 +6121,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.deedStatus}
                   onChange={(e) => set('deedStatus', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {BUILDING_DEED_STATUSES.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -6162,7 +6162,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.timesharePeriod}
                   onChange={(e) => set('timesharePeriod', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TIMESHARE_PERIODS.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -6173,7 +6173,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.roomCount}
                   onChange={(e) => set('roomCount', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TIMESHARE_ROOM_COUNTS.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -6184,7 +6184,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.timeshareCondition}
                   onChange={(e) => set('timeshareCondition', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TIMESHARE_CONDITIONS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -6195,7 +6195,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.deedStatus}
                   onChange={(e) => set('deedStatus', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TIMESHARE_DEED_STATUSES.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -6220,7 +6220,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.touristFacilityCondition}
                   onChange={(e) => set('touristFacilityCondition', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TIMESHARE_CONDITIONS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -6236,7 +6236,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.touristFacilityCondition}
                   onChange={(e) => set('touristFacilityCondition', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TIMESHARE_CONDITIONS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -6252,7 +6252,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.poolRentalDuration}
                   onChange={(e) => set('poolRentalDuration', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {POOL_RENTAL_DURATIONS.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -6263,7 +6263,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.poolCapacity}
                   onChange={(e) => set('poolCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {POOL_CAPACITIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -6274,7 +6274,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.poolDepth}
                   onChange={(e) => set('poolDepth', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {POOL_DEPTHS.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -6324,7 +6324,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.timesharePeriod}
                   onChange={(e) => set('timesharePeriod', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TIMESHARE_PERIODS.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -6335,7 +6335,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.rentDuration}
                   onChange={(e) => set('rentDuration', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {RENT_DURATIONS.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -6346,7 +6346,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.roomCount}
                   onChange={(e) => set('roomCount', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TIMESHARE_ROOM_COUNTS.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -6357,7 +6357,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.guestCapacity}
                   onChange={(e) => set('guestCapacity', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {GUEST_CAPACITIES.map((g) => <option key={g} value={g}>{g}</option>)}
@@ -6368,7 +6368,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.bedCount}
                   onChange={(e) => set('bedCount', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {BED_COUNTS.map((b) => <option key={b} value={b}>{b}</option>)}
@@ -6379,7 +6379,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.bathroomCount}
                   onChange={(e) => set('bathroomCount', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TIMESHARE_ROOM_COUNTS.map((b) => <option key={b} value={b}>{b}</option>)}
@@ -6412,7 +6412,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.projectStatus}
                   onChange={(e) => set('projectStatus', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {PROJECT_STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -6423,7 +6423,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.roomCount}
                   onChange={(e) => set('roomCount', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {PROJECT_ROOM_COUNTS.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -6434,7 +6434,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.totalFloors}
                   onChange={(e) => set('totalFloors', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TOTAL_FLOORS.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -6445,7 +6445,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.heatingType}
                   onChange={(e) => set('heatingType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {PROJECT_HEATING_TYPES.map((h) => <option key={h} value={h}>{h}</option>)}
@@ -6460,7 +6460,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.parkingType}
                   onChange={(e) => set('parkingType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {PARKING_TYPES.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -6471,7 +6471,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.deedStatus}
                   onChange={(e) => set('deedStatus', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {PROJECT_DEED_STATUSES.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -6511,7 +6511,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.roomCount}
                   onChange={(e) => set('roomCount', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {ROOM_COUNTS.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -6522,7 +6522,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.buildingAge}
                   onChange={(e) => set('buildingAge', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {BUILDING_AGES.map((a) => <option key={a} value={a}>{a}</option>)}
@@ -6533,7 +6533,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.floorNumber}
                   onChange={(e) => set('floorNumber', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {FLOOR_NUMBERS.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -6544,7 +6544,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.totalFloors}
                   onChange={(e) => set('totalFloors', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {TOTAL_FLOORS.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -6555,7 +6555,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.heatingType}
                   onChange={(e) => set('heatingType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {HEATING_TYPES.map((h) => <option key={h} value={h}>{h}</option>)}
@@ -6566,7 +6566,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.bathroomCount}
                   onChange={(e) => set('bathroomCount', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {BATHROOM_COUNTS.map((b) => <option key={b} value={b}>{b}</option>)}
@@ -6577,7 +6577,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.kitchenType}
                   onChange={(e) => set('kitchenType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {KITCHEN_TYPES.map((k) => <option key={k} value={k}>{k}</option>)}
@@ -6604,7 +6604,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.parkingType}
                   onChange={(e) => set('parkingType', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {PARKING_TYPES.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -6615,7 +6615,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.usageStatus}
                   onChange={(e) => set('usageStatus', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {USAGE_STATUSES.map((u) => <option key={u} value={u}>{u}</option>)}
@@ -6626,7 +6626,7 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                 <select
                   value={draft.deedStatus}
                   onChange={(e) => set('deedStatus', e.target.value)}
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-orange-400 bg-white text-gray-700"
+                  className="w-full text-[13px] border border-transparent rounded-field px-2.5 py-1.5 bg-input-bg focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-blue-100 focus:bg-white text-gray-700"
                 >
                   <option value="">الكل</option>
                   {DEED_STATUSES.map((d) => <option key={d} value={d}>{d}</option>)}

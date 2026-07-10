@@ -81,7 +81,7 @@ function SelectBox({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className={cn(
-          'w-full appearance-none bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm pr-8',
+          'w-full appearance-none bg-white shadow-pebble rounded-card px-3.5 py-2.5 text-sm pr-8',
           'focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition-colors',
           value ? 'text-gray-900 font-medium' : 'text-gray-400',
         )}
@@ -107,7 +107,7 @@ function CountBadge({ count, loading }: { count: number; loading: boolean }) {
 
 function SkeletonProjectCard() {
   return (
-    <div className="flex-shrink-0 w-[240px] lg:w-auto bg-white rounded-2xl border border-gray-200 overflow-hidden animate-pulse">
+    <div className="flex-shrink-0 w-[240px] lg:w-auto bg-white rounded-card shadow-pebble overflow-hidden animate-pulse">
       <div className="h-36 bg-gray-200" />
       <div className="p-3 space-y-2">
         <div className="h-3.5 bg-gray-200 rounded w-3/4" />
@@ -124,7 +124,7 @@ function FeaturedProjectCard({ project }: { project: FeaturedProject }) {
 
   return (
     <Link href={`/listings/${project.id}`} className="group flex-shrink-0 w-[240px] lg:w-auto">
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-orange-200 transition-all duration-200 h-full flex flex-col">
+      <div className="bg-white rounded-card shadow-pebble overflow-hidden hover:shadow-lg hover:border-orange-200 transition-all duration-200 h-full flex flex-col">
         <div className="relative h-36 bg-gray-100 flex items-center justify-center shrink-0">
           {project.coverImage ? (
             <img

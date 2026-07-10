@@ -110,7 +110,7 @@ function ImageGallery({ images }: { images: Listing['images'] }) {
 
   if (!images.length) {
     return (
-      <div className="aspect-[4/3] bg-gray-100 rounded-xl flex items-center justify-center">
+      <div className="aspect-[4/3] bg-gray-100 rounded-field flex items-center justify-center">
         <ImageOff className="w-14 h-14 text-gray-300" />
       </div>
     );
@@ -121,7 +121,7 @@ function ImageGallery({ images }: { images: Listing['images'] }) {
       {/* ── Inline gallery ── */}
       <div>
         <div
-          className="relative aspect-[4/3] bg-gray-100 rounded-xl overflow-hidden group cursor-zoom-in"
+          className="relative aspect-[4/3] bg-gray-100 rounded-field overflow-hidden group cursor-zoom-in"
           onClick={openLightbox}
         >
           <img
@@ -161,7 +161,7 @@ function ImageGallery({ images }: { images: Listing['images'] }) {
               <button
                 key={i}
                 onClick={() => setSelected(i)}
-                className={`shrink-0 w-[72px] h-[54px] rounded-lg overflow-hidden border-2 transition-all ${
+                className={`shrink-0 w-[72px] h-[54px] rounded-field overflow-hidden border-2 transition-all ${
                   i === selected
                     ? 'border-blue-600 ring-1 ring-blue-600'
                     : 'border-transparent hover:border-gray-300 opacity-70 hover:opacity-100'
@@ -1105,7 +1105,7 @@ function TabPanel({ listing, filterDefs, mobile = false }: { listing: Listing; f
   const tabs = mobile ? MOBILE_TABS : desktopTabs;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-card shadow-pebble overflow-hidden">
       {/* Tab bar */}
       <div className="flex bg-gray-50/80 border-b border-gray-200 overflow-x-auto">
         {tabs.map((tab) => (
@@ -1241,7 +1241,7 @@ function QASection({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-card shadow-pebble overflow-hidden">
       <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/60">
         <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
           <HelpCircle className="w-4.5 h-4.5 text-orange-400" style={{ width: 18, height: 18 }} />
@@ -1339,20 +1339,20 @@ function ListingSkeleton() {
     <div className="min-h-screen bg-gray-50 animate-pulse">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-8 py-6">
         <div className="h-4 w-72 bg-gray-200 rounded mb-4" />
-        <div className="bg-white rounded-2xl border border-gray-200 px-6 py-5 mb-5 flex items-center justify-between">
+        <div className="bg-white rounded-card shadow-pebble px-6 py-5 mb-5 flex items-center justify-between">
           <div className="h-9 w-48 bg-gray-200 rounded" />
           <div className="h-4 w-28 bg-gray-200 rounded" />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           {/* Gallery + tabs skeleton */}
           <div className="lg:col-span-5 space-y-4">
-            <div className="bg-white rounded-2xl border border-gray-200 p-4">
+            <div className="bg-white rounded-card shadow-pebble p-4">
               <div className="aspect-[4/3] bg-gray-200 rounded-xl mb-3" />
               <div className="flex gap-2">
                 {[...Array(4)].map((_, i) => <div key={i} className="w-[72px] h-[54px] bg-gray-200 rounded-lg" />)}
               </div>
             </div>
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-card shadow-pebble overflow-hidden">
               <div className="h-12 bg-gray-100 border-b border-gray-200" />
               <div className="px-6 py-5 space-y-3">
                 {[...Array(5)].map((_, i) => <div key={i} className="h-4 bg-gray-200 rounded" style={{ width: `${[100,90,95,85,70][i]}%` }} />)}
@@ -1361,7 +1361,7 @@ function ListingSkeleton() {
           </div>
           {/* Specs skeleton */}
           <div className="lg:col-span-3">
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-card shadow-pebble overflow-hidden">
               <div className="h-10 bg-gray-100 border-b border-gray-100" />
               {[...Array(8)].map((_, i) => (
                 <div key={i} className={`flex ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
@@ -1373,7 +1373,7 @@ function ListingSkeleton() {
           </div>
           {/* Seller skeleton (sticky) */}
           <div className="lg:col-span-4 lg:sticky lg:top-6">
-            <div className="bg-white rounded-2xl border border-gray-200 p-6">
+            <div className="bg-white rounded-card shadow-pebble p-6">
               <div className="h-3.5 w-16 bg-gray-200 rounded mb-4" />
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-12 h-12 bg-gray-200 rounded-full" />
@@ -1507,7 +1507,7 @@ export default function ListingDetailPage() {
           </h1>
 
           {/* Price bar */}
-          <div className="bg-white rounded-2xl border border-gray-200 px-6 py-4 mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div className="bg-white rounded-card shadow-pebble px-6 py-4 mb-5 flex flex-wrap items-center justify-between gap-3">
             <p className="text-3xl font-extrabold text-blue-700 leading-none">
               {formatPrice(listing.price, listing.currency)}
             </p>
@@ -1526,7 +1526,7 @@ export default function ListingDetailPage() {
 
             {/* RIGHT — Image Gallery + Tabs + Q&A (col-span-5) */}
             <div className="lg:col-span-5 space-y-4">
-              <div className="bg-white rounded-2xl border border-gray-200 p-4">
+              <div className="bg-white rounded-card shadow-pebble p-4">
                 <ImageGallery images={listing.images ?? []} />
               </div>
               <TabPanel listing={listing} />
@@ -1535,7 +1535,7 @@ export default function ListingDetailPage() {
 
             {/* MIDDLE — Ad Specs Table (col-span-3) */}
             <div className="lg:col-span-3">
-              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+              <div className="bg-white rounded-card shadow-pebble overflow-hidden">
                 <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/80">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">تفاصيل الإعلان</p>
                 </div>
@@ -1545,7 +1545,7 @@ export default function ListingDetailPage() {
 
             {/* LEFT — Seller Box (col-span-4, sticky) */}
             <div className="lg:col-span-4 lg:sticky lg:top-6">
-              <div className="bg-white rounded-2xl border border-gray-200 p-6">
+              <div className="bg-white rounded-card shadow-pebble p-6">
                 <SellerBox listing={listing} />
               </div>
             </div>

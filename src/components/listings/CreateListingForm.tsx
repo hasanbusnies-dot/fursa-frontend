@@ -328,7 +328,7 @@ export function CreateListingForm({
         <StepIndicator steps={steps.map((s) => s.label)} current={safeIdx + 1} />
 
         {/* Step card */}
-        <div className="mt-6 bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
+        <div className="mt-6 bg-white rounded-card shadow-pebble shadow-sm p-6 sm:p-8">
           {current.node}
         </div>
 

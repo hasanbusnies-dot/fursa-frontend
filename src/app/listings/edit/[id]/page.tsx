@@ -15,7 +15,7 @@ function EditSkeleton() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 animate-pulse">
         <div className="h-6 w-40 bg-gray-200 rounded mb-8" />
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
+        <div className="bg-white rounded-card shadow-pebble p-6 space-y-5">
           {[80, 60, 100, 40].map((w, i) => (
             <div key={i}>
               <div className="h-3 bg-gray-200 rounded w-24 mb-2" />
@@ -146,7 +146,7 @@ export default function EditListingPage() {
 
         {/* Listing preview strip */}
         {thumb && (
-          <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-4 py-3 mb-5">
+          <div className="flex items-center gap-3 bg-white shadow-pebble rounded-card px-4 py-3 mb-5">
             <div className="w-14 h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0">
               <img src={thumb} alt="" className="w-full h-full object-cover" />
             </div>
@@ -158,7 +158,7 @@ export default function EditListingPage() {
         )}
 
         {/* Edit form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="bg-white rounded-card shadow-pebble p-6 space-y-5">
 
           {/* Title */}
           <div>

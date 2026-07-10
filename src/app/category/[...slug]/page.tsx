@@ -84,7 +84,7 @@ function TableHeader({ cols, headers }: { cols: string; headers: TableHeaderDef[
 
 function SkeletonCard() {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-card shadow-pebble overflow-hidden">
       <div className="bg-gray-200 h-44 w-full animate-pulse" />
       <div className="p-4 space-y-2.5">
         <div className="bg-gray-200 h-4 rounded-md w-3/4 animate-pulse" />
@@ -100,7 +100,7 @@ function SkeletonTableRow({ cols, isRealEstate }: { cols: string; isRealEstate?:
   return (
     <div className="grid w-full items-center border-b border-gray-100 animate-pulse" style={{ gridTemplateColumns: cols }}>
       <div className="pl-3 py-3 pr-2">
-        <div className="w-[76px] h-[58px] rounded-lg bg-gray-200" />
+        <div className="w-[76px] h-[58px] rounded-field bg-gray-200" />
       </div>
       {textWidths.map((w, i) => (
         <div key={i} className="px-3 py-3">
@@ -137,7 +137,7 @@ function ListingRow({ listing, activeCategoryId, cols, isRealEstate }: { listing
       className={cn(
         'group grid w-full items-center border-b border-gray-100 last:border-b-0 cursor-pointer transition-colors',
         highlight
-          ? 'bg-orange-50/40 hover:bg-orange-50/70 border-l-4 border-l-orange-400'
+          ? 'bg-yellow-400/10 hover:bg-yellow-400/20 border-l-4 border-l-amber-400'
           : showVitrin
             ? 'bg-yellow-50/30 hover:bg-yellow-50/50'
             : 'hover:bg-blue-50/30',
@@ -146,7 +146,7 @@ function ListingRow({ listing, activeCategoryId, cols, isRealEstate }: { listing
       onClick={() => router.push(`/listings/${listing.id}`)}
     >
       <div className="pl-3 py-3 pr-2 shrink-0">
-        <div className="relative w-full h-[58px] rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+        <div className="relative w-full h-[58px] rounded-field overflow-hidden bg-gray-100 border border-gray-200">
           {primary?.url ? (
             <img src={primary.url} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
           ) : (
@@ -155,8 +155,8 @@ function ListingRow({ listing, activeCategoryId, cols, isRealEstate }: { listing
             </div>
           )}
           <div className="absolute top-0.5 left-0.5 flex flex-col gap-0.5">
-            {showVitrin && <span className="bg-yellow-400 text-yellow-900 text-[8px] font-extrabold px-1 py-px rounded leading-none">★</span>}
-            {urgent && <span className="animate-pulse bg-red-500 text-white text-[8px] font-extrabold px-1 py-px rounded leading-none">🚨</span>}
+            {showVitrin && <span className="bg-yellow-400 text-yellow-900 text-[8px] font-extrabold px-1 py-px rounded-full font-heading leading-none">★</span>}
+            {urgent && <span className="animate-pulse bg-yellow-400 text-yellow-900 text-[8px] font-extrabold px-1 py-px rounded-full font-heading leading-none">⚡</span>}
           </div>
         </div>
       </div>
@@ -177,13 +177,13 @@ function ListingRow({ listing, activeCategoryId, cols, isRealEstate }: { listing
       <div className="px-3 py-2.5 min-w-0 flex flex-col justify-center">
         <div className="flex items-start gap-1.5 mb-1.5">
           {showVitrin && (
-            <span className="shrink-0 bg-yellow-400 text-yellow-900 text-[9px] font-extrabold px-1.5 py-0.5 rounded leading-none mt-px">★ واجهة</span>
+            <span className="shrink-0 bg-yellow-400 text-yellow-900 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full font-heading leading-none mt-px">★ واجهة</span>
           )}
           {showTopOfSearch && !showVitrin && (
             <span className="shrink-0 bg-indigo-100 text-indigo-700 text-[9px] font-bold px-1.5 py-0.5 rounded leading-none mt-px">↑ مميّز</span>
           )}
           {urgent && (
-            <span className="shrink-0 animate-pulse bg-red-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded leading-none mt-px">عاجل</span>
+            <span className="shrink-0 animate-pulse bg-yellow-400 text-yellow-900 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full font-heading leading-none mt-px">عاجل</span>
           )}
           <p className={cn('text-[12px] line-clamp-2 leading-snug', highlight ? 'font-extrabold text-black' : 'font-semibold text-gray-900')}>
             {listing.title}
@@ -269,7 +269,7 @@ const lbl = (v: string) => ENUM_LABEL[v] ?? v;
 interface ChipProps { label: string; onRemove: () => void; }
 function Chip({ label, onRemove }: ChipProps) {
   return (
-    <span className="inline-flex items-center gap-1 bg-orange-50 border border-orange-200 text-orange-700 text-xs font-medium px-2.5 py-1 rounded-full">
+    <span className="inline-flex items-center gap-1 bg-orange-50 border border-orange-200 text-orange-700 text-xs font-medium px-2.5 py-1 rounded-btn">
       {label}
       <button type="button" onClick={onRemove} className="hover:text-orange-900 leading-none">
         <X className="w-3 h-3" />
@@ -308,7 +308,7 @@ function SaveSearchModal({
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
         <div className="flex items-center gap-2 mb-1">
-          <Star className="w-4 h-4 text-orange-500" />
+          <Star className="w-4 h-4 text-yellow-500" />
           <h2 className="text-base font-bold text-gray-900">حفظ البحث</h2>
         </div>
         <p className="text-sm text-gray-500 mb-4">أعطِ هذا البحث اسماً — يمكنك الوصول إليه لاحقاً من "أبحاثي المحفوظة".</p>
@@ -338,7 +338,7 @@ function SaveSearchModal({
 // slot on intermediate (branch) pages; each child links one level deeper.
 function ChildCategoryBox({ title, nodes }: { title: string; nodes: CatalogNode[] }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-card shadow-pebble overflow-hidden">
       <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/80">
         <p className="text-xs font-bold text-gray-500 uppercase tracking-wider leading-none">{title}</p>
       </div>
@@ -675,8 +675,8 @@ export default function CategoryPage() {
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex items-center overflow-x-auto no-scrollbar pe-2">
             {([
-              { href: '/account/favorites',      Icon: Star,     label: 'إعلاناتي المفضلة',  iconCls: 'text-orange-400' },
-              { href: '/account/saved-searches', Icon: Bookmark, label: 'أبحاثي المحفوظة',   iconCls: 'text-orange-400' },
+              { href: '/account/favorites',      Icon: Star,     label: 'إعلاناتي المفضلة',  iconCls: 'text-amber-400' },
+              { href: '/account/saved-searches', Icon: Bookmark, label: 'أبحاثي المحفوظة',   iconCls: 'text-amber-400' },
             ] as const).map(({ href, Icon, label, iconCls }) => (
               <Link
                 key={href}
@@ -718,7 +718,7 @@ export default function CategoryPage() {
 
           {/* ── Loading (resolving the catalog node) ── */}
           {catalogStatus === 'loading' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {Array.from({ length: 9 }).map((_, i) => (
                 <div key={i} className="h-[52px] rounded-xl border border-gray-200 bg-white animate-pulse" />
               ))}
@@ -750,7 +750,7 @@ export default function CategoryPage() {
                   <Link
                     key={c.slug}
                     href={`/category/${c.slug}`}
-                    className="group flex items-center justify-between gap-3 bg-white rounded-xl border border-gray-200 px-4 py-3.5 hover:border-blue-300 hover:shadow-sm transition-all"
+                    className="group flex items-center justify-between gap-3 bg-white rounded-card shadow-pebble px-4 py-3.5 hover:border-blue-300 hover:shadow-sm transition-all"
                   >
                     <span className="text-sm font-semibold text-gray-800 group-hover:text-blue-600">{c.nameAr}</span>
                     <span className="flex items-center gap-2 shrink-0">
@@ -813,7 +813,7 @@ export default function CategoryPage() {
               </aside>
             ) : (
               <aside className="hidden lg:block w-72 shrink-0 sticky top-6" style={{ height: 'calc(100vh - 3rem)' }}>
-                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden h-full">
+                <div className="bg-white rounded-card shadow-pebble overflow-hidden h-full">
                   <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/80" style={{ height: '40px' }}>
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider leading-none">تصفية وترتيب</p>
                   </div>
@@ -867,7 +867,7 @@ export default function CategoryPage() {
                     own catalog filters (e.g. real-estate's الناشر: المالك / مكتب عقاري /
                     شركة بناء) in the sidebar instead. */}
                 {isVehicles ? (
-                  <div className="flex gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden shrink-0">
+                  <div className="flex gap-0 bg-white shadow-pebble rounded-card overflow-hidden shrink-0">
                     {SELLER_TABS.filter((tab) => !isRentalSuv || tab.value === '').map((tab) => (
                       <button
                         key={tab.value}
@@ -885,7 +885,7 @@ export default function CategoryPage() {
 
                 <div className="flex items-center gap-2 ms-auto">
                   {/* Grid / List toggle */}
-                  <div className="flex bg-white border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="flex bg-white shadow-pebble rounded-card overflow-hidden">
                     <button
                       onClick={() => setViewMode('grid')}
                       className={cn('p-2 transition-colors', viewMode === 'grid' ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-600')}
@@ -906,13 +906,13 @@ export default function CategoryPage() {
                   <div className="relative" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => setSortOpen((o) => !o)}
-                      className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors max-w-[200px]"
+                      className="flex items-center gap-1.5 bg-white shadow-pebble rounded-card px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors max-w-[200px]"
                     >
                       <span className="truncate">{activeSortLabel}</span>
                       <ChevronDown className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                     </button>
                     {sortOpen && (
-                      <div className="absolute end-0 top-full mt-1 w-72 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden">
+                      <div className="absolute end-0 top-full mt-1 w-72 bg-white shadow-pebble rounded-card shadow-lg z-20 overflow-hidden">
                         <p className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 text-right">
                           ترتيب متقدم
                         </p>
@@ -955,7 +955,7 @@ export default function CategoryPage() {
                       {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
                     </div>
                     {/* Desktop: table skeleton */}
-                    <div className="hidden md:block bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="hidden md:block bg-white rounded-card shadow-pebble shadow-sm overflow-hidden">
                       <TableHeader cols={tableCols} headers={tableHeaders} />
                       <div className="divide-y divide-gray-100">
                         {Array.from({ length: 8 }).map((_, i) => <SkeletonTableRow key={i} cols={tableCols} isRealEstate={isRealEstate} />)}
@@ -1006,7 +1006,7 @@ export default function CategoryPage() {
                     ))}
                   </div>
                   {/* Desktop: table layout (unchanged) */}
-                  <div className="hidden md:block bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="hidden md:block bg-white rounded-card shadow-pebble shadow-sm overflow-hidden">
                     <TableHeader cols={tableCols} headers={tableHeaders} />
                     <div className="divide-y divide-gray-100">
                       {displayListings.map((listing) => (
