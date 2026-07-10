@@ -49,7 +49,7 @@ export function PeriodPicker({ onChange }: { onChange: (q: AccountingQuery | nul
   const rangeValid = fromInput !== '' && toInput !== '' && fromInput <= toInput;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-4 mb-6">
+    <div className="bg-white shadow-pebble rounded-card p-4 mb-6">
       <div className="flex gap-1 mb-4 bg-gray-100 rounded-xl p-1 w-fit">
         {([['month', 'شهر'], ['range', 'نطاق تاريخي']] as [Mode, string][]).map(([m, label]) => (
           <button

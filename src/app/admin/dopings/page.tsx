@@ -162,7 +162,7 @@ function PackageCard({ pkg, onEdit }: { pkg: DopingPackage; onEdit: () => void }
   const meta = DOPING_META[pkg.dopingType];
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-5 hover:shadow-md transition-shadow flex flex-col gap-3">
+    <div className="bg-white shadow-pebble rounded-card p-5 hover:shadow-md transition-shadow flex flex-col gap-3">
       <div className="flex items-center gap-3">
         <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', meta?.iconBg ?? 'bg-gray-100')}>
           {meta ? <meta.icon className={cn('w-5 h-5', meta.iconColor)} /> : <Zap className="w-5 h-5 text-gray-400" />}
@@ -253,7 +253,7 @@ function ActiveDopingsTab() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+      <div className="bg-white rounded-card shadow-pebble overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -434,7 +434,7 @@ function PriceManagementTab() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-200 p-5 animate-pulse h-36" />
+              <div key={i} className="bg-white rounded-card shadow-pebble p-5 animate-pulse h-36" />
             ))}
           </div>
         ) : packages.length === 0 ? (
@@ -478,7 +478,7 @@ export default function AdminDopingsPage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-8">
 
         {/* Page header */}
         <div className="flex items-center gap-3 mb-6">
@@ -495,7 +495,7 @@ export default function AdminDopingsPage() {
         <AdminNav />
 
         {/* Tab switcher */}
-        <div className="flex gap-1 mb-6 bg-white border border-gray-200 rounded-xl p-1 w-fit">
+        <div className="flex gap-1 mb-6 bg-white shadow-pebble rounded-card p-1 w-fit">
           {([
             { key: 'active',   label: 'الإعلانات المميَّزة النشطة', icon: CheckCircle2 },
             { key: 'packages', label: 'الباقات والأسعار',          icon: Package      },

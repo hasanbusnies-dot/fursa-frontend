@@ -16,7 +16,7 @@ const LINKS = [
 export function AccountingNav() {
   const pathname = usePathname();
   return (
-    <div className="flex gap-1 mb-6 bg-white border border-gray-200 rounded-xl p-1 w-fit overflow-x-auto max-w-full">
+    <div className="flex gap-1 mb-6 bg-white shadow-pebble rounded-card p-1 w-fit overflow-x-auto max-w-full">
       {LINKS.map(({ href, label, icon: Icon, exact }) => {
         const active = exact ? pathname === href : (pathname === href || pathname.startsWith(`${href}/`));
         return (

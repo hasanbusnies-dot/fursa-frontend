@@ -102,7 +102,7 @@ function TransferCard({
   busy: boolean;
 }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col">
+    <div className="bg-white shadow-pebble rounded-card p-4 flex flex-col">
       {/* Amount + method — the matching anchors, made prominent */}
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -273,7 +273,7 @@ export default function AdminTransfersPage() {
         />
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-8">
         {/* Page header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center shadow-sm">
@@ -291,7 +291,7 @@ export default function AdminTransfersPage() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-200 animate-pulse h-80" />
+              <div key={i} className="bg-white rounded-card shadow-pebble animate-pulse h-80" />
             ))}
           </div>
         ) : error ? (

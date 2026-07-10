@@ -185,7 +185,7 @@ export default function AdminStaffPage() {
 
         {done ? (
           /* ── Uniform success screen (both roles) ── */
-          <div className="bg-white border border-gray-200 rounded-2xl p-6">
+          <div className="bg-white shadow-pebble rounded-card p-6">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500" />
@@ -228,7 +228,7 @@ export default function AdminStaffPage() {
           </div>
         ) : (
           /* ── Form ── */
-          <div className="bg-white border border-gray-200 rounded-2xl p-6">
+          <div className="bg-white shadow-pebble rounded-card p-6">
             {/* Role selector */}
             <label className="block text-xs font-semibold text-gray-700 mb-2">نوع الموظف</label>
             <div className="grid grid-cols-2 gap-2 mb-6">

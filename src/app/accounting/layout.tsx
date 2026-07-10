@@ -43,7 +43,7 @@ export default function AccountingLayout({ children }: { children: React.ReactNo
     <div className="min-h-screen bg-gray-100">
       {/* Staff top bar */}
       <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 h-14 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
               <Calculator className="w-4 h-4 text-emerald-600" />
@@ -63,7 +63,7 @@ export default function AccountingLayout({ children }: { children: React.ReactNo
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-8">
         <AccountingNav />
         {children}
       </div>

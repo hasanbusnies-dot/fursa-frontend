@@ -75,7 +75,7 @@ export function CategoryManager({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl mb-6 overflow-hidden">
+    <div className="bg-white shadow-pebble rounded-card mb-6 overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

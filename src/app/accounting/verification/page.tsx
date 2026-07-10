@@ -47,7 +47,7 @@ export default function AccountingVerificationPage() {
         </div>
       </div>
 
-      <div className="flex gap-1 mb-6 bg-white border border-gray-200 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 mb-6 bg-white shadow-pebble rounded-card p-1 w-fit">
         {([[true, 'قيد التحقق'], [false, UI_AR.all]] as [boolean, string][]).map(([v, label]) => (
           <button
             key={label}
@@ -64,7 +64,7 @@ export default function AccountingVerificationPage() {
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="bg-white rounded-2xl border border-gray-200 animate-pulse h-44" />)}
+          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="bg-white rounded-card shadow-pebble animate-pulse h-44" />)}
         </div>
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
@@ -83,7 +83,7 @@ export default function AccountingVerificationPage() {
             <Link
               key={`${a.agentId}-${a.currency}`}
               href={`/accounting/verification/${a.agentId}`}
-              className="block bg-white border border-gray-200 rounded-2xl p-4 hover:border-gray-300 hover:shadow-sm transition-all"
+              className="block bg-white shadow-pebble rounded-card p-4 hover:border-gray-300 hover:shadow-sm transition-all"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">

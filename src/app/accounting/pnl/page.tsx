@@ -22,7 +22,7 @@ function CurrencyCard({ block }: { block: PnlCurrencyBlock }) {
   const netCls = netSign < 0 ? 'text-red-600' : 'text-green-600';
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+    <div className="bg-white shadow-pebble rounded-card overflow-hidden">
       <div className="px-5 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
         <h2 className="text-sm font-bold text-gray-800">{block.currency}</h2>
         <span className={cn('text-lg font-extrabold tabular-nums', netCls)} dir="ltr">
@@ -119,7 +119,7 @@ export default function AccountingPnlPage() {
       {loading ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-200 animate-pulse h-72" />
+            <div key={i} className="bg-white rounded-card shadow-pebble animate-pulse h-72" />
           ))}
         </div>
       ) : error ? (

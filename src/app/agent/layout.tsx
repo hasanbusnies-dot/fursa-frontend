@@ -57,7 +57,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen bg-slate-100 flex flex-col" dir="rtl">
 
       {/* Staff top bar */}
-      <header className="sticky top-0 z-40 bg-slate-900 text-white">
+      <header className="sticky top-0 z-40 bg-slate-900/85 backdrop-blur-[20px] text-white">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-8 h-8 rounded-lg bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">

@@ -640,7 +640,7 @@ export default function AdminAdvertisementsPage() {
         />
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-10">
 
         {/* Page header */}
         <div className="flex items-center gap-3 mb-6">
@@ -656,7 +656,7 @@ export default function AdminAdvertisementsPage() {
         <AdminNav />
 
         {/* ── Create form ─────────────────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-8">
+        <div className="bg-white rounded-card shadow-pebble shadow-sm p-6 mb-8">
           <h2 className="text-base font-semibold text-gray-800 mb-5 flex items-center gap-2">
             <Plus className="w-4 h-4 text-blue-600" /> إضافة إعلان جديد
           </h2>
@@ -750,7 +750,7 @@ export default function AdminAdvertisementsPage() {
         </div>
 
         {/* ── Ads table ────────────────────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-card shadow-pebble shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>

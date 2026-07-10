@@ -62,7 +62,7 @@ function SummaryHeader({ summary }: { summary: RenewalsSummary }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
       {SUMMARY_CARDS.map(({ key, label, cls }) => (
-        <div key={key} className="bg-white border border-gray-200 rounded-2xl p-4">
+        <div key={key} className="bg-white shadow-pebble rounded-card p-4">
           <p className={cn('text-2xl font-extrabold leading-none', cls)}>{summary[key] ?? 0}</p>
           <p className="text-xs text-gray-500 mt-1.5">{label}</p>
         </div>
@@ -81,7 +81,7 @@ function RenewalRowCard({ r }: { r: RenewalRow }) {
   return (
     <Link
       href={`/admin/stores/${r.storeId}`}
-      className="block bg-white border border-gray-200 rounded-2xl p-4 hover:border-gray-300 hover:shadow-sm transition-all"
+      className="block bg-white shadow-pebble rounded-card p-4 hover:border-gray-300 hover:shadow-sm transition-all"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -176,7 +176,7 @@ export default function AdminRenewalsPage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-8">
         {/* Page header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center shadow-sm">
@@ -194,7 +194,7 @@ export default function AdminRenewalsPage() {
         {summary && <SummaryHeader summary={summary} />}
 
         {/* State filter chips */}
-        <div className="flex gap-1 mb-6 bg-white border border-gray-200 rounded-xl p-1 w-fit overflow-x-auto max-w-full">
+        <div className="flex gap-1 mb-6 bg-white shadow-pebble rounded-card p-1 w-fit overflow-x-auto max-w-full">
           {FILTERS.map(({ value, label }) => (
             <button
               key={value}
@@ -213,7 +213,7 @@ export default function AdminRenewalsPage() {
         {loading ? (
           <div className="space-y-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-200 animate-pulse h-24" />
+              <div key={i} className="bg-white rounded-card shadow-pebble animate-pulse h-24" />
             ))}
           </div>
         ) : error ? (

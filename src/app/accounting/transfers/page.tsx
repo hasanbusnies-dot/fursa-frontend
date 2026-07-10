@@ -120,7 +120,7 @@ function TransferCard({
   const pending = row.status === 'PENDING_VERIFICATION';
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col">
+    <div className="bg-white shadow-pebble rounded-card p-4 flex flex-col">
       {/* Amount + method */}
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -301,7 +301,7 @@ export default function AccountingTransfersPage() {
       </div>
 
       {/* Status filter */}
-      <div className="flex gap-1 mb-6 bg-white border border-gray-200 rounded-xl p-1 w-fit overflow-x-auto max-w-full">
+      <div className="flex gap-1 mb-6 bg-white shadow-pebble rounded-card p-1 w-fit overflow-x-auto max-w-full">
         {FILTERS.map(({ value, label }) => (
           <button
             key={value}
@@ -319,7 +319,7 @@ export default function AccountingTransfersPage() {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-200 animate-pulse h-80" />
+            <div key={i} className="bg-white rounded-card shadow-pebble animate-pulse h-80" />
           ))}
         </div>
       ) : error ? (

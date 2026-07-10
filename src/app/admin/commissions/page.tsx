@@ -49,7 +49,7 @@ function SummaryHeader({ report }: { report: CommissionsReport }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
       {cards.map((c) => (
-        <div key={c.label} className="bg-white border border-gray-200 rounded-2xl p-4">
+        <div key={c.label} className="bg-white shadow-pebble rounded-card p-4">
           <p className={cn('text-2xl font-extrabold leading-none', c.cls)}>{c.value}</p>
           <p className="text-xs text-gray-500 mt-1.5">{c.label}</p>
         </div>
@@ -129,7 +129,7 @@ export default function AdminCommissionsPage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-8">
         {/* Page header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center shadow-sm">
@@ -147,7 +147,7 @@ export default function AdminCommissionsPage() {
         <CommissionConfigPanel onSaved={load} />
 
         {/* Period picker */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-4 mb-6">
+        <div className="bg-white shadow-pebble rounded-card p-4 mb-6">
           {/* Mode toggle */}
           <div className="flex gap-1 mb-4 bg-gray-100 rounded-xl p-1 w-fit">
             {([['month', 'شهر'], ['range', 'نطاق تاريخي']] as [Mode, string][]).map(([m, label]) => (
@@ -249,7 +249,7 @@ export default function AdminCommissionsPage() {
             <p className="text-sm font-medium text-gray-500">اختر نطاقاً تاريخياً.</p>
           </div>
         ) : loading ? (
-          <div className="bg-white rounded-2xl border border-gray-200 animate-pulse h-64" />
+          <div className="bg-white rounded-card shadow-pebble animate-pulse h-64" />
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
             <AlertTriangle className="w-10 h-10 text-gray-300" />
@@ -264,7 +264,7 @@ export default function AdminCommissionsPage() {
             <p className="text-sm font-medium text-gray-500">لا توجد بيانات مندوبين في هذه الفترة.</p>
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          <div className="bg-white shadow-pebble rounded-card overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>

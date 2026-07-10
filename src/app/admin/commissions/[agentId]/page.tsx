@@ -159,7 +159,7 @@ export default function AdminCommissionAgentPage() {
         <div className="print:hidden"><AdminNav /></div>
 
         {loading ? (
-          <div className="bg-white rounded-2xl border border-gray-200 animate-pulse h-72" />
+          <div className="bg-white rounded-card shadow-pebble animate-pulse h-72" />
         ) : error || !detail ? (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
             <AlertTriangle className="w-10 h-10 text-gray-300" />
@@ -192,7 +192,7 @@ export default function AdminCommissionAgentPage() {
             <div className="print-area">
 
             {/* Identity + period + applied config */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-4 print:border-0 print:p-0 print:mb-4">
+            <div className="bg-white shadow-pebble rounded-card p-5 mb-4 print:border-0 print:p-0 print:mb-4">
               <h2 className="text-xl font-bold text-gray-900">{detail.agent.name}</h2>
               {detail.agent.phone && (
                 <p className="flex items-center gap-1.5 text-sm text-gray-500 mt-1" dir="ltr">
@@ -223,12 +223,12 @@ export default function AdminCommissionAgentPage() {
 
             {/* Payments */}
             {payments.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center gap-3 bg-white border border-gray-200 rounded-2xl">
+              <div className="flex flex-col items-center justify-center py-16 text-center gap-3 bg-white shadow-pebble rounded-card">
                 <Inbox className="w-10 h-10 text-gray-300" />
                 <p className="text-sm font-medium text-gray-500">لا توجد مدفوعات في هذه الفترة.</p>
               </div>
             ) : (
-              <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden print:border-0">
+              <div className="bg-white shadow-pebble rounded-card overflow-hidden print:border-0">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>

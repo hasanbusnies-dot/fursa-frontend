@@ -37,7 +37,7 @@ function formatDateTime(s?: string | null): string {
 function CollectionRow({ c }: { c: SettlementCollection }) {
   const meta = STATUS_META[c.verificationStatus] ?? { label: c.verificationStatus, cls: 'bg-gray-100 text-gray-500' };
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col">
+    <div className="bg-white shadow-pebble rounded-card p-4 flex flex-col">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xl font-extrabold text-gray-900 tabular-nums" dir="ltr">{formatMoney(c.amount, c.currency)}</p>
@@ -101,9 +101,9 @@ export default function SettlementDetailPage() {
 
       {loading ? (
         <>
-          <div className="bg-white rounded-2xl border border-gray-200 animate-pulse h-40 mb-6" />
+          <div className="bg-white rounded-card shadow-pebble animate-pulse h-40 mb-6" />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 3 }).map((_, i) => <div key={i} className="bg-white rounded-2xl border border-gray-200 animate-pulse h-48" />)}
+            {Array.from({ length: 3 }).map((_, i) => <div key={i} className="bg-white rounded-card shadow-pebble animate-pulse h-48" />)}
           </div>
         </>
       ) : notFound ? (
@@ -120,7 +120,7 @@ export default function SettlementDetailPage() {
       ) : (
         <>
           {/* Header */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-6">
+          <div className="bg-white shadow-pebble rounded-card p-5 mb-6">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm shrink-0">
@@ -185,7 +185,7 @@ export default function SettlementDetailPage() {
           </div>
 
           {detail.collections.length === 0 ? (
-            <p className="text-sm text-gray-400 py-6 text-center bg-white border border-gray-200 rounded-2xl">لا تحصيلات في هذه التسوية.</p>
+            <p className="text-sm text-gray-400 py-6 text-center bg-white shadow-pebble rounded-card">لا تحصيلات في هذه التسوية.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {detail.collections.map((c) => <CollectionRow key={c.id} c={c} />)}

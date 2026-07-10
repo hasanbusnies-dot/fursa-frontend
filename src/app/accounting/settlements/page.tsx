@@ -41,7 +41,7 @@ function OutstandingCard({
   const settleable = compareAmounts(verified, '0') > 0;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col">
+    <div className="bg-white shadow-pebble rounded-card p-4 flex flex-col">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-bold text-gray-900 flex items-center gap-1.5 truncate">
@@ -243,7 +243,7 @@ export default function AccountingSettlementsPage() {
       {/* Outstanding (live state) */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
-          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="bg-white rounded-2xl border border-gray-200 animate-pulse h-56" />)}
+          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="bg-white rounded-card shadow-pebble animate-pulse h-56" />)}
         </div>
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
@@ -281,7 +281,7 @@ export default function AccountingSettlementsPage() {
         <select
           value={agentFilter}
           onChange={(e) => onAgent(e.target.value)}
-          className="text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-100 cursor-pointer"
+          className="text-sm font-semibold text-gray-600 bg-white shadow-pebble rounded-card px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-100 cursor-pointer"
         >
           <option value="">كل المندوبين</option>
           {agentOptions.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -289,7 +289,7 @@ export default function AccountingSettlementsPage() {
         <select
           value={currencyFilter}
           onChange={(e) => onCurrency(e.target.value)}
-          className="text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-100 cursor-pointer"
+          className="text-sm font-semibold text-gray-600 bg-white shadow-pebble rounded-card px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-100 cursor-pointer"
         >
           <option value="">كل العملات</option>
           {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -297,11 +297,11 @@ export default function AccountingSettlementsPage() {
       </div>
 
       {histLoading ? (
-        <div className="bg-white rounded-2xl border border-gray-200 animate-pulse h-48" />
+        <div className="bg-white rounded-card shadow-pebble animate-pulse h-48" />
       ) : history.length === 0 ? (
-        <p className="text-sm text-gray-400 py-6 text-center bg-white border border-gray-200 rounded-2xl">لا تسويات ضمن هذه الفلاتر.</p>
+        <p className="text-sm text-gray-400 py-6 text-center bg-white shadow-pebble rounded-card">لا تسويات ضمن هذه الفلاتر.</p>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden divide-y divide-gray-50">
+        <div className="bg-white shadow-pebble rounded-card overflow-hidden divide-y divide-gray-50">
           {history.map((s) => <HistoryRow key={s.id} s={s} />)}
 
           {histMeta && (histMeta.hasPrevPage || histMeta.hasNextPage) && (

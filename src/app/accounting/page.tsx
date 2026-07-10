@@ -30,7 +30,7 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-5">
+    <div className="bg-white shadow-pebble rounded-card p-5">
       <div className="flex items-center gap-2 mb-3">
         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${iconCls}`}>
           <Icon className="w-4 h-4" />
@@ -129,7 +129,7 @@ export default function AccountingOverviewPage() {
       {loading ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-200 animate-pulse h-40" />
+            <div key={i} className="bg-white rounded-card shadow-pebble animate-pulse h-40" />
           ))}
         </div>
       ) : error || !data ? (

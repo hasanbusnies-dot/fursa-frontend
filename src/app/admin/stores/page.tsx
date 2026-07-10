@@ -139,7 +139,7 @@ function StoreCard({
   const isPending = store.status === 'PENDING';
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm flex flex-col">
+    <div className="bg-white shadow-pebble rounded-card overflow-hidden shadow-sm flex flex-col">
       <div className="p-4 flex-1 flex flex-col">
         <div className="flex items-start justify-between gap-2">
           <Link
@@ -337,7 +337,7 @@ export default function AdminStoresPage() {
         />
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-8">
         {/* Page header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center shadow-sm">
@@ -352,7 +352,7 @@ export default function AdminStoresPage() {
         <AdminNav />
 
         {/* Status filter chips */}
-        <div className="flex gap-1 mb-6 bg-white border border-gray-200 rounded-xl p-1 w-fit">
+        <div className="flex gap-1 mb-6 bg-white shadow-pebble rounded-card p-1 w-fit">
           {FILTERS.map(({ value, label }) => (
             <button
               key={value}
@@ -371,7 +371,7 @@ export default function AdminStoresPage() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-200 animate-pulse h-80" />
+              <div key={i} className="bg-white rounded-card shadow-pebble animate-pulse h-80" />
             ))}
           </div>
         ) : error ? (

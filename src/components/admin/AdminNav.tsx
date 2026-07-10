@@ -19,7 +19,7 @@ const LINKS = [
 export function AdminNav() {
   const pathname = usePathname();
   return (
-    <div className="flex gap-1 mb-6 bg-white border border-gray-200 rounded-xl p-1 w-fit">
+    <div className="flex gap-1 mb-6 bg-white shadow-pebble rounded-card p-1 w-fit">
       {LINKS.map(({ href, label, icon: Icon }) => {
         const active = pathname === href;
         return (

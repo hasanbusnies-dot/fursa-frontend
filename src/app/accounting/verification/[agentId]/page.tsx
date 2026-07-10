@@ -121,7 +121,7 @@ function CollectionCard({
   const pending = c.verificationStatus === 'PENDING_VERIFICATION';
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col">
+    <div className="bg-white shadow-pebble rounded-card p-4 flex flex-col">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xl font-extrabold text-gray-900 tabular-nums" dir="ltr">{formatMoney(c.amount, c.currency)}</p>
@@ -268,7 +268,7 @@ export default function AccountingAgentCollectionsPage() {
 
       {/* Filters: verification status × settlement state (combined server-side) */}
       <div className="flex flex-wrap gap-2 mb-6">
-        <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit overflow-x-auto max-w-full">
+        <div className="flex gap-1 bg-white shadow-pebble rounded-card p-1 w-fit overflow-x-auto max-w-full">
           {STATUS_FILTERS.map(({ value, label }) => (
             <button
               key={value}
@@ -282,7 +282,7 @@ export default function AccountingAgentCollectionsPage() {
             </button>
           ))}
         </div>
-        <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit overflow-x-auto max-w-full">
+        <div className="flex gap-1 bg-white shadow-pebble rounded-card p-1 w-fit overflow-x-auto max-w-full">
           {SETTLED_FILTERS.map(({ value, label }) => (
             <button
               key={value}
@@ -300,7 +300,7 @@ export default function AccountingAgentCollectionsPage() {
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="bg-white rounded-2xl border border-gray-200 animate-pulse h-56" />)}
+          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="bg-white rounded-card shadow-pebble animate-pulse h-56" />)}
         </div>
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">

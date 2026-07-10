@@ -254,7 +254,7 @@ export default function AccountingExpensesPage() {
         <select
           value={categoryFilter}
           onChange={(e) => onCategory(e.target.value)}
-          className="text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-100 cursor-pointer"
+          className="text-sm font-semibold text-gray-600 bg-white shadow-pebble rounded-card px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-100 cursor-pointer"
         >
           <option value="">كل الفئات</option>
           {categories.map((c) => <option key={c.id} value={c.id}>{expenseCategoryLabel(c.key, c.label)}</option>)}
@@ -262,7 +262,7 @@ export default function AccountingExpensesPage() {
         <select
           value={currencyFilter}
           onChange={(e) => onCurrency(e.target.value)}
-          className="text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-100 cursor-pointer"
+          className="text-sm font-semibold text-gray-600 bg-white shadow-pebble rounded-card px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-100 cursor-pointer"
         >
           <option value="">كل العملات</option>
           {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -271,7 +271,7 @@ export default function AccountingExpensesPage() {
 
       {/* List */}
       {loading ? (
-        <div className="bg-white rounded-2xl border border-gray-200 animate-pulse h-64" />
+        <div className="bg-white rounded-card shadow-pebble animate-pulse h-64" />
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
           <AlertTriangle className="w-10 h-10 text-gray-300" />
@@ -284,7 +284,7 @@ export default function AccountingExpensesPage() {
           <p className="text-sm font-medium text-gray-500">لا مصروفات ضمن هذه الفلاتر.</p>
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        <div className="bg-white shadow-pebble rounded-card overflow-hidden">
           <div className="divide-y divide-gray-50">
             {rows.map((e) => (
               <div key={e.id} className="flex items-center gap-3 p-4">

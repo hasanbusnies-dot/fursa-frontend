@@ -314,7 +314,7 @@ export default function AdminListingsPage() {
         />
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-10">
 
         {/* Page header */}
         <div className="flex items-center gap-3 mb-6">
@@ -334,7 +334,7 @@ export default function AdminListingsPage() {
 
         {/* ── Category filter ───────────────────────────────────────────────── */}
         {categories.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 mb-4 p-3 bg-white border border-gray-200 rounded-xl shadow-sm">
+          <div className="flex flex-wrap items-center gap-2 mb-4 p-3 bg-white shadow-pebble rounded-card shadow-sm">
             {/* Main category */}
             <div className="flex items-center gap-2 min-w-0">
               <label className="text-xs font-semibold text-gray-500 whitespace-nowrap shrink-0">
@@ -394,7 +394,7 @@ export default function AdminListingsPage() {
         )}
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-white border border-gray-200 rounded-xl p-1 w-fit overflow-x-auto">
+        <div className="flex gap-1 mb-6 bg-white shadow-pebble rounded-card p-1 w-fit overflow-x-auto">
           {TABS.map((tab) => (
             <button
               key={tab.id}
@@ -411,7 +411,7 @@ export default function AdminListingsPage() {
         </div>
 
         {/* Table card */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-card shadow-pebble shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>

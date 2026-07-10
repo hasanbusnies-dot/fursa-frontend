@@ -98,11 +98,11 @@ export default function AdminStoreDetailPage() {
 
         {loading ? (
           <div className="space-y-3">
-            <div className="rounded-2xl bg-white border border-gray-200 h-44 animate-pulse" />
-            <div className="rounded-2xl bg-white border border-gray-200 h-32 animate-pulse" />
+            <div className="rounded-card bg-white shadow-pebble h-44 animate-pulse" />
+            <div className="rounded-card bg-white shadow-pebble h-32 animate-pulse" />
           </div>
         ) : error || !store ? (
-          <div className="rounded-2xl bg-white border border-gray-200 p-8 text-center">
+          <div className="rounded-card bg-white shadow-pebble p-8 text-center">
             <AlertTriangle className="w-8 h-8 text-gray-300 mx-auto mb-2" />
             <p className="text-sm font-medium text-gray-600">تعذّر تحميل المتجر.</p>
             <button onClick={load} className="mt-3 text-xs font-semibold text-orange-600 hover:text-orange-700 underline">
@@ -120,7 +120,7 @@ export default function AdminStoreDetailPage() {
           return (
             <div className="space-y-4">
               {/* Store header */}
-              <div className="rounded-2xl bg-white border border-gray-200 p-5">
+              <div className="rounded-card bg-white shadow-pebble p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center shrink-0">
@@ -192,7 +192,7 @@ export default function AdminStoreDetailPage() {
               </div>
 
               {/* Membership block (read-only) */}
-              <div className="rounded-2xl bg-white border border-gray-200 p-5">
+              <div className="rounded-card bg-white shadow-pebble p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <BadgeCheck className="w-4 h-4 text-orange-500" />
                   <h2 className="text-sm font-bold text-gray-800">العضوية</h2>
@@ -231,7 +231,7 @@ export default function AdminStoreDetailPage() {
 
               {/* Charge history with receipts — the admin's window into cash collections */}
               {charges.length > 0 && (
-                <div className="rounded-2xl bg-white border border-gray-200 p-5">
+                <div className="rounded-card bg-white shadow-pebble p-5">
                   <h2 className="text-sm font-bold text-gray-800 mb-3">سجل المدفوعات</h2>
                   <div className="divide-y divide-gray-100">
                     {charges.map((c) => (

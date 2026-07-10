@@ -97,7 +97,7 @@ export default function OwnerSetPasswordPage() {
           فرصة
         </Link>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-card shadow-pebble overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-l from-blue-600 to-blue-800 px-8 py-6 flex flex-col items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center">
