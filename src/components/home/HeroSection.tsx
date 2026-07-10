@@ -55,7 +55,7 @@ export function HeroSection() {
       {/* ── Headline ─────────────────────────────────────────────────────── */}
       <div className="max-w-3xl mx-auto text-center pt-6 pb-3 px-4">
         <h1 className="text-3xl md:text-4xl font-extrabold leading-tight mb-1">
-          اكتشف فرصتك التالية
+          اكتشف <span className="text-yellow-400">فرصتك</span> التالية
         </h1>
         <p className="text-sm md:text-base" style={{ color: 'rgba(255,255,255,0.75)' }}>
           منصة الإعلانات المبوبة الرائدة في سوريا — استخدم شريط البحث أعلاه للعثور على أي إعلان.

@@ -17,7 +17,7 @@ function formatPrice(price: number, currency: 'SYP' | 'USD') {
 
 function FeaturedSkeleton() {
   return (
-    <div className="bg-white/10 rounded-xl border border-white/20 overflow-hidden animate-pulse">
+    <div className="bg-white/10 rounded-card border border-white/20 overflow-hidden animate-pulse">
       <div className="h-28 bg-white/10" />
       <div className="p-3 space-y-2">
         <div className="h-3 bg-white/20 rounded w-3/4" />
@@ -37,7 +37,7 @@ function FeaturedCard({ listing }: { listing: Listing }) {
 
   return (
     <Link href={`/listings/${listing.id}`} className="group block">
-      <div className="bg-white rounded-xl border-2 border-amber-400/80 shadow-md hover:shadow-xl hover:border-amber-400 hover:-translate-y-0.5 transition-all duration-200 overflow-hidden h-full flex flex-col">
+      <div className="bg-white rounded-card border-2 border-amber-400/80 shadow-pebble hover:shadow-pebble-hover hover:border-amber-400 hover:-translate-y-0.5 transition-all duration-200 overflow-hidden h-full flex flex-col">
 
         {/* Image */}
         <div className="relative h-28 bg-gray-100 shrink-0 overflow-hidden">
@@ -53,7 +53,7 @@ function FeaturedCard({ listing }: { listing: Listing }) {
             </div>
           )}
           {/* Vitrin badge */}
-          <span className="absolute top-2 left-2 inline-flex items-center gap-0.5 bg-amber-400 text-amber-900 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide shadow-sm">
+          <span className="absolute top-2 left-2 inline-flex items-center gap-0.5 bg-amber-400 text-amber-900 text-[9px] font-bold font-heading px-1.5 py-0.5 rounded-full uppercase tracking-wide shadow-sm">
             <Star className="w-2.5 h-2.5 fill-amber-900" />
             Vitrin
           </span>
@@ -102,7 +102,7 @@ export function FeaturedSection() {
   if (!loading && listings.length === 0) return null;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 pb-10">
       {/* Section header */}
       <div className="flex items-end justify-between mb-4">
         <div>
@@ -122,7 +122,7 @@ export function FeaturedSection() {
       </div>
 
       {/* Card grid — 2 cols mobile, 3 tablet, 5 desktop */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {loading
           ? Array.from({ length: 5 }).map((_, i) => <FeaturedSkeleton key={i} />)
           : listings.map((l) => <FeaturedCard key={l.id} listing={l} />)

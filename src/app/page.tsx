@@ -9,7 +9,7 @@ export default function HomePage() {
       <HeroSection />
 
       {/* ── Main layout: sidebar + feed ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-5">
         <div className="flex gap-6 items-start">
 
           {/* Left sidebar — hidden on mobile, visible lg+ */}

@@ -108,7 +108,7 @@ export function HomeCategorySidebar() {
   }, []);
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3">
+    <div className="bg-white rounded-card shadow-pebble p-4 space-y-3">
 
       {/* ── Quick links ── */}
       <div className="space-y-0.5">

@@ -21,7 +21,7 @@ const CATEGORIES = [
 export function MobileCategoryList() {
   return (
     <div className="md:hidden mb-4">
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-card shadow-pebble overflow-hidden">
 
         {/* Quick links row */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 overflow-x-auto scrollbar-none">

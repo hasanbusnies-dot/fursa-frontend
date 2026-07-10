@@ -9,7 +9,7 @@ import type { Listing } from '@/types';
 
 function SkeletonCard() {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-card shadow-pebble overflow-hidden">
       <div className="bg-gray-200 h-44 w-full animate-pulse" />
       <div className="p-4 space-y-2.5">
         <div className="bg-gray-200 h-4 rounded-md w-3/4 animate-pulse" />
@@ -41,7 +41,7 @@ function ShowcasePlaceholderCard() {
   );
 }
 
-export function RecentAds({ sectionClassName = 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16' }: { sectionClassName?: string }) {
+export function RecentAds({ sectionClassName = 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 pb-16' }: { sectionClassName?: string }) {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -86,12 +86,12 @@ export function RecentAds({ sectionClassName = 'max-w-7xl mx-auto px-4 sm:px-6 l
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           <SkeletonCard />
           {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           <ShowcasePlaceholderCard />
           {sortedListings.map((listing) => (
             <ListingCard key={listing.id} listing={listing} showCompare={false} isHomepageView={true} />
