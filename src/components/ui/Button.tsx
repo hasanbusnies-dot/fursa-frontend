@@ -4,7 +4,9 @@ import { cn } from '@/lib/utils';
 
 const variants = {
   primary: 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white',
-  secondary: 'bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white',
+  // DESIGN.md "Secondary (Gold)": white bg, gold border + gold text — the
+  // premium-flavored secondary, distinct from the solid-blue primary.
+  secondary: 'bg-white border border-amber-400 text-yellow-900 hover:bg-yellow-50 active:bg-yellow-100',
   ghost: 'border border-gray-300 bg-transparent hover:bg-gray-100 text-gray-700',
   danger: 'bg-red-500 hover:bg-red-600 active:bg-red-700 text-white',
 } as const;
@@ -27,7 +29,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       ref={ref}
       disabled={disabled || loading}
       className={cn(
-        'inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-colors',
+        'inline-flex items-center justify-center gap-2 font-medium rounded-btn transition-colors',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
         'disabled:opacity-50 disabled:cursor-not-allowed',
         variants[variant],
