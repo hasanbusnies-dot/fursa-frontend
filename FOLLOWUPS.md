@@ -57,3 +57,38 @@ Deferred during the entry-point repointing (Option a) change.
 
 ---
 _Owner: messaging/auth refactor. Raised during the Socket.io migration groundwork._
+
+## 5. Maskable PWA icon (Android adaptive icon) — LOW, pre-TWA
+**Where:** `src/app/manifest.ts` — icons are `purpose: any` only.
+
+**Problem:** Android adaptive icons crop to a central safe zone (~80% circle). The current
+`public/forsa-logo-*.png` artwork (wordmark spanning the full width) would get its edges
+clipped in a circular mask, so no `purpose: maskable` entry was declared — launchers fall
+back to shrinking the `any` icon inside a plain background, which is safe but less polished.
+
+**Fix:** export a dedicated maskable asset (mark centered inside the safe zone with padded
+solid background, e.g. `forsa-logo-maskable-512.png`) and add it to the manifest with
+`purpose: 'maskable'`. Do this before the TWA (mobile roadmap Phase 1) ships.
+
+Deferred during the logo integration (2026-07-09) because it needs a new asset from the
+logo source files, not code.
+
+## Stitch redesign deferrals (2026-07-10, uncommitted redesign build)
+Deferred on purpose while applying the DESIGN.md system; none block the local review.
+
+- **Raw-input stragglers:** the 3 dominant raw-input class patterns (251 of ~263
+  instances, mostly FilterSidebar) were converted to the spec style (12px radius,
+  `#F2F4F6` fill, blue 4px glow). ~10 one-off variants remain (wizard price/title
+  fields with `rounded-xl` + orange rings) — converge them onto `Input`/shared
+  classes when touching those screens.
+- **Inner card images at 12px radius:** applied to the detail-page gallery, its
+  thumbnails, and browse-table thumbs. ListingCard/FeaturedSection images stay
+  flush-bleed (clipped by the 20px card radius) — revisit per-card if the inset
+  look is wanted.
+- **DESIGN.md type scale:** spec body is 16–18px; we kept the deliberate compact
+  13px/12px root dial and adopted only the font pairing (Cairo headings/Tajawal body).
+  Revisit density after the human reviews.
+- **FeaturedSection copy is Turkish** ("Vitrin İlanları", "Günün Fırsatları",
+  "Tümünü Gör") — pre-existing, should become Arabic like the rest of the UI.
+- **Popover/modal Level-3 treatment** (1px 10% primary outline + deep soft shadow)
+  not yet applied to dropdowns/modals.
