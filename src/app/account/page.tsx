@@ -22,10 +22,10 @@ function DashboardSkeleton() {
       <div className="h-4 w-32 bg-gray-100 rounded animate-pulse mb-5" />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="bg-white rounded-2xl border border-gray-200 h-32 animate-pulse" />
+          <div key={i} className="bg-white rounded-card shadow-pebble h-32 animate-pulse" />
         ))}
       </div>
-      <div className="bg-white rounded-2xl border border-gray-200 h-52 animate-pulse" />
+      <div className="bg-white rounded-card shadow-pebble h-52 animate-pulse" />
     </div>
   );
 }
@@ -45,7 +45,7 @@ function StatCard({
   return (
     <Link
       href={href}
-      className="group bg-white rounded-2xl border border-gray-200 p-5 hover:shadow-md hover:border-orange-200 transition-all"
+      className="group bg-white rounded-card shadow-pebble p-5 hover:shadow-md hover:border-orange-200 transition-all"
     >
       <div className="flex items-start justify-between mb-3">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg}`}>
@@ -156,7 +156,7 @@ export default function AccountDashboardPage() {
       </div>
 
       {/* ── Recent favorites ─────────────────────────────────────────────── */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-5">
+      <div className="bg-white rounded-card shadow-pebble p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />

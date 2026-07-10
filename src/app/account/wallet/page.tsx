@@ -265,7 +265,7 @@ function TopupModal({ onClose }: { onClose: () => void }) {
 
 function SkeletonRow() {
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-3 animate-pulse">
+    <div className="bg-white shadow-pebble rounded-card p-4 flex items-center gap-3 animate-pulse">
       <div className="w-10 h-10 rounded-xl bg-gray-200 shrink-0" />
       <div className="flex-1 space-y-2">
         <div className="h-3.5 bg-gray-200 rounded w-1/3" />
@@ -376,7 +376,7 @@ export default function WalletPage() {
             <div className="h-28 rounded-2xl bg-gray-100 animate-pulse" />
           </div>
         ) : walletError ? (
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6 text-center">
+          <div className="bg-white shadow-pebble rounded-card p-6 mb-6 text-center">
             <AlertTriangle className="w-8 h-8 text-red-300 mx-auto mb-2" />
             <p className="text-sm text-gray-600 mb-3">تعذّر تحميل رصيد المحفظة.</p>
             <button onClick={loadWallet} className="inline-flex items-center gap-1.5 text-sm font-semibold text-orange-600 hover:text-orange-700">
@@ -395,7 +395,7 @@ export default function WalletPage() {
               <p className="text-xs opacity-80 mt-1">ل.س</p>
             </div>
             {/* USD — secondary */}
-            <div className="rounded-2xl p-5 bg-white border border-gray-200">
+            <div className="rounded-card p-5 bg-white shadow-pebble">
               <div className="flex items-center gap-2 mb-3 text-gray-400">
                 <Wallet className="w-4 h-4" />
                 <span className="text-xs font-semibold">الرصيد بالدولار</span>
@@ -410,7 +410,7 @@ export default function WalletPage() {
         <TransferHistory key={transfersKey} />
 
         {/* Transactions */}
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        <div className="bg-white shadow-pebble rounded-card overflow-hidden">
           {/* Filters */}
           <div className="p-3 border-b border-gray-100 flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5">

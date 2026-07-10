@@ -21,7 +21,7 @@ function formatDate(dateStr: string) {
 
 function SkeletonCard() {
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-5 animate-pulse space-y-3">
+    <div className="bg-white shadow-pebble rounded-card p-5 animate-pulse space-y-3">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-gray-200 shrink-0" />
         <div className="flex-1 space-y-1.5">
@@ -81,7 +81,7 @@ function ReceivedCard({ question, onAnswered }: { question: Question; onAnswered
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-4">
+    <div className="bg-white shadow-pebble rounded-card p-5 space-y-4">
       {/* Listing + meta row */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center">
@@ -168,7 +168,7 @@ function AskedCard({ question }: { question: Question }) {
     ?? question.listing?.images?.[0]?.url;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-4">
+    <div className="bg-white shadow-pebble rounded-card p-5 space-y-4">
       {/* Listing + meta */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center">
@@ -290,7 +290,7 @@ export default function QuestionsPage() {
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-card shadow-pebble overflow-hidden">
         {/* Tabs */}
         <div className="flex border-b border-gray-100">
           {TABS.map((tab) => (

@@ -75,7 +75,7 @@ export function LoginForm() {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+    <div className="bg-white rounded-card shadow-pebble p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">أهلاً بعودتك</h1>
         <p className="mt-1 text-sm text-gray-500">سجّل دخولك إلى حساب فرصة</p>

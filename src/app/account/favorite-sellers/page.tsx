@@ -33,7 +33,7 @@ function sellerInitial(user: User | null | undefined): string {
 
 function SkeletonRow() {
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-5 flex items-center gap-4 animate-pulse">
+    <div className="bg-white shadow-pebble rounded-card p-5 flex items-center gap-4 animate-pulse">
       <div className="w-12 h-12 rounded-full bg-gray-200 shrink-0" />
       <div className="flex-1 space-y-2">
         <div className="h-4 bg-gray-200 rounded w-1/3" />
@@ -108,7 +108,7 @@ export default function FavoriteSellersPage() {
             {Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}
           </div>
         ) : sellers.length === 0 ? (
-          <div className="bg-white border border-gray-200 rounded-2xl flex flex-col items-center justify-center py-24 px-6 text-center">
+          <div className="bg-white shadow-pebble rounded-card flex flex-col items-center justify-center py-24 px-6 text-center">
             <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mb-5">
               <Users className="w-10 h-10 text-green-200" />
             </div>
@@ -129,7 +129,7 @@ export default function FavoriteSellersPage() {
             {sellers.map((seller) => (
               <div
                 key={seller.id}
-                className="bg-white border border-gray-200 rounded-2xl overflow-hidden flex items-center hover:shadow-sm transition-shadow"
+                className="bg-white shadow-pebble rounded-card overflow-hidden flex items-center hover:shadow-sm transition-shadow"
               >
                 {/* Clickable left area → seller's listings */}
                 <Link

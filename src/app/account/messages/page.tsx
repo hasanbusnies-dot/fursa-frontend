@@ -156,7 +156,7 @@ export default function MessagesPage() {
     return (
       <div>
         <div className="h-8 w-40 bg-gray-200 rounded mb-6 animate-pulse" />
-        <div className="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
+        <div className="bg-white rounded-card shadow-pebble divide-y divide-gray-100">
           {Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)}
         </div>
       </div>
@@ -184,7 +184,7 @@ export default function MessagesPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-card shadow-pebble overflow-hidden">
         {isLoading ? (
           <div className="divide-y divide-gray-100">
             {Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)}

@@ -51,8 +51,8 @@ function PageSkeleton() {
   return (
     <div className="space-y-3">
       <div className="h-7 w-40 bg-gray-200 rounded animate-pulse" />
-      <div className="rounded-2xl bg-white border border-gray-200 h-44 animate-pulse" />
-      <div className="rounded-2xl bg-white border border-gray-200 h-36 animate-pulse" />
+      <div className="rounded-card bg-white shadow-pebble h-44 animate-pulse" />
+      <div className="rounded-card bg-white shadow-pebble h-36 animate-pulse" />
     </div>
   );
 }
@@ -100,7 +100,7 @@ export default function OwnerStorePage() {
   // ── 404: no store linked to this account ──
   if (noStore) {
     return (
-      <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center">
+      <div className="bg-white shadow-pebble rounded-card p-10 text-center">
         <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
           <Inbox className="w-6 h-6 text-gray-400" />
         </div>
@@ -112,7 +112,7 @@ export default function OwnerStorePage() {
 
   if (error || !store) {
     return (
-      <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center">
+      <div className="bg-white shadow-pebble rounded-card p-8 text-center">
         <AlertTriangle className="w-8 h-8 text-gray-300 mx-auto mb-2" />
         <p className="text-sm font-medium text-gray-600">تعذّر تحميل بيانات المتجر.</p>
         <button onClick={load} className="mt-3 text-xs font-semibold text-orange-600 hover:text-orange-700 underline">
@@ -160,7 +160,7 @@ export default function OwnerStorePage() {
       </div>
 
       {/* Store card */}
-      <div className="rounded-2xl bg-white border border-gray-200 p-5">
+      <div className="rounded-card bg-white shadow-pebble p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 className="text-base font-bold text-gray-900 truncate">{store.name}</h2>
@@ -231,7 +231,7 @@ export default function OwnerStorePage() {
 
       {/* ── Membership (APPROVED only) ── */}
       {isApproved && (
-        <div className="rounded-2xl bg-white border border-gray-200 p-5">
+        <div className="rounded-card bg-white shadow-pebble p-5">
           <div className="flex items-center gap-2 mb-3">
             <BadgeCheck className="w-4 h-4 text-orange-600" />
             <h2 className="text-sm font-bold text-gray-800">العضوية</h2>
@@ -290,7 +290,7 @@ export default function OwnerStorePage() {
 
       {/* ── Charge history (APPROVED only) ── */}
       {isApproved && charges.length > 0 && (
-        <div className="rounded-2xl bg-white border border-gray-200 p-5">
+        <div className="rounded-card bg-white shadow-pebble p-5">
           <h2 className="text-sm font-bold text-gray-800 mb-3">سجل الدفعات</h2>
           <div className="divide-y divide-gray-100">
             {charges.map((c) => (

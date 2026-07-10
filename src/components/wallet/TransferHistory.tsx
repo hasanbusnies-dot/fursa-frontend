@@ -52,7 +52,7 @@ export function TransferHistory() {
   if (!loading && !error && rows.length === 0) return null;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden mb-6">
+    <div className="bg-white shadow-pebble rounded-card overflow-hidden mb-6">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
         <ArrowLeftRight className="w-4 h-4 text-orange-500" />
         <h2 className="text-sm font-bold text-gray-800">طلبات الشحن</h2>

@@ -135,7 +135,7 @@ export function AccountSidebar() {
     <div className="flex flex-col gap-3">
 
       {/* ── User card ─────────────────────────────────────────────────────── */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-4">
+      <div className="bg-white rounded-card shadow-pebble p-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shrink-0 font-bold text-orange-600 text-sm">
             {initial}
@@ -148,7 +148,7 @@ export function AccountSidebar() {
       </div>
 
       {/* ── Navigation ────────────────────────────────────────────────────── */}
-      <nav className="bg-white rounded-2xl border border-gray-200 overflow-hidden divide-y divide-gray-100">
+      <nav className="bg-white rounded-card shadow-pebble overflow-hidden divide-y divide-gray-100">
         {sections.map((section, si) => (
           <div key={si}>
             {section.title && (

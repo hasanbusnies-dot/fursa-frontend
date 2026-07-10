@@ -203,7 +203,7 @@ function ShipModal({
 
 function SkeletonCard() {
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-4 animate-pulse">
+    <div className="bg-white shadow-pebble rounded-card p-5 space-y-4 animate-pulse">
       <div className="flex gap-4">
         <div className="w-16 h-14 rounded-xl bg-gray-200 shrink-0" />
         <div className="flex-1 space-y-2">
@@ -238,7 +238,7 @@ function TransactionCard({
   const isTerminal = tx.status === 'COMPLETED' || tx.status === 'CANCELLED' || tx.status === 'REFUNDED';
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-5 hover:shadow-sm transition-shadow space-y-4">
+    <div className="bg-white shadow-pebble rounded-card p-5 hover:shadow-sm transition-shadow space-y-4">
       {/* Header row */}
       <div className="flex items-start gap-4">
         <Link href={`/listings/${tx.listingId}`} className="shrink-0">
@@ -473,7 +473,7 @@ export default function SellingTransactionsPage() {
         </Link>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-card shadow-pebble overflow-hidden">
 
         {/* Tabs + Sort */}
         <div className="flex items-center justify-between border-b border-gray-100 px-1">
@@ -514,7 +514,7 @@ export default function SellingTransactionsPage() {
               <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', sortOpen && 'rotate-180')} />
             </button>
             {sortOpen && (
-              <div className="absolute end-4 top-full mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden min-w-[150px]">
+              <div className="absolute end-4 top-full mt-1 z-20 bg-white shadow-pebble rounded-card shadow-lg overflow-hidden min-w-[150px]">
                 {(Object.keys(SORT_LABELS) as SortKey[]).map((key) => (
                   <button
                     key={key}

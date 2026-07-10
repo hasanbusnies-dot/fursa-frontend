@@ -159,7 +159,7 @@ function ListingRow({
             )}
           >
             {listing.isUrgent && (
-              <span className="inline-block ms-1.5 animate-pulse bg-red-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded leading-none align-middle">
+              <span className="inline-block ms-1.5 animate-pulse bg-yellow-400 text-yellow-900 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full font-heading leading-none align-middle">
                 عاجل
               </span>
             )}
@@ -314,7 +314,7 @@ export default function MyListingsPage() {
         <div className="h-8 w-48 bg-gray-200 rounded mb-6 animate-pulse" />
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex gap-4 items-start bg-white rounded-2xl border border-gray-200 p-4 animate-pulse">
+            <div key={i} className="flex gap-4 items-start bg-white rounded-card shadow-pebble p-4 animate-pulse">
               <div className="w-28 h-20 rounded-xl bg-gray-200 shrink-0" />
               <div className="flex-1 space-y-2 pt-1">
                 <div className="h-4 bg-gray-200 rounded w-3/4" />
@@ -369,7 +369,7 @@ export default function MyListingsPage() {
           {loading ? (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex gap-4 items-start bg-white rounded-2xl border border-gray-200 p-4 animate-pulse">
+                <div key={i} className="flex gap-4 items-start bg-white rounded-card shadow-pebble p-4 animate-pulse">
                   <div className="w-28 h-20 rounded-xl bg-gray-200 shrink-0" />
                   <div className="flex-1 space-y-2 pt-1">
                     <div className="h-4 bg-gray-200 rounded w-3/4" />

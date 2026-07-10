@@ -87,7 +87,7 @@ function DeleteModal({
 
 function SkeletonRow() {
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-5 flex items-center gap-4 animate-pulse">
+    <div className="bg-white shadow-pebble rounded-card p-5 flex items-center gap-4 animate-pulse">
       <div className="w-10 h-10 rounded-xl bg-gray-200 shrink-0" />
       <div className="flex-1 space-y-2">
         <div className="h-4 bg-gray-200 rounded w-2/5" />
@@ -173,7 +173,7 @@ export default function SavedSearchesPage() {
             {Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}
           </div>
         ) : searches.length === 0 ? (
-          <div className="bg-white border border-gray-200 rounded-2xl flex flex-col items-center justify-center py-20 px-6 text-center">
+          <div className="bg-white shadow-pebble rounded-card flex flex-col items-center justify-center py-20 px-6 text-center">
             <div className="w-16 h-16 rounded-full bg-orange-50 flex items-center justify-center mb-4">
               <Search className="w-8 h-8 text-orange-300" />
             </div>
@@ -194,7 +194,7 @@ export default function SavedSearchesPage() {
             {searches.map((search) => (
               <div
                 key={search.id}
-                className="bg-white border border-gray-200 rounded-2xl p-5 flex items-center gap-4 hover:shadow-sm transition-shadow"
+                className="bg-white shadow-pebble rounded-card p-5 flex items-center gap-4 hover:shadow-sm transition-shadow"
               >
                 {/* Icon */}
                 <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center shrink-0">

@@ -111,7 +111,7 @@ function initials(name: string): string {
 
 function ChatSkeleton() {
   return (
-    <div className="flex flex-col bg-white rounded-2xl border border-gray-200 overflow-hidden animate-pulse" style={{ height: 'calc(100vh - 10rem)' }}>
+    <div className="flex flex-col bg-white rounded-card shadow-pebble overflow-hidden animate-pulse" style={{ height: 'calc(100vh - 10rem)' }}>
       <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 shrink-0">
         <div className="w-9 h-9 rounded-xl bg-gray-200 shrink-0" />
         <div className="w-10 h-10 rounded-full bg-gray-200 shrink-0" />
@@ -351,7 +351,7 @@ export default function ChatDetailPage() {
 
   return (
     <div
-      className="flex flex-col bg-white rounded-2xl border border-gray-200 overflow-hidden"
+      className="flex flex-col bg-white rounded-card shadow-pebble overflow-hidden"
       style={{ height: 'calc(100vh - 10rem)' }}
     >
 

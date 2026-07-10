@@ -14,7 +14,7 @@ import type { Listing } from '@/types';
 
 function SkeletonCard() {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden animate-pulse">
+    <div className="bg-white rounded-card shadow-pebble overflow-hidden animate-pulse">
       <div className="h-44 w-full bg-gray-200" />
       <div className="p-4 space-y-2.5">
         <div className="h-4 bg-gray-200 rounded w-3/4" />
@@ -87,7 +87,7 @@ export default function FavoritesPage() {
             {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : favorites.length === 0 ? (
-          <div className="bg-white border border-gray-200 rounded-2xl flex flex-col items-center justify-center py-24 px-6 text-center">
+          <div className="bg-white shadow-pebble rounded-card flex flex-col items-center justify-center py-24 px-6 text-center">
             <div className="w-20 h-20 rounded-full bg-yellow-50 flex items-center justify-center mb-5">
               <Star className="w-10 h-10 text-yellow-200" />
             </div>
