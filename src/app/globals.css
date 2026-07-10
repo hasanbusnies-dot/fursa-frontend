@@ -1,12 +1,84 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-arabic);
+  /* Dual-font per DESIGN.md: Tajawal body, Cairo headings (base rule below).
+     font-heading is also a utility for heading-styled non-h* text. */
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-arabic);
+}
+
+/* ── Stitch palette, Step 1 correction (approved 2026-07-10) ───────────────
+   Reskin-by-token: the codebase styles with stock Tailwind classes, so we
+   override the scales it already uses instead of touching components.
+   Per DESIGN.md, blue is the ONLY action color — the orange scale (the old
+   secondary/CTA color) is remapped to the blue action ramp, so every
+   orange-* CTA/link/accent renders blue with zero class changes. Gold is a
+   sparse premium-only accent: yellow-400/900 + amber-400 (what the vitrin/
+   featured badges already use) are pinned to the exact Stitch golds; the
+   rest of yellow/amber stays stock — amber-100/800 etc. are warning/status
+   banners, not premium. Revert = delete this block. */
+@theme {
+  /* Primary — pinned exact. Tailwind v4's default blue-600 is an oklch/P3
+     conversion of #2563eb; pinning keeps logo, UI, and manifest theme_color
+     identical everywhere. */
+  --color-blue-600: #2563EB;
+
+  /* Orange scale → blue action ramp (DESIGN.md: "Primary Blue: used for
+     action-oriented elements, active states, and brand recognition").
+     orange-500 lands exactly on brand blue so former-orange CTAs match
+     bg-blue-600 CTAs; orange-400 carries the 263 focus:border-orange-400
+     inputs (spec: blue focus border). */
+  --color-orange-50: #EFF6FF;
+  --color-orange-100: #DBEAFE;
+  --color-orange-200: #BFDBFE;
+  --color-orange-300: #93C5FD;
+  --color-orange-400: #60A5FA;
+  --color-orange-500: #2563EB;
+  --color-orange-600: #1D4ED8;
+  --color-orange-700: #1E40AF;
+  --color-orange-800: #1E3A8A;
+  --color-orange-900: #172554;
+
+  /* Gold — premium badges only (DESIGN.md: "reserved for premium features,
+     loyalty tiers, Special Offers, and CTA highlights"). Pins the shades the
+     vitrin/featured badges already use onto the exact Stitch gold tokens. */
+  --color-yellow-300: #FFE088; /* secondary-fixed — soft gold on dark/blue */
+  --color-yellow-400: #FED65B; /* secondary-container — badge/CTA fill */
+  --color-yellow-500: #E9C349; /* secondary-fixed-dim — stars, icons */
+  --color-yellow-900: #745C00; /* on-secondary-container — text on gold */
+  --color-amber-400: #E9C349;  /* secondary-fixed-dim — borders/rings */
+
+  /* Neutrals per DESIGN.md tokens */
+  --color-gray-900: #191C1E; /* on-surface — darkest text + footer bg */
+  --color-gray-50: #F7F9FB;  /* background — body bg (bg-gray-50 in layout) */
+
+  /* Semantic aliases for new code (bg-primary, text-gold, …). Existing
+     screens keep their utility classes and inherit via the remaps above.
+     --color-input-bg is defined now, applied to inputs in Step 3. */
+  /* Pebble geometry + elevation (DESIGN.md Shapes/Elevation). Pixel values on
+     purpose: the root font-size dial (81.25%/75%) shrinks rem-based radii, but
+     the spec's 20/14/12px are absolute. shadow-pebble = "blur 15px, spread
+     -5px, 4% opacity" — edges defined by shadow, not borders. */
+  --radius-card: 20px;  /* product/content cards */
+  --radius-btn: 14px;   /* buttons — "squircle" */
+  --radius-field: 12px; /* inputs + inner card images */
+  --shadow-pebble: 0 4px 15px -5px rgb(25 28 30 / 0.04);
+  --shadow-pebble-hover: 0 8px 24px -6px rgb(25 28 30 / 0.10);
+
+  --color-primary: #2563EB;
+  --color-gold: #FED65B;
+  --color-gold-dim: #E9C349;
+  --color-gold-soft: #FFE088;
+  --color-gold-deep: #745C00;
+  --color-secondary: #FED65B;
+  --color-ink: #191C1E;
+  --color-surface: #F7F9FB;
+  --color-input-bg: #F2F4F6; /* surface-container-low */
 }
 
 :root {
   --brand-primary: #2563eb;   /* blue-600 */
-  --brand-secondary: #f97316; /* orange-500 */
+  --brand-secondary: #FED65B; /* Stitch gold (secondary-container) */
 }
 
 @layer base {
@@ -23,6 +95,10 @@
     html {
       font-size: 75%; /* 12px — slightly tighter on large desktop monitors */
     }
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading, inherit);
   }
 }
 
