@@ -175,7 +175,7 @@ export function RecommendationsPopover() {
 
       {/* Floating panel — rendered outside overflow clipping via z-[100] */}
       {isOpen && (
-        <div className="absolute top-full left-0 z-[100] mt-1.5 w-[440px] bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden">
+        <div className="absolute top-full left-0 z-[100] mt-1.5 w-[440px] bg-white rounded-card shadow-pebble shadow-2xl overflow-hidden">
 
           {/* Tab bar */}
           <div className="flex border-b border-gray-200 bg-gray-50">

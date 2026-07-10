@@ -102,7 +102,7 @@ export function MobileTopBar() {
   const title = ctxTitle ?? ROUTE_TITLES[pathname] ?? fallbackTitle(pathname);
 
   return (
-    <div className="md:hidden sticky top-0 z-40 bg-white border-b border-gray-200">
+    <div className="md:hidden sticky top-0 z-40 bg-white/70 backdrop-blur-[20px] border-b border-gray-200/60">
       <div className="flex items-center gap-2 h-14 px-3">
         <button
           type="button"

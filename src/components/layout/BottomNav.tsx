@@ -21,7 +21,7 @@ export function BottomNav() {
   if (pathname.startsWith('/staff')) return null; // staff portal — no consumer chrome
 
   return (
-    <nav className="block md:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-gray-200 shadow-[0_-2px_12px_rgba(0,0,0,0.07)]">
+    <nav className="block md:hidden fixed bottom-0 inset-x-0 z-50 bg-white/70 backdrop-blur-[20px] border-t border-gray-200/60 shadow-[0_-2px_12px_rgba(0,0,0,0.05)]">
       <div className="flex items-end justify-around h-16 px-1">
 
         {/* Regular tabs — first two */}
@@ -45,7 +45,7 @@ export function BottomNav() {
           prefetch={false}
           className="flex flex-col items-center gap-1 -mt-5"
         >
-          <div className="w-14 h-14 rounded-full bg-orange-500 shadow-[0_4px_14px_rgba(249,115,22,0.45)] flex items-center justify-center transition-transform active:scale-95">
+          <div className="w-14 h-14 rounded-full bg-orange-500 shadow-[0_4px_14px] shadow-orange-500/45 flex items-center justify-center transition-transform active:scale-95">
             <PlusCircle className="w-6 h-6 text-white" />
           </div>
           <span className="text-[10px] font-semibold text-orange-500">أضف إعلان</span>

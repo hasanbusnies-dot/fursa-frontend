@@ -141,7 +141,7 @@ export function ComparePopover() {
 
       {/* Floating panel */}
       {isOpen && (
-        <div className="absolute top-full left-0 z-[100] mt-1.5 w-[440px] bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden">
+        <div className="absolute top-full left-0 z-[100] mt-1.5 w-[440px] bg-white rounded-card shadow-pebble shadow-2xl overflow-hidden">
 
           {/* Panel header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">

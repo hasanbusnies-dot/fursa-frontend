@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -114,20 +115,32 @@ export function Header() {
   const innerMobile = shouldShowMobileTopBar(pathname);
 
   return (
-    <header className={`sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm${innerMobile ? ' hidden md:block' : ''}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className={`sticky top-0 z-50 bg-white/70 backdrop-blur-[20px] border-b border-gray-200/60${innerMobile ? ' hidden md:block' : ''}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20">
 
         {/* ── Main row ── */}
         <div className="flex items-center gap-3 h-16">
 
-          {/* Logo */}
-          <Link href="/" className="flex-shrink-0 flex items-baseline gap-1.5">
-            <span className="text-2xl font-black tracking-tight text-blue-600">Forsa</span>
-            <span className="hidden sm:inline text-xs text-gray-400 font-medium">فرصة</span>
+          {/* Logo: brand mark tile + wordmark. The PNG has a baked-in solid
+              background, so it's rendered as a rounded app-icon-style tile;
+              a transparent logo drop-in at the same path also renders fine. */}
+          <Link href="/" className="flex-shrink-0 flex items-center gap-2">
+            <Image
+              src="/forsa-logo-512.png"
+              alt="شعار فرصة"
+              width={48}
+              height={48}
+              preload
+              className="rounded-xl"
+            />
+            <span className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-black tracking-tight text-blue-600">Forsa</span>
+              <span className="hidden sm:inline text-xs text-gray-400 font-medium">فرصة</span>
+            </span>
           </Link>
 
           {/* Desktop search bar */}
-          <div className="hidden sm:flex flex-1 items-stretch border border-gray-300 rounded-lg overflow-hidden transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
+          <div className="hidden sm:flex flex-1 items-stretch border border-gray-300 rounded-field overflow-hidden transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
             <div className="relative flex-shrink-0">
               <select
                 value={category}
@@ -220,7 +233,7 @@ export function Header() {
                         onClick={closeFavDropdown}
                         className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                       >
-                        <Bookmark className="w-4 h-4 text-orange-400 shrink-0" />
+                        <Bookmark className="w-4 h-4 text-amber-400 shrink-0" />
                         بحثي المفضل
                       </Link>
                       <Link
@@ -308,7 +321,7 @@ export function Header() {
             <Link
               href="/listings/create"
               prefetch={false}
-              className="hidden md:flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+              className="hidden md:flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-semibold px-4 py-2 rounded-btn transition-colors whitespace-nowrap"
             >
               <PlusCircle className="w-4 h-4" />
               أضف إعلان
@@ -327,7 +340,7 @@ export function Header() {
 
         {/* Mobile search bar */}
         <div className="sm:hidden pb-3">
-          <div className="flex items-stretch border border-gray-300 rounded-lg overflow-hidden focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
+          <div className="flex items-stretch border border-gray-300 rounded-field overflow-hidden focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
             <input
               type="text"
               placeholder="ابحث عن أي شيء..."
@@ -349,7 +362,7 @@ export function Header() {
 
       {/* ── Mobile nav drawer ── */}
       {mobileOpen && (
-        <div className="sm:hidden border-t border-gray-200 bg-white px-4 py-4 space-y-0.5 shadow-lg">
+        <div className="sm:hidden border-t border-gray-200 bg-white/90 backdrop-blur-[20px] px-4 py-4 space-y-0.5 shadow-lg">
           {isAuthenticated && user ? (
             <>
               <div className="flex items-center gap-2 pb-2 mb-1 border-b border-gray-100 text-sm text-gray-700">
@@ -408,7 +421,7 @@ export function Header() {
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-2.5 py-2.5 text-sm font-medium text-gray-700 hover:text-orange-600 transition-colors"
               >
-                <Bookmark className="w-4 h-4 text-orange-400" />
+                <Bookmark className="w-4 h-4 text-amber-400" />
                 بحثي المفضل
               </Link>
               <Link
