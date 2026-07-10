@@ -121,22 +121,23 @@ export function Header() {
         {/* ── Main row ── */}
         <div className="flex items-center gap-3 h-16">
 
-          {/* Logo: brand mark tile + wordmark. The PNG has a baked-in solid
-              background, so it's rendered as a rounded app-icon-style tile;
-              a transparent logo drop-in at the same path also renders fine. */}
-          <Link href="/" className="flex-shrink-0 flex items-center gap-2">
+          {/* Logo: horizontal wordmark (فرصة GO + fursago.com baked into the
+              image, solid brand-yellow bg), so no separate brand-text span.
+              forsa-logo-wide.png is cropped+downscaled from the Gemini
+              original (kept untouched in public/). Fixed 32px height on
+              purpose — the row's h-16 is rem-based (~48-52px under the root
+              font-size dial) and the logo must not shrink with it; w-auto
+              keeps the intrinsic aspect (128px asset = 4x density).
+              Favicon/app icons stay on the square logo set. */}
+          <Link href="/" className="flex-shrink-0 flex items-center">
             <Image
-              src="/forsa-logo-512.png"
-              alt="شعار فرصة"
-              width={48}
-              height={48}
+              src="/forsa-logo-wide.png"
+              alt="فرصة GO — fursago.com"
+              width={379}
+              height={128}
               preload
-              className="rounded-xl"
+              className="h-[32px] w-auto rounded-lg"
             />
-            <span className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-black tracking-tight text-blue-600">Forsa</span>
-              <span className="hidden sm:inline text-xs text-gray-400 font-medium">فرصة</span>
-            </span>
           </Link>
 
           {/* Desktop search bar */}
