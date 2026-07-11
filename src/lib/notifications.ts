@@ -1,4 +1,4 @@
-import { MessageSquare, TrendingDown, CheckCircle2, XCircle, Info, type LucideIcon } from 'lucide-react';
+import { MessageSquare, TrendingDown, CheckCircle2, XCircle, Info, Sparkles, type LucideIcon } from 'lucide-react';
 import type { AppNotification, NotificationType } from '@/services/notifications.service';
 
 // ── Shared notification UI helpers (bell dropdown + /account/notifications page) ──
@@ -18,6 +18,7 @@ export const NOTIFICATION_ICONS: Record<NotificationType, { Icon: LucideIcon; cl
   PRICE_DROP:       { Icon: TrendingDown,  className: 'text-green-600' },
   LISTING_APPROVED: { Icon: CheckCircle2,  className: 'text-green-500' },
   LISTING_REJECTED: { Icon: XCircle,       className: 'text-red-500' },
+  LISTING_CTA:      { Icon: Sparkles,      className: 'text-amber-500' },
   SYSTEM:           { Icon: Info,          className: 'text-gray-400' },
 };
 

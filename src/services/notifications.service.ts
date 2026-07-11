@@ -11,6 +11,7 @@ export type NotificationType =
   | 'PRICE_DROP'
   | 'LISTING_APPROVED'
   | 'LISTING_REJECTED'
+  | 'LISTING_CTA'
   | 'SYSTEM';
 
 export interface AppNotification {
