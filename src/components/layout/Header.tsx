@@ -7,11 +7,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   Search, PlusCircle, Menu, X, ChevronDown,
   User, LayoutDashboard, MessageSquare, FileText,
-  Star, Bookmark, UserCheck, LogOut, Store,
+  Star, Bookmark, UserCheck, LogOut, Store, Bell,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import { useNotificationsStore } from '@/store/notifications.store';
 import { messagesService } from '@/services/messages.service';
 import { shouldShowMobileTopBar } from './MobileTopBar';
+import { NotificationsBell } from './NotificationsBell';
 
 const CATEGORIES = [
   'كل الفئات',
@@ -38,6 +40,7 @@ export function Header() {
   const router   = useRouter();
   const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuthStore();
+  const notifUnread = useNotificationsStore((s) => s.unreadCount);
 
   const displayName = user?.profile?.firstName
     ?? user?.email?.split('@')[0]
@@ -200,6 +203,9 @@ export function Header() {
                     <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
                   )}
                 </Link>
+
+                {/* ── Notifications bell + dropdown ── */}
+                <NotificationsBell />
 
                 {/* ── Favorites icon + dropdown ── */}
                 <div className="relative" ref={favDropdownRef}>
@@ -401,6 +407,20 @@ export function Header() {
                 {unreadCount > 0 && (
                   <span className="ml-1 bg-red-500 text-white text-[10px] rounded-full h-4 min-w-[1rem] px-0.5 flex items-center justify-center">
                     {unreadCount}
+                  </span>
+                )}
+              </Link>
+
+              <Link
+                href="/account/notifications"
+                onClick={() => setMobileOpen(false)}
+                className="relative flex items-center gap-2.5 py-2.5 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                <Bell className="w-4 h-4 text-gray-400" />
+                الإشعارات
+                {notifUnread > 0 && (
+                  <span className="ml-1 bg-blue-600 text-white text-[10px] rounded-full h-4 min-w-[1rem] px-0.5 flex items-center justify-center">
+                    {notifUnread > 9 ? '9+' : notifUnread}
                   </span>
                 )}
               </Link>

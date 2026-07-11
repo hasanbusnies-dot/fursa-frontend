@@ -61,7 +61,8 @@ const NAV: NavSection[] = [
   {
     title: 'الرسائل',
     items: [
-      { href: '/account/messages',   label: 'الرسائل',    icon: MessageSquare },
+      { href: '/account/messages',      label: 'الرسائل',   icon: MessageSquare },
+      { href: '/account/notifications', label: 'الإشعارات', icon: Bell },
       { href: '/account/questions',  label: 'سؤال وجواب', icon: HelpCircle },
       {
         label: 'عروض الشراء',
