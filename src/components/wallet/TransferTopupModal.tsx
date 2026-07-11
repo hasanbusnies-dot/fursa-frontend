@@ -277,6 +277,16 @@ export function TransferTopupModal({ onClose }: { onClose: () => void }) {
                 </div>
               )}
 
+              {/* Recipient name — lets the user verify the holder shown in the Sham Cash app */}
+              {transfer.accountName && (
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">اسم المستلم</label>
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                    <span className="text-sm font-bold text-gray-800">{transfer.accountName}</span>
+                  </div>
+                </div>
+              )}
+
               {/* Receiving account — below the QR */}
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">حوّل إلى هذا الحساب</label>

@@ -21,6 +21,7 @@ export interface TransferMethodOption {
   label: string;
   address: string;
   qrUrl?: string | null;
+  accountName?: string | null; // recipient/holder name (null while coming soon)
   isActive: boolean;
   comingSoon: boolean;
 }
@@ -32,6 +33,7 @@ export interface TransferInitiated {
   amount: string;            // STRING
   currency: string;
   receivingAccount: string;
+  accountName?: string | null; // recipient/holder name shown above the account line
   qrUrl?: string | null;
   referenceCode: string;     // the user MUST put this in their transfer note
   instructions: string;
