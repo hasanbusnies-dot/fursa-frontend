@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { notificationsService, type AppNotification } from '@/services/notifications.service';
 import { useNotificationsStore } from '@/store/notifications.store';
 import { notificationHref, NOTIFICATION_ICONS, timeAgoAr } from '@/lib/notifications';
+import { PushToggle } from '@/components/notifications/PushToggle';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
 
@@ -83,6 +84,9 @@ export default function NotificationsPage() {
           </button>
         )}
       </div>
+
+      {/* Browser push opt-in/out (Phase D) */}
+      <PushToggle />
 
       {/* Unread filter */}
       <div className="flex items-center gap-2 mb-4">

@@ -8,6 +8,7 @@ import { Footer } from '@/components/layout/Footer';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { StaffRouteLock } from '@/components/layout/StaffRouteLock';
 import { SocketManager } from '@/components/providers/SocketManager';
+import { PushPrompt } from '@/components/providers/PushPrompt';
 
 // Dual-font strategy per the Stitch DESIGN.md: Cairo (geometric Kufi-style)
 // for headings, Tajawal for body text/labels. Both carry Latin glyphs so brand
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ar" dir="rtl" className={`${cairo.variable} ${tajawal.variable} h-full`}>
       <body className="min-h-full flex flex-col bg-gray-50 font-sans antialiased">
         <SocketManager />
+        <PushPrompt />
         <StaffRouteLock />
         <Header />
         <MobileTopBar />

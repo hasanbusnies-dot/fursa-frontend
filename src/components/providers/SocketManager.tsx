@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useAuthStore } from '@/store/auth.store';
 import { useNotificationsStore } from '@/store/notifications.store';
 import { connectSocket, disconnectSocket } from '@/lib/socket';
+import { registerServiceWorker } from '@/lib/push';
 import { notificationHref } from '@/lib/notifications';
 import { notificationsService, type AppNotification } from '@/services/notifications.service';
 
@@ -29,6 +30,10 @@ export function SocketManager() {
     notificationsService.getUnreadCount()
       .then((n) => useNotificationsStore.getState().setUnread(n))
       .catch(() => {});
+
+    // Idempotent SW registration (push; later also PWA T1 caching). Registering does
+    // NOT prompt for anything — permission is only requested from user gestures.
+    void registerServiceWorker();
 
     const socket = connectSocket();
     const onNotification = (n: AppNotification) => {

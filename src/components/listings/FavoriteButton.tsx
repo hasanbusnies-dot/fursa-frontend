@@ -75,6 +75,9 @@ export function FavoriteButton({
       setFavorited(result);
       onToggle?.(result);
       toast.success(result ? 'تمت الإضافة إلى المفضلة!' : 'تمت الإزالة من المفضلة.');
+      // The contextual push-permission moment (PushPrompt listens; no-op if already
+      // subscribed/denied/snoozed).
+      if (result) window.dispatchEvent(new CustomEvent('forsa:favorited'));
     } catch {
       setFavorited(!optimistic);
       toast.error('فشلت العملية. حاول مجدداً.');
