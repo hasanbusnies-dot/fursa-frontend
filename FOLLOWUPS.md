@@ -92,3 +92,18 @@ Deferred on purpose while applying the DESIGN.md system; none block the local re
   "Tümünü Gör") — pre-existing, should become Arabic like the rest of the UI.
 - **Popover/modal Level-3 treatment** (1px 10% primary outline + deep soft shadow)
   not yet applied to dropdowns/modals.
+
+## Account settings Phase 2 deferrals (2026-07-12)
+
+- **Profile photo removal:** the PATCH schemas validate `avatarUrl`/`logoUrl` as URLs, so
+  `''`/`null` can't clear a photo. Needs backend `z.literal('').transform(() => null)` (or
+  `.nullable()`) + a small «إزالة الصورة» button in the settings PhotoSection.
+- **Photo cropping:** no client-side crop — users upload as-is (min 480×480 enforced).
+  Add a square-crop step if avatars start looking off-center in circular masks.
+- **Avatar in header/sidebar:** Header + AccountSidebar still render initials only; the
+  login response already carries `profile.avatarUrl`/`logoUrl`, so wiring the image in is
+  frontend-only.
+- **Supabase `temp/` prefix:** avatars (like listing images) live under `temp/` in the
+  `forsa-images` bucket because `POST /upload` puts everything there and no cleanup job
+  exists. If a temp-cleanup job is ever added pre-launch, it MUST skip URLs referenced by
+  listings/profiles — or uploads should move to a permanent prefix first.
