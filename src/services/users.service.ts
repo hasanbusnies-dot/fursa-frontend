@@ -61,6 +61,26 @@ export interface UpdateCorporatePayload {
   logoUrl?: string;
 }
 
+// ── Notification preferences (settings Phase 3) ────────────────────────────────
+// Fixed matrix keyed by preference GROUP (LISTING_STATUS covers approved+rejected).
+// email channel deliberately absent from the API until a transport exists.
+
+export type NotificationPrefKey = 'NEW_MESSAGE' | 'PRICE_DROP' | 'LISTING_CTA' | 'LISTING_STATUS';
+
+export interface NotificationPrefEntry {
+  inApp: boolean;
+  push: boolean;
+  inAppLocked?: true; // backend states locked cells (moderation paper trail) — render, don't hardcode
+}
+
+export type NotificationPrefMatrix = Record<NotificationPrefKey, NotificationPrefEntry>;
+
+// Partial patch; the backend rejects inApp on LISTING_STATUS (locked) and
+// push:true while inApp is off (contradiction) with 400.
+export type NotificationPrefsPatch = Partial<
+  Record<NotificationPrefKey, { inApp?: boolean; push?: boolean }>
+>;
+
 // ── Logged-in devices (active refresh-token sessions) ──────────────────────────
 
 export interface UserSession {
@@ -113,6 +133,18 @@ export const usersService = {
 
   revokeSession: async (sessionId: string): Promise<void> => {
     await api.delete<void>(`/users/me/sessions/${sessionId}`);
+  },
+
+  getNotificationPrefs: async (): Promise<NotificationPrefMatrix> => {
+    const res = await api.get<{ data: NotificationPrefMatrix }>('/users/me/notification-preferences');
+    return res.data;
+  },
+
+  // Returns the FULL resolved matrix — always replace local state with it (the
+  // backend may normalize, e.g. collapse push when inApp turns off).
+  patchNotificationPrefs: async (patch: NotificationPrefsPatch): Promise<NotificationPrefMatrix> => {
+    const res = await api.patch<{ data: NotificationPrefMatrix }>('/users/me/notification-preferences', patch);
+    return res.data;
   },
 
   // Revokes every refresh token, including this device's — caller must log out locally after.
