@@ -69,6 +69,7 @@ The doushesh catalog (tree + inherited filters, served by the backend) drives br
 3. Backend-side (when you cross over): **stop the dev server before `prisma generate`** (Windows EPERM file lock); **use the Supabase session port 5432 for `migrate diff`/introspection** — the app's pooler port 6543 lies about drift.
 4. `npm run build` warns about multiple lockfiles (a stray `C:\Users\ASUS\package-lock.json`) — known, harmless.
 5. Console `curl` output mangles Arabic — decode API responses with a UTF-8-explicit python script, not by eyeballing terminal bytes.
+6. **`npm run build` while the dev server runs freezes dev CSS** (they share `.next`) — stop dev first, build, then delete `.next` and restart dev before any browser verify.
 
 ## 8. Common mistakes (each one really happened or nearly did)
 

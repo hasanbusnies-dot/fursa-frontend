@@ -92,9 +92,16 @@ const NAV: NavSection[] = [
   {
     title: 'أخرى',
     items: [
-      { label: 'الإشعارات',   icon: Bell },
       { label: 'فحص السيارات', icon: Car },
-      { href: '/account/settings', label: 'حسابي والإعدادات', icon: Settings },
+      {
+        label: 'حسابي والإعدادات',
+        icon: Settings,
+        children: [
+          { href: '/account/settings/profile',       label: 'معلوماتي' },
+          { href: '/account/settings/security',      label: 'أمان الحساب' },
+          { href: '/account/settings/notifications', label: 'إعدادات التطبيق' },
+        ],
+      },
     ],
   },
 ];
