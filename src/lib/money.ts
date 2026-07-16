@@ -78,3 +78,14 @@ export function compareAmounts(a: string, b: string): -1 | 0 | 1 {
   const cb = toCents(b);
   return ca < cb ? -1 : ca > cb ? 1 : 0;
 }
+
+/** Multiply a decimal money string by a small non-negative INTEGER factor — exact,
+ *  no floats (e.g. pricePerWeek × durationInWeeks). Returns a plain decimal string. */
+export function multiplyAmount(value: string, factor: number): string {
+  const cents = toCents(value) * BigInt(Math.trunc(factor));
+  const negative = cents < BigInt(0);
+  const abs = negative ? -cents : cents;
+  const int = (abs / BigInt(100)).toString();
+  const frac = (abs % BigInt(100)).toString().padStart(2, '0');
+  return `${negative ? '-' : ''}${int}.${frac}`;
+}

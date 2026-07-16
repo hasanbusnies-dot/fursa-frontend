@@ -1,123 +1,140 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   X, Zap, Star, LayoutGrid, ArrowUp, Search,
   Flame, Type, RefreshCw, CheckCircle, Clock,
+  Wallet, Loader2, AlertTriangle, Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { dopingsService, type DopingType } from '@/services/dopings.service';
+import {
+  dopingsService,
+  type DopingType,
+  type DopingCurrency,
+  type DopingPackageInfo,
+} from '@/services/dopings.service';
+import { walletService, type Wallet as WalletInfo } from '@/services/wallet.service';
+import { ApiError } from '@/services/api';
+import { formatMoney, compareAmounts, multiplyAmount } from '@/lib/money';
 import { cn } from '@/lib/utils';
 
 // ── Types & config ────────────────────────────────────────────────────────────
+// Prices are NOT defined here — they come from GET /dopings/packages (the live DB
+// prices the backend actually charges). Displayed total ≡ charged total, always.
 
 type DurationWeeks = 1 | 2 | 4;
 
 interface DopingOption {
   type: DopingType | 'REFRESH_DATE';
+  /** DB DopingPackage.type this option is priced by. */
+  packageType: string;
   icon: React.ElementType;
   iconBg: string;
   iconColor: string;
   title: string;
   description: string;
-  /** true → show duration selector; false → one-time or fixed-duration */
+  /** true → duration selector (charged pricePerWeek × weeks); false → fixed. */
   timed: boolean;
-  basePrice: number;
   fixedDurationLabel?: string;
 }
 
 const DOPING_OPTIONS: DopingOption[] = [
   {
     type: 'HOMEPAGE',
+    packageType: 'HOMEPAGE',
     icon: Star,
     iconBg: 'bg-yellow-50',
     iconColor: 'text-yellow-500',
     title: 'واجهة الصفحة الرئيسية',
     description: 'اظهر للملايين على الصفحة الرئيسية.',
     timed: true,
-    basePrice: 500,
   },
   {
     type: 'CATEGORY',
+    packageType: 'CATEGORY',
     icon: LayoutGrid,
     iconBg: 'bg-blue-50',
     iconColor: 'text-blue-500',
     title: 'واجهة الفئة',
     description: 'أعلى واجهة في صفحة الفئة.',
     timed: true,
-    basePrice: 300,
   },
   {
     type: 'TOP_OF_SEARCH',
+    packageType: 'TOP_OF_SEARCH',
     icon: ArrowUp,
     iconBg: 'bg-indigo-50',
     iconColor: 'text-indigo-500',
     title: 'في أعلى القائمة',
     description: 'تصدر نتائج البحث دائماً.',
     timed: true,
-    basePrice: 400,
   },
   {
     type: 'DETAILED_SEARCH',
+    packageType: 'DETAILED_SEARCH',
     icon: Search,
     iconBg: 'bg-purple-50',
     iconColor: 'text-purple-500',
     title: 'واجهة البحث المتقدم',
     description: 'ابرز في نتائج البحث المتقدم.',
     timed: true,
-    basePrice: 250,
   },
   {
+    // Backend applies URGENT/HIGHLIGHT for exactly 1 week (urgentUntil/highlightUntil)
+    // — say so honestly instead of the old "one-time" label.
     type: 'URGENT',
+    packageType: 'URGENT',
     icon: Flame,
     iconBg: 'bg-red-50',
     iconColor: 'text-red-500',
     title: 'إعلان عاجل',
     description: "الفت الانتباه بشارة 'عاجل' الحمراء.",
     timed: false,
-    basePrice: 150,
+    fixedDurationLabel: 'لمدة أسبوع',
   },
   {
     type: 'HIGHLIGHT',
+    packageType: 'HIGHLIGHT',
     icon: Type,
     iconBg: 'bg-orange-50',
     iconColor: 'text-orange-500',
     title: 'خط عريض وإطار',
     description: 'ابرز في القائمة بإطار ملون.',
     timed: false,
-    basePrice: 200,
+    fixedDurationLabel: 'لمدة أسبوع',
   },
   {
     type: 'REFRESH_DATE',
+    packageType: 'REFRESH',
     icon: RefreshCw,
     iconBg: 'bg-green-50',
     iconColor: 'text-green-500',
-    title: 'تحديث الإعلان',
-    description: 'انقل إعلانك للأعلى بتحديث تاريخه.',
+    title: 'تحديث تاريخ الإعلان',
+    description: 'انقل إعلانك للأعلى بتحديث تاريخ النشر.',
     timed: false,
-    basePrice: 100,
+    fixedDurationLabel: 'لمرة واحدة',
   },
 ];
 
-const DURATION_OPTIONS: { weeks: DurationWeeks; label: string; multiplier: number }[] = [
-  { weeks: 1, label: 'أسبوع واحد', multiplier: 1 },
-  { weeks: 2, label: 'أسبوعان',    multiplier: 1.8 },
-  { weeks: 4, label: '4 أسابيع',   multiplier: 3.2 },
+const DURATION_OPTIONS: { weeks: DurationWeeks; label: string }[] = [
+  { weeks: 1, label: 'أسبوع واحد' },
+  { weeks: 2, label: 'أسبوعان' },
+  { weeks: 4, label: '4 أسابيع' },
 ];
 
-function calcPrice(option: DopingOption, weeks: DurationWeeks): number {
-  if (!option.timed) return option.basePrice;
-  const dur = DURATION_OPTIONS.find((d) => d.weeks === weeks)!;
-  return Math.round(option.basePrice * dur.multiplier);
-}
+const CURRENCY_META: Record<DopingCurrency, { name: string }> = {
+  SYP: { name: 'ليرة سورية' },
+  USD: { name: 'دولار أمريكي' },
+};
 
-function durationSummaryLabel(option: DopingOption, weeks: DurationWeeks): string {
-  if (option.fixedDurationLabel) return option.fixedDurationLabel;
-  if (!option.timed)             return 'لمرة واحدة';
-  const d = DURATION_OPTIONS.find((x) => x.weeks === weeks);
-  return d?.label ?? `${weeks} أسابيع`;
-}
+// sahibinden's biggest Güncelim complaint class: users assuming the refresh extends
+// the publication period. Kill it with one explicit line.
+const REFRESH_SCOPE_NOTE =
+  'هذه الترقية تُحدّث تاريخ نشر الإعلان فقط ليتقدّم في الترتيب — وهي لا تُمدّد فترة عرض الإعلان ولا تُغيّر تاريخ انتهائه.';
+
+const INSUFFICIENT_MSG = 'رصيد المحفظة غير كافٍ — يرجى شحن المحفظة أولاً.';
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
 
@@ -132,29 +149,82 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
   const router = useRouter();
   const [selectedType, setSelectedType] = useState<DopingOption>(DOPING_OPTIONS[0]);
   const [duration, setDuration]         = useState<DurationWeeks>(1);
+  const [currency, setCurrency]         = useState<DopingCurrency>('SYP');
   const [purchasing, setPurchasing]     = useState(false);
+  const [error, setError]               = useState<string | null>(null);
+
+  // One idempotency key per modal open — a double-tap can't double-charge.
+  const [idemKey, setIdemKey] = useState('');
+
+  // null = loading; [] / undefined balances = fetch failed (don't block — backend decides).
+  const [packages, setPackages] = useState<DopingPackageInfo[] | null>(null);
+  const [wallet, setWallet]     = useState<WalletInfo | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    setIdemKey(crypto.randomUUID());
+    setError(null);
+    setPackages(null);
+    setWallet(null);
+    dopingsService.getPackages()
+      .then((p) => { if (!cancelled) setPackages(p); })
+      .catch(() => { if (!cancelled) setPackages([]); });
+    walletService.getWallet()
+      .then((w) => { if (!cancelled) setWallet(w); })
+      .catch(() => { if (!cancelled) setWallet({ status: 'ACTIVE', balances: [] }); });
+    return () => { cancelled = true; };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const price = calcPrice(selectedType, duration);
+  const loading = packages === null || wallet === null;
+
+  /** Real per-week/per-use price (money-STRING) for an option in the chosen currency. */
+  const priceFor = (opt: DopingOption, cur: DopingCurrency): string | undefined =>
+    packages?.find((p) => p.type === opt.packageType)
+      ?.prices.find((pr) => pr.currency === cur)?.pricePerWeek;
+
+  const unitPrice = priceFor(selectedType, currency);
+  const total = unitPrice !== undefined
+    ? (selectedType.timed ? multiplyAmount(unitPrice, duration) : unitPrice)
+    : undefined;
+
+  const balance = wallet?.balances.find((b) => b.currency === currency)?.balance;
+  const insufficient =
+    total !== undefined && balance !== undefined && compareAmounts(balance, total) < 0;
+
+  const payDisabled = purchasing || loading || total === undefined || insufficient;
 
   const handlePurchase = async () => {
+    if (payDisabled) return;
+    setError(null);
     setPurchasing(true);
     try {
       if (selectedType.type === 'REFRESH_DATE') {
-        await dopingsService.refreshDate(listingId);
+        await dopingsService.refreshDate({ listingId, currency, idempotencyKey: idemKey });
       } else {
-        await dopingsService.apply(
+        await dopingsService.apply({
           listingId,
-          selectedType.type as DopingType,
-          selectedType.timed ? duration : 1,
-        );
+          dopingType: selectedType.type as DopingType,
+          durationInWeeks: selectedType.timed ? duration : 1,
+          currency,
+          idempotencyKey: idemKey,
+        });
       }
       toast.success(`تم تطبيق "${selectedType.title}" بنجاح!`);
       onClose();
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'فشلت العملية.');
+      if (err instanceof ApiError && err.status === 422) {
+        setError(INSUFFICIENT_MSG);
+      } else if (err instanceof ApiError && err.status === 403) {
+        setError('محفظتك مجمّدة حالياً. تواصل مع الدعم.');
+      } else if (err instanceof ApiError && err.status === 409) {
+        setError('لا يمكن تحديث الإعلان الآن — يُسمح بالتحديث مرة واحدة كل 24 ساعة (وبعد مرور 24 ساعة على نشر الإعلان).');
+      } else {
+        setError(err instanceof Error ? err.message : 'فشلت العملية. حاول مرة أخرى.');
+      }
     } finally {
       setPurchasing(false);
     }
@@ -191,6 +261,7 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
             <div className="grid grid-cols-1 gap-2">
               {DOPING_OPTIONS.map((opt) => {
                 const selected = selectedType.type === opt.type;
+                const optPrice = priceFor(opt, currency);
                 return (
                   <button
                     key={opt.type}
@@ -217,13 +288,8 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-900 flex items-center gap-2 flex-wrap">
                         {opt.title}
-                        {!opt.timed && !opt.fixedDurationLabel && (
-                          <span className="text-[10px] font-bold bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
-                            لمرة واحدة
-                          </span>
-                        )}
                         {opt.fixedDurationLabel && (
-                          <span className="text-[10px] font-bold bg-sky-100 text-sky-600 px-1.5 py-0.5 rounded-full">
+                          <span className="text-[10px] font-bold bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
                             {opt.fixedDurationLabel}
                           </span>
                         )}
@@ -231,12 +297,18 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
                       <p className="text-xs text-gray-500 mt-0.5">{opt.description}</p>
                     </div>
 
-                    {/* Price — aligned to the left edge (end in RTL) */}
+                    {/* Real price from the API — aligned to the left edge (end in RTL) */}
                     <div className="shrink-0 text-end">
-                      <p className="text-sm font-extrabold text-yellow-900">{opt.basePrice} ل.س</p>
-                      <p className="text-[10px] text-gray-400">
-                        {opt.timed ? '/ أسبوع' : opt.fixedDurationLabel ? 'ثابت' : 'لمرة واحدة'}
-                      </p>
+                      {loading ? (
+                        <Loader2 className="w-4 h-4 text-gray-300 animate-spin ms-auto" />
+                      ) : optPrice !== undefined ? (
+                        <>
+                          <p className="text-sm font-extrabold text-yellow-900">{formatMoney(optPrice, currency)}</p>
+                          <p className="text-[10px] text-gray-400">{opt.timed ? '/ أسبوع' : opt.fixedDurationLabel}</p>
+                        </>
+                      ) : (
+                        <p className="text-xs text-gray-400">غير متاح</p>
+                      )}
                     </div>
                   </button>
                 );
@@ -244,8 +316,18 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
             </div>
           </div>
 
+          {/* REFRESH_DATE scope note — date only, does NOT extend the publication period */}
+          {selectedType.type === 'REFRESH_DATE' && (
+            <div className="rounded-xl bg-sky-50 border border-sky-200 p-3.5">
+              <p className="flex items-start gap-2 text-xs text-sky-800 leading-relaxed">
+                <Info className="w-4 h-4 shrink-0 mt-0.5" />
+                {REFRESH_SCOPE_NOTE}
+              </p>
+            </div>
+          )}
+
           {/* Duration selector */}
-          {selectedType.timed && !selectedType.fixedDurationLabel && (
+          {selectedType.timed && (
             <div>
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" />
@@ -266,13 +348,50 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
                   >
                     <p className="text-sm font-bold text-gray-900">{d.label}</p>
                     <p className="text-xs text-yellow-900 font-semibold mt-0.5">
-                      {Math.round(selectedType.basePrice * d.multiplier)} ل.س
+                      {unitPrice !== undefined ? formatMoney(multiplyAmount(unitPrice, d.weeks), currency) : '—'}
                     </p>
                   </button>
                 ))}
               </div>
             </div>
           )}
+
+          {/* Wallet currency selector — which balance funds the purchase */}
+          <div>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <Wallet className="w-3.5 h-3.5" />
+              ادفع من رصيد
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {(['SYP', 'USD'] as const).map((c) => {
+                const bal = wallet?.balances.find((b) => b.currency === c)?.balance;
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCurrency(c)}
+                    className={cn(
+                      'py-3 px-3 rounded-xl border-2 text-center transition-all',
+                      currency === c
+                        ? 'border-orange-400 bg-orange-50 shadow-sm'
+                        : 'border-gray-200 hover:border-gray-300',
+                    )}
+                  >
+                    <p className="text-sm font-bold text-gray-900">{CURRENCY_META[c].name}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {wallet === null ? (
+                        <Loader2 className="w-3.5 h-3.5 text-gray-300 animate-spin inline-block" />
+                      ) : bal !== undefined ? (
+                        <>الرصيد: <span className="font-semibold text-gray-700">{formatMoney(bal, c)}</span></>
+                      ) : (
+                        'الرصيد: —'
+                      )}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           {/* Order summary */}
           <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
@@ -281,21 +400,48 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">{selectedType.title}</span>
                 <span className="font-semibold text-gray-900">
-                  {durationSummaryLabel(selectedType, duration)}
+                  {selectedType.timed
+                    ? DURATION_OPTIONS.find((d) => d.weeks === duration)?.label
+                    : selectedType.fixedDurationLabel}
                 </span>
               </div>
               <div className="border-t border-gray-200 pt-2 flex justify-between items-baseline">
-                <span className="text-sm font-bold text-gray-800">المجموع</span>
-                <span className="text-xl font-extrabold text-yellow-900">{price} ل.س</span>
+                <span className="text-sm font-bold text-gray-800">المجموع — يُخصم من محفظتك</span>
+                <span className="text-xl font-extrabold text-yellow-900">
+                  {total !== undefined ? formatMoney(total, currency) : '—'}
+                </span>
               </div>
             </div>
           </div>
+
+          {/* Insufficient balance — point to the wallet top-up */}
+          {(insufficient || error === INSUFFICIENT_MSG) && (
+            <div className="rounded-xl bg-amber-50 border border-amber-200 p-3.5">
+              <p className="flex items-start gap-2 text-xs text-amber-800 leading-relaxed">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                {INSUFFICIENT_MSG}
+              </p>
+              <Link
+                href="/account/wallet"
+                className="mt-2.5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-l from-orange-500 to-pink-500 text-white text-sm font-bold hover:opacity-95 transition-opacity"
+              >
+                <Wallet className="w-4 h-4" />
+                شحن المحفظة
+              </Link>
+            </div>
+          )}
+
+          {error && error !== INSUFFICIENT_MSG && (
+            <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3">
+              <p className="text-sm text-red-700 leading-snug">{error}</p>
+            </div>
+          )}
 
           {/* Purchase button */}
           <button
             type="button"
             onClick={handlePurchase}
-            disabled={purchasing}
+            disabled={payDisabled}
             className="w-full flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-yellow-900 font-extrabold text-sm py-3.5 rounded-xl shadow-md transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {purchasing ? (
@@ -306,7 +452,7 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
             ) : (
               <>
                 <Zap className="w-4 h-4" />
-                اشترِ وأكّد — {price} ل.س
+                {total !== undefined ? `اشترِ وأكّد — ${formatMoney(total, currency)}` : 'اشترِ وأكّد'}
               </>
             )}
           </button>
