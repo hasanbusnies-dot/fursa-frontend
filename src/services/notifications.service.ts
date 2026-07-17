@@ -15,6 +15,7 @@ export type NotificationType =
   | 'LISTING_APPROVED'
   | 'LISTING_REJECTED'
   | 'LISTING_CTA'
+  | 'WALLET_TOPUP'
   | 'SYSTEM';
 
 export interface AppNotification {

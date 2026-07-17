@@ -1,10 +1,11 @@
-import { MessageSquare, TrendingDown, CheckCircle2, XCircle, Info, Sparkles, type LucideIcon } from 'lucide-react';
+import { MessageSquare, TrendingDown, CheckCircle2, XCircle, Info, Sparkles, Wallet, type LucideIcon } from 'lucide-react';
 import type { AppNotification, NotificationType } from '@/services/notifications.service';
 
 // ── Shared notification UI helpers (bell dropdown + /account/notifications page) ──
 
 /** Deep-link target resolved from metadata; falls back to the notifications page. */
 export function notificationHref(n: AppNotification): string {
+  if (n.type === 'WALLET_TOPUP') return '/account/wallet';
   if (n.metadata?.listingId) return `/listings/${n.metadata.listingId}`;
   if (n.metadata?.conversationId) return `/account/messages/${n.metadata.conversationId}`;
   // A NEW_MESSAGE without its conversation id still belongs on the messages surface.
@@ -19,6 +20,7 @@ export const NOTIFICATION_ICONS: Record<NotificationType, { Icon: LucideIcon; cl
   LISTING_APPROVED: { Icon: CheckCircle2,  className: 'text-green-500' },
   LISTING_REJECTED: { Icon: XCircle,       className: 'text-red-500' },
   LISTING_CTA:      { Icon: Sparkles,      className: 'text-amber-500' },
+  WALLET_TOPUP:     { Icon: Wallet,        className: 'text-orange-500' },
   SYSTEM:           { Icon: Info,          className: 'text-gray-400' },
 };
 

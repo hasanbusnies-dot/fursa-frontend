@@ -14,6 +14,10 @@ import { notificationsService, type AppNotification } from '@/services/notificat
 // lifecycle (connect when authenticated, disconnect on logout) AND the app-wide
 // 'notification' listener: badge bump + toast with a deep-link action. Every event
 // carries a real DB id (the backend chokepoint persists before emitting).
+// Wallet-credit socket arrivals re-broadcast as a window event so wallet surfaces can
+// refetch (mirrors the FAVORITED_EVENT pattern — SocketManager stays headless).
+export const WALLET_CREDITED_EVENT = 'forsa:wallet-credited';
+
 export function SocketManager() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const router = useRouter();
@@ -40,6 +44,7 @@ export function SocketManager() {
     const socket = connectSocket();
     const onNotification = (n: AppNotification) => {
       useNotificationsStore.getState().bump();
+      if (n.type === 'WALLET_TOPUP') window.dispatchEvent(new Event(WALLET_CREDITED_EVENT));
       toast(n.title, {
         description: n.content,
         action: {

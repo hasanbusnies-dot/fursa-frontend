@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -22,6 +22,7 @@ import { formatMoney, formatAmount } from '@/lib/money';
 import { cn } from '@/lib/utils';
 import { TransferTopupModal } from '@/components/wallet/TransferTopupModal';
 import { TransferHistory } from '@/components/wallet/TransferHistory';
+import { WALLET_CREDITED_EVENT } from '@/components/providers/SocketManager';
 
 // ── Labels & helpers ────────────────────────────────────────────────────────────
 
@@ -302,16 +303,21 @@ export default function WalletPage() {
     if (!isAuthenticated) router.replace('/login');
   }, [isAuthenticated, router]);
 
-  const loadWallet = useCallback(() => {
-    setLW(true); setWalletErr(false);
+  // silent: refresh in place with no spinner flip and no error-state change (focus/socket
+  // refetches must never flash the UI or replace good data with an error card).
+  // Options-object (not a boolean) so `onClick={loadWallet}` can't smuggle a MouseEvent in.
+  const loadWallet = useCallback((opts?: { silent?: boolean }) => {
+    const silent = opts?.silent === true;
+    if (!silent) { setLW(true); setWalletErr(false); }
     walletService.getWallet()
       .then(setWallet)
-      .catch(() => setWalletErr(true))
-      .finally(() => setLW(false));
+      .catch(() => { if (!silent) setWalletErr(true); })
+      .finally(() => { if (!silent) setLW(false); });
   }, []);
 
-  const loadTxns = useCallback(() => {
-    setLT(true); setTxnErr(false);
+  const loadTxns = useCallback((opts?: { silent?: boolean }) => {
+    const silent = opts?.silent === true;
+    if (!silent) { setLT(true); setTxnErr(false); }
     walletService.getTransactions({
       page,
       limit: 20,
@@ -319,12 +325,40 @@ export default function WalletPage() {
       type:     typeFilter === 'ALL' ? undefined : typeFilter,
     })
       .then((res) => { setTxns(res.data); setMeta(res.meta); })
-      .catch(() => setTxnErr(true))
-      .finally(() => setLT(false));
+      .catch(() => { if (!silent) setTxnErr(true); })
+      .finally(() => { if (!silent) setLT(false); });
   }, [page, currencyFilter, typeFilter]);
 
   useEffect(() => { if (isAuthenticated) loadWallet(); }, [isAuthenticated, loadWallet]);
   useEffect(() => { if (isAuthenticated) loadTxns();  }, [isAuthenticated, loadTxns]);
+
+  // Freshness (the stale-balance incident): an admin approving a transfer while the user
+  // sits on this page must land without a reload. Two triggers, both silent:
+  //  - tab regains visibility/focus (throttled — focus+visibilitychange often co-fire),
+  //  - a WALLET_TOPUP notification arrives via the socket (SocketManager dispatches
+  //    forsa:wallet-credited; unthrottled — a real credit always warrants a refetch).
+  const lastSilentRef = useRef(0);
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const silentReload = (force: boolean) => {
+      const now = Date.now();
+      if (!force && now - lastSilentRef.current < 5000) return;
+      lastSilentRef.current = now;
+      loadWallet({ silent: true });
+      loadTxns({ silent: true });
+    };
+    const onVisibility = () => { if (document.visibilityState === 'visible') silentReload(false); };
+    const onFocus = () => silentReload(false);
+    const onCredited = () => silentReload(true);
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('focus', onFocus);
+    window.addEventListener(WALLET_CREDITED_EVENT, onCredited);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener(WALLET_CREDITED_EVENT, onCredited);
+    };
+  }, [isAuthenticated, loadWallet, loadTxns]);
 
   // Reset to page 1 when a filter changes
   const onCurrency = (c: 'ALL' | WalletCurrency) => { setCF(c); setPage(1); };
@@ -379,7 +413,7 @@ export default function WalletPage() {
           <div className="bg-white shadow-pebble rounded-card p-6 mb-6 text-center">
             <AlertTriangle className="w-8 h-8 text-red-300 mx-auto mb-2" />
             <p className="text-sm text-gray-600 mb-3">تعذّر تحميل رصيد المحفظة.</p>
-            <button onClick={loadWallet} className="inline-flex items-center gap-1.5 text-sm font-semibold text-orange-600 hover:text-orange-700">
+            <button onClick={() => loadWallet()} className="inline-flex items-center gap-1.5 text-sm font-semibold text-orange-600 hover:text-orange-700">
               <RefreshCw className="w-4 h-4" /> إعادة المحاولة
             </button>
           </div>
@@ -445,7 +479,7 @@ export default function WalletPage() {
             <div className="py-16 text-center">
               <AlertTriangle className="w-8 h-8 text-red-300 mx-auto mb-2" />
               <p className="text-sm text-gray-600 mb-3">تعذّر تحميل العمليات.</p>
-              <button onClick={loadTxns} className="inline-flex items-center gap-1.5 text-sm font-semibold text-orange-600 hover:text-orange-700">
+              <button onClick={() => loadTxns()} className="inline-flex items-center gap-1.5 text-sm font-semibold text-orange-600 hover:text-orange-700">
                 <RefreshCw className="w-4 h-4" /> إعادة المحاولة
               </button>
             </div>
