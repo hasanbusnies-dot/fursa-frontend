@@ -4,16 +4,23 @@ import { useEffect, useState } from 'react';
 import { Bell, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/auth.store';
-import { getPushState, subscribeToPush } from '@/lib/push';
+import { getPushState, pushErrorMessage, subscribeToPush } from '@/lib/push';
 
-// Contextual push-permission card (Phase D): appears ONLY right after the user
-// favorites something (the `forsa:favorited` event from FavoriteButton) — the moment
-// the pitch is honest ("know when its price drops"). Never an on-load nag; snoozed
-// dismissals persist for 14 days; browser-level denial permanently silences it.
+// Push-permission card (Phase D). Two triggers, one gate:
+//  1. ENTRY — shortly after entering a logged-in session (founder decision 2026-07:
+//     ask up front, app and web alike).
+//  2. CONTEXTUAL — right after favoriting (`forsa:favorited` from FavoriteButton).
+// This is OUR card, never the native prompt on load: Safari auto-denies
+// requestPermission() outside a user gesture, and Chrome's abusive-notification
+// policy can quiet-block origins that prompt without interaction — so the browser
+// prompt fires only from the card's button tap. Snoozed dismissals persist for
+// 14 days; browser-level denial permanently silences it.
 
 export const FAVORITED_EVENT = 'forsa:favorited';
 const SNOOZE_KEY = 'forsa-push-prompt-snoozed-until';
 const SNOOZE_DAYS = 14;
+// Let the page settle before the entry ask — an instant overlay reads as a pop-up ad.
+const ENTRY_DELAY_MS = 3000;
 
 export function PushPrompt() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -23,15 +30,20 @@ export function PushPrompt() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const onFavorited = async () => {
+    const maybeShow = async () => {
       const snoozedUntil = Number(localStorage.getItem(SNOOZE_KEY) ?? 0);
       if (Date.now() < snoozedUntil) return;
-      if ((await getPushState()) !== 'unsubscribed') return; // supported + permission still askable
+      if ((await getPushState()) !== 'unsubscribed') return; // supported + configured + permission still askable
       setVisible(true);
     };
 
+    const entryTimer = window.setTimeout(() => { void maybeShow(); }, ENTRY_DELAY_MS);
+    const onFavorited = () => { void maybeShow(); };
     window.addEventListener(FAVORITED_EVENT, onFavorited);
-    return () => window.removeEventListener(FAVORITED_EVENT, onFavorited);
+    return () => {
+      window.clearTimeout(entryTimer);
+      window.removeEventListener(FAVORITED_EVENT, onFavorited);
+    };
   }, [isAuthenticated]);
 
   const snooze = () => {
@@ -45,9 +57,9 @@ export function PushPrompt() {
       await subscribeToPush();
       setVisible(false);
       toast.success('تم تفعيل التنبيهات — سنعلمك فور انخفاض سعر إعلان في مفضلتك.');
-    } catch {
+    } catch (err) {
       snooze(); // denied or failed — don't nag again soon
-      toast.error('لم يتم تفعيل التنبيهات.');
+      toast.error(pushErrorMessage(err) ?? 'لم يتم تفعيل التنبيهات.');
     } finally {
       setBusy(false);
     }

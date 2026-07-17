@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { BellRing } from 'lucide-react';
 import { toast } from 'sonner';
-import { getPushState, subscribeToPush, unsubscribeFromPush, type PushState } from '@/lib/push';
+import { getPushState, pushErrorMessage, subscribeToPush, unsubscribeFromPush, type PushState } from '@/lib/push';
 import { cn } from '@/lib/utils';
 
 // «تنبيهات المتصفح» switch — the durable home for push opt-in/out on the
@@ -29,9 +29,9 @@ export function PushToggle() {
         setState('subscribed');
         toast.success('تم تفعيل تنبيهات المتصفح.');
       }
-    } catch {
+    } catch (err) {
       setState(await getPushState());
-      toast.error('تعذّر تغيير إعداد التنبيهات.');
+      toast.error(pushErrorMessage(err) ?? 'تعذّر تغيير إعداد التنبيهات — تحقق من اتصالك وحاول مجدداً.');
     } finally {
       setBusy(false);
     }
@@ -41,6 +41,7 @@ export function PushToggle() {
     state === 'denied'         ? 'التنبيهات محظورة من إعدادات المتصفح — فعّلها من إعدادات الموقع في متصفحك ثم أعد المحاولة.'
     : state === 'ios-install-needed' ? 'على آيفون: أضِف فرصة إلى الشاشة الرئيسية (مشاركة ← إضافة إلى الشاشة الرئيسية) لتفعيل التنبيهات.'
     : state === 'unsupported'  ? 'متصفحك لا يدعم تنبيهات الويب.'
+    : state === 'unconfigured' ? 'تنبيهات المتصفح غير متاحة حالياً — سيتم تفعيلها قريباً.'
     : 'استقبل تنبيهات انخفاض الأسعار والرسائل الجديدة حتى عندما يكون الموقع مغلقاً.';
 
   const toggleable = state === 'subscribed' || state === 'unsubscribed';
