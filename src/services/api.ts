@@ -1,4 +1,4 @@
-import { refreshAccessToken } from './token-refresh';
+import { refreshAccessToken, RefreshError } from './token-refresh';
 
 export class ApiError extends Error {
   constructor(
@@ -44,7 +44,8 @@ function authHeader(token: string | null): Record<string, string> {
 }
 
 // Wipes all local auth state and hard-navigates to /login.
-// Called whenever the server returns 401 (expired / invalid token).
+// Called ONLY on a definitive session death: /auth/refresh rejected the refresh token,
+// or a just-refreshed access token was rejected again (account-level rejection).
 // Safe to call from SSR context — the guard prevents browser-only APIs from running.
 function clearAuthAndRedirect(): void {
   if (typeof window === 'undefined') return;
@@ -55,19 +56,6 @@ function clearAuthAndRedirect(): void {
   // Expire the session cookie
   document.cookie = 'forsa-token=; path=/; max-age=0; SameSite=Lax';
   window.location.href = '/login';
-}
-
-// Checks a parsed error body for known "expired token" messages even when the
-// server incorrectly returns a non-401 status code.
-function isAuthError(status: number, message: string): boolean {
-  if (status === 401) return true;
-  const m = message.toLowerCase();
-  return (
-    m.includes('invalid or expired') ||
-    m.includes('access token') ||
-    m.includes('unauthorized') ||
-    m.includes('jwt expired')
-  );
 }
 
 // Auth endpoints (login / register / refresh) must never trigger a refresh-retry:
@@ -99,7 +87,9 @@ async function request<T>(
       errors?: Record<string, string[]>;
     };
     const message = body.message ?? `HTTP ${res.status}`;
-    if (isAuthError(res.status, message)) {
+    // Status 401 ONLY — never message text. An endpoint returning auth failures as a
+    // non-401 is a backend bug to fix there, not to pattern-match here.
+    if (res.status === 401) {
       // Auth endpoints: surface the server message ("Invalid credentials") — never
       // refresh, never redirect.
       if (isAuthEndpoint(endpoint)) {
@@ -109,16 +99,21 @@ async function request<T>(
       if (!retried) {
         let newToken: string;
         try {
-          newToken = await refreshAccessToken();
-        } catch {
+          newToken = await refreshAccessToken(token ?? undefined);
+        } catch (err) {
+          if (err instanceof RefreshError && !err.definitive) {
+            // Transient refresh failure (network/429/5xx): the session is NOT known dead.
+            // Fail only THIS request; the next action retries naturally.
+            throw new ApiError(message, body.errors, res.status);
+          }
           clearAuthAndRedirect();
-          throw new ApiError('Session expired. Please log in again.');
+          throw new ApiError('Session expired. Please log in again.', undefined, 401);
         }
         return request<T>(endpoint, options, true, newToken);
       }
-      // Already retried with a fresh token and still 401 → give up.
+      // A freshly-refreshed token was rejected again → account-level rejection.
       clearAuthAndRedirect();
-      throw new ApiError('Session expired. Please log in again.');
+      throw new ApiError('Session expired. Please log in again.', undefined, 401);
     }
     throw new ApiError(message, body.errors, res.status);
   }
@@ -150,22 +145,25 @@ async function uploadFormRequest<T>(
       errors?: Record<string, string[]>;
     };
     const message = body.message ?? `HTTP ${res.status}`;
-    if (isAuthError(res.status, message)) {
+    if (res.status === 401) {
       if (isAuthEndpoint(endpoint)) {
         throw new ApiError(message, body.errors, res.status);
       }
       if (!retried) {
         let newToken: string;
         try {
-          newToken = await refreshAccessToken();
-        } catch {
+          newToken = await refreshAccessToken(token ?? undefined);
+        } catch (err) {
+          if (err instanceof RefreshError && !err.definitive) {
+            throw new ApiError(message, body.errors, res.status);
+          }
           clearAuthAndRedirect();
-          throw new ApiError('Session expired. Please log in again.');
+          throw new ApiError('Session expired. Please log in again.', undefined, 401);
         }
         return uploadFormRequest<T>(endpoint, formData, true, newToken);
       }
       clearAuthAndRedirect();
-      throw new ApiError('Session expired. Please log in again.');
+      throw new ApiError('Session expired. Please log in again.', undefined, 401);
     }
     throw new ApiError(message, body.errors, res.status);
   }
