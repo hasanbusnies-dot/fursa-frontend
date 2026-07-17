@@ -26,7 +26,7 @@ export class PushError extends Error {
   }
 }
 
-/** Arabic explanation for a subscribe failure the user can act on; null → caller's generic fallback. */
+/** Arabic explanation for a subscribe failure the user can act on; null (non-PushError) → caller's generic fallback. */
 export function pushErrorMessage(err: unknown): string | null {
   if (!(err instanceof PushError)) return null;
   switch (err.code) {
@@ -34,8 +34,10 @@ export function pushErrorMessage(err: unknown): string | null {
       return 'خدمة التنبيهات غير مهيأة حالياً — حاول مرة أخرى لاحقاً.';
     case 'permission-denied':
       return 'لم يُمنح إذن التنبيهات — فعّله من إعدادات الموقع في متصفحك ثم أعد المحاولة.';
-    default:
-      return null;
+    case 'subscribe-failed':
+      return 'تعذّر إنشاء اشتراك التنبيهات في المتصفح — أعد تحميل الصفحة وحاول مجدداً.';
+    case 'backend-failed':
+      return 'تم منح الإذن لكن تعذّر تسجيل الاشتراك لدى الخادم — تحقق من اتصالك بالإنترنت وحاول مجدداً.';
   }
 }
 
@@ -73,6 +75,29 @@ export async function getPushState(): Promise<PushState> {
   return VAPID_PUBLIC_KEY ? 'unsubscribed' : 'unconfigured';
 }
 
+/** Browser subscribe + backend row in lockstep. Throws PushError; underlying errors go to console. */
+async function createSubscription(reg: ServiceWorkerRegistration): Promise<void> {
+  let sub: PushSubscription;
+  try {
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+    });
+  } catch (err) {
+    console.error('[push] pushManager.subscribe failed:', err);
+    throw new PushError('subscribe-failed');
+  }
+  try {
+    await api.post('/notifications/web-push', sub.toJSON());
+  } catch (err) {
+    console.error('[push] backend subscription registration failed:', err);
+    // Lockstep rule: a browser-only subscription would show the toggle "on" while the
+    // backend has no row to deliver to — roll the browser side back before surfacing.
+    await sub.unsubscribe().catch(() => {});
+    throw new PushError('backend-failed');
+  }
+}
+
 /** Must be called from a user gesture (iOS requirement). Throws PushError on failure/denial. */
 export async function subscribeToPush(): Promise<void> {
   if (!VAPID_PUBLIC_KEY) throw new PushError('not-configured');
@@ -82,24 +107,34 @@ export async function subscribeToPush(): Promise<void> {
   const reg = (await navigator.serviceWorker.getRegistration()) ?? (await registerServiceWorker());
   if (!reg) throw new PushError('subscribe-failed');
   await navigator.serviceWorker.ready;
+  await createSubscription(reg);
+}
 
-  let sub: PushSubscription;
-  try {
-    sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+/**
+ * Heals the granted-but-unsubscribed gap on app entry: permission is 'granted' yet there is
+ * no live PushSubscription (a past transient subscribe failure, a browser-evicted
+ * subscription) — or the subscription exists but the backend row was lost. Never prompts
+ * (it only acts when permission is already granted), so it's safe outside a user gesture
+ * and on every auth. All failures are silent-to-UI; the PushPrompt card remains the
+ * user-gesture retry path when this can't heal.
+ */
+export async function ensurePushSubscription(): Promise<void> {
+  if (!isPushSupported() || Notification.permission !== 'granted') return;
+  const reg = (await navigator.serviceWorker.getRegistration()) ?? (await registerServiceWorker());
+  if (!reg) return;
+  await navigator.serviceWorker.ready;
+
+  const existing = await reg.pushManager.getSubscription();
+  if (existing) {
+    // The backend POST is an upsert-by-endpoint that re-parents the row to the caller and
+    // bumps lastSeenAt — re-asserting every entry heals a lost row and follows account switches.
+    await api.post('/notifications/web-push', existing.toJSON()).catch((err) => {
+      console.error('[push] backend re-sync of existing subscription failed:', err);
     });
-  } catch {
-    throw new PushError('subscribe-failed');
+    return;
   }
-  try {
-    await api.post('/notifications/web-push', sub.toJSON());
-  } catch {
-    // Lockstep rule: a browser-only subscription would show the toggle "on" while the
-    // backend has no row to deliver to — roll the browser side back before surfacing.
-    await sub.unsubscribe().catch(() => {});
-    throw new PushError('backend-failed');
-  }
+  if (!VAPID_PUBLIC_KEY) return;
+  await createSubscription(reg).catch(() => {}); // underlying error already logged at the failure site
 }
 
 /** Idempotent both sides: browser unsubscribe + backend row delete. */

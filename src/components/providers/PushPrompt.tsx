@@ -58,7 +58,11 @@ export function PushPrompt() {
       setVisible(false);
       toast.success('تم تفعيل التنبيهات — سنعلمك فور انخفاض سعر إعلان في مفضلتك.');
     } catch (err) {
-      snooze(); // denied or failed — don't nag again soon
+      // A failure is the system's, not the user's "not now" — never snooze here, or a
+      // transient backend error silences the card for 14 days (the granted-but-
+      // unsubscribed strand). Snooze belongs to explicit dismissal («لاحقاً» / ✕) only.
+      // Browser-level denial needs no snooze: getPushState() reads 'denied' next trigger.
+      setVisible(false);
       toast.error(pushErrorMessage(err) ?? 'لم يتم تفعيل التنبيهات.');
     } finally {
       setBusy(false);
