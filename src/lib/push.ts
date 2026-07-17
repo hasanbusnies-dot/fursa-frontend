@@ -88,7 +88,9 @@ async function createSubscription(reg: ServiceWorkerRegistration): Promise<void>
     throw new PushError('subscribe-failed');
   }
   try {
-    await api.post('/notifications/web-push', sub.toJSON());
+    // realm: 'user' — runs from SocketManager (root layout), which can be on a staff
+    // portal pathname; push subscriptions always belong to the consumer session.
+    await api.post('/notifications/web-push', sub.toJSON(), { realm: 'user' });
   } catch (err) {
     console.error('[push] backend subscription registration failed:', err);
     // Lockstep rule: a browser-only subscription would show the toggle "on" while the
@@ -128,7 +130,7 @@ export async function ensurePushSubscription(): Promise<void> {
   if (existing) {
     // The backend POST is an upsert-by-endpoint that re-parents the row to the caller and
     // bumps lastSeenAt — re-asserting every entry heals a lost row and follows account switches.
-    await api.post('/notifications/web-push', existing.toJSON()).catch((err) => {
+    await api.post('/notifications/web-push', existing.toJSON(), { realm: 'user' }).catch((err) => {
       console.error('[push] backend re-sync of existing subscription failed:', err);
     });
     return;
@@ -144,7 +146,7 @@ export async function unsubscribeFromPush(): Promise<void> {
   if (!sub) return;
   const endpoint = sub.endpoint;
   await sub.unsubscribe().catch(() => {});
-  await api.delete('/notifications/web-push', { body: JSON.stringify({ endpoint }) }).catch(() => {});
+  await api.delete('/notifications/web-push', { body: JSON.stringify({ endpoint }), realm: 'user' }).catch(() => {});
 }
 
 function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {

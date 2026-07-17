@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminNav } from '@/components/admin/AdminNav';
-import { useAuthStore } from '@/store/auth.store';
+import { useAdminAuthStore } from '@/store/auth.store';
 import { staffService, type CreateStaffResult, type StaffRole } from '@/services/staff.service';
 import { UI_AR } from '@/lib/staff-labels';
 
@@ -93,7 +93,7 @@ function Field({
 
 export default function AdminStaffPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAdminAuthStore();
   const [mounted, setMounted] = useState(false);
 
   const [role, setRole] = useState<StaffRole>('ACCOUNTANT');

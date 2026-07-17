@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { HandCoins, KeyRound, Loader2, Eye, EyeOff } from 'lucide-react';
-import { useAuthStore } from '@/store/auth.store';
+import { useAgentAuthStore } from '@/store/auth.store';
 import { agentAuthService, type AgentAuthed } from '@/services/agent-auth.service';
 import { ApiError } from '@/services/api';
 
@@ -41,7 +41,7 @@ const GENERIC_ERROR = 'بيانات الدخول غير صحيحة. حاول م�
 
 export default function AgentLoginPage() {
   const router = useRouter();
-  const { setAuth, logout } = useAuthStore();
+  const { setAuth, logout } = useAgentAuthStore();
 
   // Phase: regular 3-factor login, or the forced first-password reset.
   const [phase, setPhase]           = useState<'login' | 'reset'>('login');

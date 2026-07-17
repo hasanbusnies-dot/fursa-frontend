@@ -24,23 +24,23 @@ function parseListings(raw: unknown): Listing[] {
 export const recommendationsService = {
   trackView: async (listingId: string): Promise<void> => {
     try {
-      await api.post('/recommendations/view', { listingId });
+      await api.post('/recommendations/view', { listingId }, { realm: 'user' });
     } catch {
       // fire-and-forget
     }
   },
 
   getRecent: async (): Promise<Listing[]> => {
-    const res = await api.get<ApiResponse<unknown>>('/recommendations/recent');
+    const res = await api.get<ApiResponse<unknown>>('/recommendations/recent', { realm: 'user' });
     return parseListings(res.data);
   },
 
   getSuggested: async (): Promise<Listing[]> => {
-    const res = await api.get<ApiResponse<unknown>>('/recommendations/suggested');
+    const res = await api.get<ApiResponse<unknown>>('/recommendations/suggested', { realm: 'user' });
     return parseListings(res.data);
   },
 
   removeFromHistory: async (listingId: string): Promise<void> => {
-    await api.delete(`/recommendations/history/${listingId}`);
+    await api.delete(`/recommendations/history/${listingId}`, { realm: 'user' });
   },
 };

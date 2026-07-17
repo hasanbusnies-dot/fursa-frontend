@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { ShieldCheck, Loader2, Eye, EyeOff } from 'lucide-react';
-import { useAuthStore } from '@/store/auth.store';
+import { useAdminAuthStore } from '@/store/auth.store';
 import { authService } from '@/services/auth.service';
 import { ApiError } from '@/services/api';
 
@@ -19,7 +19,7 @@ type FormData = z.infer<typeof schema>;
 
 export default function AdminLoginPage() {
   const router   = useRouter();
-  const { setAuth, logout } = useAuthStore();
+  const { setAuth, logout } = useAdminAuthStore();
 
   const [isLoading,    setIsLoading]    = useState(false);
   const [globalError,  setGlobalError]  = useState('');

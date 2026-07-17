@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminNav } from '@/components/admin/AdminNav';
-import { useAuthStore } from '@/store/auth.store';
+import { useAdminAuthStore } from '@/store/auth.store';
 import {
   adminTransfersService,
   type AdminTransferRow,
@@ -204,7 +204,7 @@ function TransferCard({
 
 export default function AdminTransfersPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAdminAuthStore();
   const [mounted, setMounted] = useState(false);
 
   const [rows, setRows]       = useState<AdminTransferRow[]>([]);

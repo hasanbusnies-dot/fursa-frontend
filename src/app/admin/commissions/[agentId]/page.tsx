@@ -7,7 +7,7 @@ import {
   Coins, ChevronLeft, AlertTriangle, Inbox, Info, Phone, Printer, Download,
 } from 'lucide-react';
 import { AdminNav } from '@/components/admin/AdminNav';
-import { useAuthStore } from '@/store/auth.store';
+import { useAdminAuthStore } from '@/store/auth.store';
 import {
   adminCommissionsService,
   type CommissionAgentDetail,
@@ -74,7 +74,7 @@ export default function AdminCommissionAgentPage() {
   const params = useParams<{ agentId: string }>();
   const agentId = params?.agentId;
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAdminAuthStore();
 
   const [mounted, setMounted] = useState(false);
   const [query, setQuery]     = useState<CommissionsQuery | null>(null);

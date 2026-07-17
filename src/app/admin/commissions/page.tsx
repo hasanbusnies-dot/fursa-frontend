@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { CommissionConfigPanel } from '@/components/admin/CommissionConfigPanel';
-import { useAuthStore } from '@/store/auth.store';
+import { useAdminAuthStore } from '@/store/auth.store';
 import {
   adminCommissionsService,
   type CommissionsReport,
@@ -62,7 +62,7 @@ function SummaryHeader({ report }: { report: CommissionsReport }) {
 
 export default function AdminCommissionsPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAdminAuthStore();
   const [mounted, setMounted] = useState(false);
 
   const [mode, setMode]     = useState<Mode>('month');

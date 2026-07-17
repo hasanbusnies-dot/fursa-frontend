@@ -7,7 +7,7 @@ import {
   Store, ChevronLeft, AlertTriangle, UserRound, UserCog, Phone, MapPin,
   CalendarDays, BadgeCheck, ShieldX, Clock, CheckCircle2, XCircle, Ban,
 } from 'lucide-react';
-import { useAuthStore } from '@/store/auth.store';
+import { useAdminAuthStore } from '@/store/auth.store';
 import {
   adminStoresService,
   contractUrlOf,
@@ -48,7 +48,7 @@ export default function AdminStoreDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAdminAuthStore();
 
   const [mounted, setMounted] = useState(false);
   const [store, setStore]     = useState<StoreDetail | null>(null);

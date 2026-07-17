@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminNav } from '@/components/admin/AdminNav';
-import { useAuthStore } from '@/store/auth.store';
+import { useAdminAuthStore } from '@/store/auth.store';
 import {
   adminStoresService,
   contractUrlOf,
@@ -260,7 +260,7 @@ function StoreCard({
 
 export default function AdminStoresPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAdminAuthStore();
   const [mounted, setMounted] = useState(false);
 
   const [filter, setFilter]   = useState<StoreStatus | 'ALL'>('PENDING');

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Loader2, Calculator, LogOut } from 'lucide-react';
-import { useAuthStore } from '@/store/auth.store';
+import { useAccountingAuthStore } from '@/store/auth.store';
 import { AccountingNav } from '@/components/accounting/AccountingNav';
 
 // Accounting is a staff finance tool (Arabic/RTL), gated to ACCOUNTANT or ADMIN.
@@ -13,7 +13,7 @@ import { AccountingNav } from '@/components/accounting/AccountingNav';
 export default function AccountingLayout({ children }: { children: React.ReactNode }) {
   const router   = useRouter();
   const pathname = usePathname();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAccountingAuthStore();
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);

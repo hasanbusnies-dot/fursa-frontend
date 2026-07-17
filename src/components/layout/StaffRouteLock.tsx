@@ -13,6 +13,12 @@ import { useAuthStore } from '@/store/auth.store';
 // Mounted globally in the root layout; renders nothing. Client-side because the role
 // lives in useAuthStore (localStorage), not in the `forsa-token` cookie, so middleware
 // can't see it — consistent with every other guard in this app.
+//
+// VESTIGIAL since auth realms (2026-07-17): staff sessions now live in their own realm
+// stores, and the backend blocks FIELD_AGENT/ACCOUNTANT from the standard /auth/login —
+// so the USER store this reads can never hold a staff role, and the lock never fires.
+// Kept as defense-in-depth (it costs nothing and would catch a future backend regression
+// that let staff into the consumer login).
 const LOCKS: Record<string, string> = {
   ACCOUNTANT: '/accounting',
   FIELD_AGENT: '/agent',

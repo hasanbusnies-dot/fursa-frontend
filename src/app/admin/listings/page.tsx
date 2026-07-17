@@ -8,7 +8,7 @@ import {
   Check, X, Clock, ImageOff, Loader2, ShieldCheck, Inbox,
   Star, StarOff, Pencil, Trash2, AlertTriangle, Users, Building2,
 } from 'lucide-react';
-import { useAuthStore } from '@/store/auth.store';
+import { useAdminAuthStore } from '@/store/auth.store';
 import { listingsService } from '@/services/listings.service';
 import { categoriesService } from '@/services/categories.service';
 import type { Category, Listing } from '@/types';
@@ -179,7 +179,7 @@ function SkeletonRow() {
 
 export default function AdminListingsPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAdminAuthStore();
 
   const [mounted,       setMounted]       = useState(false);
   const [activeTab,     setActiveTab]     = useState<TabId>('all');

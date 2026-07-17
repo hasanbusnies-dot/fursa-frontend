@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuthStore } from '@/store/auth.store';
+import { authStoreFor, AUTH_STORAGE_KEYS, type AuthRealm } from '@/store/auth.store';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
 
@@ -19,12 +19,13 @@ export class RefreshError extends Error {
   }
 }
 
-// Single-flight refresh: while one refresh is in flight, every other caller awaits the
-// SAME promise. This is MANDATORY (not just an optimization) because the backend ROTATES
-// refresh tokens — two parallel /auth/refresh calls with the same token would make the
-// second present an already-revoked token and force a spurious logout. The shared promise
-// is reused by REST (api.ts) and the socket (socket.ts) so they never race the rotation.
-let refreshPromise: Promise<string> | null = null;
+// Single-flight refresh PER REALM: while one refresh is in flight, every other caller of
+// that realm awaits the SAME promise. This is MANDATORY (not just an optimization)
+// because the backend ROTATES refresh tokens — two parallel /auth/refresh calls with the
+// same token would make the second present an already-revoked token and force a spurious
+// logout. The shared promise is reused by REST (api.ts) and the socket (socket.ts) so
+// they never race the rotation. Realms hold independent tokens, so they never share.
+const refreshPromises = new Map<AuthRealm, Promise<string>>();
 
 // Transient failures retry behind the single-flight (jittered backoff) before surfacing;
 // callers just see one slower promise. Definitive rejections surface immediately.
@@ -36,16 +37,20 @@ const RETRY_DELAYS_MS = [1000, 3000, 9000];
  * listener) refreshed in the meantime — reuse that token instead of burning a second
  * rotation. This is what keeps a cold app entry at ONE rotation (REST and socket both
  * 401 with the same stale token; whoever loses the single-flight reuses the winner's).
+ * @param realm defaults to 'user' so realm-agnostic callers (socket) stay on the
+ * consumer session; api.ts always passes the request's resolved realm explicitly.
  */
-export function refreshAccessToken(failedToken?: string): Promise<string> {
-  const current = useAuthStore.getState().token;
+export function refreshAccessToken(failedToken?: string, realm: AuthRealm = 'user'): Promise<string> {
+  const current = authStoreFor(realm).getState().token;
   if (current && failedToken && current !== failedToken) return Promise.resolve(current);
-  if (!refreshPromise) {
-    refreshPromise = refreshWithCrossTabLock(current).finally(() => {
-      refreshPromise = null;
+  let inFlight = refreshPromises.get(realm);
+  if (!inFlight) {
+    inFlight = refreshWithCrossTabLock(current, realm).finally(() => {
+      refreshPromises.delete(realm);
     });
+    refreshPromises.set(realm, inFlight);
   }
-  return refreshPromise;
+  return inFlight;
 }
 
 // ── Cross-tab single-flight (FOLLOWUPS §3) ─────────────────────────────────────
@@ -55,29 +60,29 @@ export function refreshAccessToken(failedToken?: string): Promise<string> {
 // result instead of presenting the now-revoked token. Browsers without Web Locks
 // (pre-2022) fall back to in-tab single-flight only — §2/§3 plus the backend's rotation
 // grace still cover them.
-async function refreshWithCrossTabLock(staleToken: string | null): Promise<string> {
+async function refreshWithCrossTabLock(staleToken: string | null, realm: AuthRealm): Promise<string> {
   if (typeof navigator !== 'undefined' && 'locks' in navigator) {
-    return await navigator.locks.request('forsa-refresh', () =>
-      refreshUnlessDoneElsewhere(staleToken),
+    return await navigator.locks.request(`forsa-refresh-${realm}`, () =>
+      refreshUnlessDoneElsewhere(staleToken, realm),
     );
   }
-  return refreshUnlessDoneElsewhere(staleToken);
+  return refreshUnlessDoneElsewhere(staleToken, realm);
 }
 
-async function refreshUnlessDoneElsewhere(staleToken: string | null): Promise<string> {
+async function refreshUnlessDoneElsewhere(staleToken: string | null, realm: AuthRealm): Promise<string> {
   // While we waited on the lock another tab may have rotated. The storage EVENT can lag
   // behind the write, so read the persisted entry directly for the freshest tokens.
-  const persisted = readPersistedTokens();
+  const persisted = readPersistedTokens(realm);
   if (persisted?.token && persisted.refreshToken && persisted.token !== staleToken) {
-    useAuthStore.getState().setTokens(persisted.token, persisted.refreshToken);
+    authStoreFor(realm).getState().setTokens(persisted.token, persisted.refreshToken);
     return persisted.token;
   }
-  return doRefreshWithRetry();
+  return doRefreshWithRetry(realm);
 }
 
-function readPersistedTokens(): { token: string | null; refreshToken: string | null } | null {
+function readPersistedTokens(realm: AuthRealm): { token: string | null; refreshToken: string | null } | null {
   try {
-    const raw = localStorage.getItem('forsa-auth');
+    const raw = localStorage.getItem(AUTH_STORAGE_KEYS[realm]);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as {
       state?: { token?: string | null; refreshToken?: string | null };
@@ -88,10 +93,10 @@ function readPersistedTokens(): { token: string | null; refreshToken: string | n
   }
 }
 
-async function doRefreshWithRetry(): Promise<string> {
+async function doRefreshWithRetry(realm: AuthRealm): Promise<string> {
   for (let attempt = 0; ; attempt++) {
     try {
-      return await doRefresh();
+      return await doRefresh(realm);
     } catch (err) {
       const delay = RETRY_DELAYS_MS[attempt];
       if ((err instanceof RefreshError && err.definitive) || delay === undefined) throw err;
@@ -101,8 +106,9 @@ async function doRefreshWithRetry(): Promise<string> {
   }
 }
 
-async function doRefresh(): Promise<string> {
-  const refreshToken = useAuthStore.getState().refreshToken;
+async function doRefresh(realm: AuthRealm): Promise<string> {
+  const store = authStoreFor(realm);
+  const refreshToken = store.getState().refreshToken;
   if (!refreshToken) throw new RefreshError(true, 'No refresh token available');
 
   // Raw fetch — must NOT go through the api.ts 401-retry interceptor (would recurse).
@@ -134,6 +140,6 @@ async function doRefresh(): Promise<string> {
 
   // Persist BOTH — the backend rotated the refresh token, so the new one MUST replace the
   // old or the next refresh will fail with "Invalid or expired refresh token".
-  useAuthStore.getState().setTokens(accessToken, newRefresh);
+  store.getState().setTokens(accessToken, newRefresh);
   return accessToken;
 }

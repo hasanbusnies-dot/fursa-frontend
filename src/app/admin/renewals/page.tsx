@@ -8,7 +8,7 @@ import {
   CalendarDays, ReceiptText, UserCog, Phone,
 } from 'lucide-react';
 import { AdminNav } from '@/components/admin/AdminNav';
-import { useAuthStore } from '@/store/auth.store';
+import { useAdminAuthStore } from '@/store/auth.store';
 import {
   adminRenewalsService,
   type RenewalRow,
@@ -128,7 +128,7 @@ function RenewalRowCard({ r }: { r: RenewalRow }) {
 
 export default function AdminRenewalsPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAdminAuthStore();
   const [mounted, setMounted] = useState(false);
 
   const [filter, setFilter]   = useState<RenewalStateFilter>('all');

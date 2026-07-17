@@ -1,4 +1,5 @@
 import { refreshAccessToken, RefreshError } from './token-refresh';
+import { AUTH_STORAGE_KEYS, realmFromPathname, type AuthRealm } from '@/store/auth.store';
 
 export class ApiError extends Error {
   constructor(
@@ -16,21 +17,39 @@ export class ApiError extends Error {
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
 
+// RequestInit + the auth realm this request runs as. Default: the realm owning the
+// current pathname (portal pages get their portal's session with zero threading — even
+// through shared services). Pin realm: 'user' on cross-cutting components that must stay
+// on the consumer session while a staff portal is on screen (SocketManager's
+// notification calls, lib/push).
+export interface ApiOptions extends RequestInit {
+  realm?: AuthRealm;
+}
+
+function currentRealm(override?: AuthRealm): AuthRealm {
+  if (override) return override;
+  if (typeof window === 'undefined') return 'user';
+  return realmFromPathname(window.location.pathname);
+}
+
 function sanitize(token: string | null | undefined): string | null {
   if (!token || token === 'undefined' || token === 'null') return null;
   return token.replace(/^"|"$/g, '').trim() || null;
 }
 
-function getToken(): string | null {
+function getToken(realm: AuthRealm): string | null {
   if (typeof window === 'undefined') return null;
 
-  // Primary: read from the cookie we explicitly set in setAuth — no nested parsing needed
-  const cookieMatch = document.cookie.match(/(?:^|;\s*)forsa-token=([^;]+)/);
-  if (cookieMatch?.[1]) return sanitize(decodeURIComponent(cookieMatch[1]));
+  // User realm primary: the cookie set in setAuth — no nested parsing needed.
+  // Staff realms have no cookie by design (localStorage only).
+  if (realm === 'user') {
+    const cookieMatch = document.cookie.match(/(?:^|;\s*)forsa-token=([^;]+)/);
+    if (cookieMatch?.[1]) return sanitize(decodeURIComponent(cookieMatch[1]));
+  }
 
-  // Fallback: parse from Zustand's persisted localStorage entry
+  // Zustand's persisted entry for this realm
   try {
-    const raw = localStorage.getItem('forsa-auth');
+    const raw = localStorage.getItem(AUTH_STORAGE_KEYS[realm]);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as { state?: { token?: string | null } };
     return sanitize(parsed.state?.token);
@@ -43,19 +62,31 @@ function authHeader(token: string | null): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-// Wipes all local auth state and hard-navigates to /login.
+const LOGIN_PATHS: Record<AuthRealm, string> = {
+  user: '/login',
+  admin: '/admin/login',
+  agent: '/agent/login',
+  accounting: '/accounting/login',
+};
+
+// Wipes THIS realm's local auth state and hard-navigates to its login portal.
 // Called ONLY on a definitive session death: /auth/refresh rejected the refresh token,
 // or a just-refreshed access token was rejected again (account-level rejection).
 // Safe to call from SSR context — the guard prevents browser-only APIs from running.
-function clearAuthAndRedirect(): void {
+function clearAuthAndRedirect(realm: AuthRealm): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.removeItem('forsa-auth');
-    localStorage.removeItem('forsa-token');
+    localStorage.removeItem(AUTH_STORAGE_KEYS[realm]);
+    if (realm === 'user') localStorage.removeItem('forsa-token');
   } catch { /* private-browsing environments may throw */ }
-  // Expire the session cookie
-  document.cookie = 'forsa-token=; path=/; max-age=0; SameSite=Lax';
-  window.location.href = '/login';
+  // Expire the session cookie (user realm only — staff realms have none)
+  if (realm === 'user') document.cookie = 'forsa-token=; path=/; max-age=0; SameSite=Lax';
+  // Never hard-navigate to the page we're already on: a stray call that dies with this
+  // realm ON the realm's login page would otherwise reload → refire → reload, forever
+  // (the /admin/login loop from the Header's unread poll). Clearing state is enough.
+  if (window.location.pathname !== LOGIN_PATHS[realm]) {
+    window.location.href = LOGIN_PATHS[realm];
+  }
 }
 
 // Auth endpoints (login / register / refresh) must never trigger a refresh-retry:
@@ -66,17 +97,19 @@ function isAuthEndpoint(endpoint: string): boolean {
 
 async function request<T>(
   endpoint: string,
-  options: RequestInit = {},
+  options: ApiOptions = {},
   retried = false,
   tokenOverride?: string,
 ): Promise<T> {
-  const token = tokenOverride ?? getToken();
+  const { realm: realmOverride, ...init } = options;
+  const realm = currentRealm(realmOverride);
+  const token = tokenOverride ?? getToken(realm);
 
   const res = await fetch(`${BASE_URL}${endpoint}`, {
-    ...options,
+    ...init,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...init.headers,
       ...authHeader(token), // last — always wins, can never be accidentally overridden
     },
   });
@@ -99,20 +132,20 @@ async function request<T>(
       if (!retried) {
         let newToken: string;
         try {
-          newToken = await refreshAccessToken(token ?? undefined);
+          newToken = await refreshAccessToken(token ?? undefined, realm);
         } catch (err) {
           if (err instanceof RefreshError && !err.definitive) {
             // Transient refresh failure (network/429/5xx): the session is NOT known dead.
             // Fail only THIS request; the next action retries naturally.
             throw new ApiError(message, body.errors, res.status);
           }
-          clearAuthAndRedirect();
+          clearAuthAndRedirect(realm);
           throw new ApiError('Session expired. Please log in again.', undefined, 401);
         }
         return request<T>(endpoint, options, true, newToken);
       }
       // A freshly-refreshed token was rejected again → account-level rejection.
-      clearAuthAndRedirect();
+      clearAuthAndRedirect(realm);
       throw new ApiError('Session expired. Please log in again.', undefined, 401);
     }
     throw new ApiError(message, body.errors, res.status);
@@ -133,7 +166,8 @@ async function uploadFormRequest<T>(
   retried = false,
   tokenOverride?: string,
 ): Promise<T> {
-  const token = tokenOverride ?? getToken();
+  const realm = currentRealm();
+  const token = tokenOverride ?? getToken(realm);
   const res = await fetch(`${BASE_URL}${endpoint}`, {
     method: 'POST',
     headers: authHeader(token), // no Content-Type — browser sets multipart boundary
@@ -152,17 +186,17 @@ async function uploadFormRequest<T>(
       if (!retried) {
         let newToken: string;
         try {
-          newToken = await refreshAccessToken(token ?? undefined);
+          newToken = await refreshAccessToken(token ?? undefined, realm);
         } catch (err) {
           if (err instanceof RefreshError && !err.definitive) {
             throw new ApiError(message, body.errors, res.status);
           }
-          clearAuthAndRedirect();
+          clearAuthAndRedirect(realm);
           throw new ApiError('Session expired. Please log in again.', undefined, 401);
         }
         return uploadFormRequest<T>(endpoint, formData, true, newToken);
       }
-      clearAuthAndRedirect();
+      clearAuthAndRedirect(realm);
       throw new ApiError('Session expired. Please log in again.', undefined, 401);
     }
     throw new ApiError(message, body.errors, res.status);
@@ -171,15 +205,15 @@ async function uploadFormRequest<T>(
 }
 
 export const api = {
-  get: <T>(endpoint: string, options?: RequestInit) =>
+  get: <T>(endpoint: string, options?: ApiOptions) =>
     request<T>(endpoint, options),
-  post: <T>(endpoint: string, body: unknown, options?: RequestInit) =>
+  post: <T>(endpoint: string, body: unknown, options?: ApiOptions) =>
     request<T>(endpoint, { method: 'POST', body: JSON.stringify(body), ...options }),
-  put: <T>(endpoint: string, body: unknown, options?: RequestInit) =>
+  put: <T>(endpoint: string, body: unknown, options?: ApiOptions) =>
     request<T>(endpoint, { method: 'PUT', body: JSON.stringify(body), ...options }),
-  patch: <T>(endpoint: string, body: unknown, options?: RequestInit) =>
+  patch: <T>(endpoint: string, body: unknown, options?: ApiOptions) =>
     request<T>(endpoint, { method: 'PATCH', body: JSON.stringify(body), ...options }),
-  delete: <T>(endpoint: string, options?: RequestInit) =>
+  delete: <T>(endpoint: string, options?: ApiOptions) =>
     request<T>(endpoint, { method: 'DELETE', ...options }),
 
   // Multipart upload — browser sets Content-Type + boundary automatically for FormData

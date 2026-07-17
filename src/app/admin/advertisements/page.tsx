@@ -8,7 +8,7 @@ import {
   ToggleLeft, ToggleRight, UploadCloud, X, CheckCircle2, Film,
   Pencil, Type, Palette,
 } from 'lucide-react';
-import { useAuthStore } from '@/store/auth.store';
+import { useAdminAuthStore } from '@/store/auth.store';
 import { api, ApiError } from '@/services/api';
 import { advertisementsService } from '@/services/advertisements.service';
 import type { CreateAdPayload } from '@/services/advertisements.service';
@@ -504,7 +504,7 @@ function EditModal({
 
 export default function AdminAdvertisementsPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAdminAuthStore();
 
   const [mounted,     setMounted]     = useState(false);
   const [ads,         setAds]         = useState<Advertisement[]>([]);

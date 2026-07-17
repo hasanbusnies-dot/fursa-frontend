@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { HandCoins, ReceiptText, Store, PlusCircle, CalendarClock, LogOut, Loader2 } from 'lucide-react';
-import { useAuthStore } from '@/store/auth.store';
+import { useAgentAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
 
 // Calmer staff palette (slate/teal) — deliberately distinct from the consumer orange
@@ -21,7 +21,7 @@ const TABS = [
 export default function AgentLayout({ children }: { children: React.ReactNode }) {
   const router   = useRouter();
   const pathname = usePathname();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAgentAuthStore();
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
