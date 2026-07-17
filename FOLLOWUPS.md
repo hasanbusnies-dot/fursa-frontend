@@ -27,16 +27,12 @@ live session.
 **Fix (backend only):** store `sha256(rawToken)`; on lookup, hash the presented token and
 compare. The wire format (opaque hex) stays the same, so the frontend is unaffected.
 
-## 3. Full BroadcastChannel cross-tab single-flight refresh — MEDIUM
-**Current state:** `auth.store.ts` has a lightweight `storage`-event listener so sibling
-tabs *adopt* the newest tokens after a refresh (and mirror logout). This prevents most
-tab-vs-tab token fights, but two tabs can still *initiate* a refresh at nearly the same
-moment (each tab has its own in-memory single-flight promise).
-
-**Fix:** elect a single "refresher" across tabs via `BroadcastChannel` (or a Web Lock):
-only the leader calls `/auth/refresh`; it broadcasts the new tokens; followers await the
-broadcast instead of calling the endpoint. Eliminates the residual cross-tab rotation race
-entirely.
+## 3. ~~Full cross-tab single-flight refresh~~ — DONE 2026-07-17
+Implemented via Web Locks in `token-refresh.ts` (`refreshWithCrossTabLock`): the network
+refresh runs under a browser-wide `forsa-refresh` lock; waiting tabs re-read the persisted
+tokens after acquiring it and adopt instead of rotating again. Browsers without Web Locks
+fall back to in-tab single-flight (covered by the failed-token comparison + the backend's
+rotation grace window).
 
 ## 4. "Message a seller" without a listing context — MEDIUM
 **Where:** `src/app/account/favorite-sellers/page.tsx:159` links to `/messages?to=${seller.id}`.

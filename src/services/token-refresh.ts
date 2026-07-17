@@ -41,11 +41,51 @@ export function refreshAccessToken(failedToken?: string): Promise<string> {
   const current = useAuthStore.getState().token;
   if (current && failedToken && current !== failedToken) return Promise.resolve(current);
   if (!refreshPromise) {
-    refreshPromise = doRefreshWithRetry().finally(() => {
+    refreshPromise = refreshWithCrossTabLock(current).finally(() => {
       refreshPromise = null;
     });
   }
   return refreshPromise;
+}
+
+// ── Cross-tab single-flight (FOLLOWUPS §3) ─────────────────────────────────────
+// The in-memory promise above only serializes callers within ONE tab. Two tabs hitting
+// 401 at the same moment would still race the rotation — so the network refresh runs
+// under a browser-wide Web Lock: one tab rotates, the others wait and then ADOPT its
+// result instead of presenting the now-revoked token. Browsers without Web Locks
+// (pre-2022) fall back to in-tab single-flight only — §2/§3 plus the backend's rotation
+// grace still cover them.
+async function refreshWithCrossTabLock(staleToken: string | null): Promise<string> {
+  if (typeof navigator !== 'undefined' && 'locks' in navigator) {
+    return await navigator.locks.request('forsa-refresh', () =>
+      refreshUnlessDoneElsewhere(staleToken),
+    );
+  }
+  return refreshUnlessDoneElsewhere(staleToken);
+}
+
+async function refreshUnlessDoneElsewhere(staleToken: string | null): Promise<string> {
+  // While we waited on the lock another tab may have rotated. The storage EVENT can lag
+  // behind the write, so read the persisted entry directly for the freshest tokens.
+  const persisted = readPersistedTokens();
+  if (persisted?.token && persisted.refreshToken && persisted.token !== staleToken) {
+    useAuthStore.getState().setTokens(persisted.token, persisted.refreshToken);
+    return persisted.token;
+  }
+  return doRefreshWithRetry();
+}
+
+function readPersistedTokens(): { token: string | null; refreshToken: string | null } | null {
+  try {
+    const raw = localStorage.getItem('forsa-auth');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as {
+      state?: { token?: string | null; refreshToken?: string | null };
+    };
+    return { token: parsed.state?.token ?? null, refreshToken: parsed.state?.refreshToken ?? null };
+  } catch {
+    return null;
+  }
 }
 
 async function doRefreshWithRetry(): Promise<string> {
