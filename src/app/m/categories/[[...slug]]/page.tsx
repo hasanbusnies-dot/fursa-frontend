@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { findCategoryNode } from '@/data/sidebar-categories';
 import type { SubCategory } from '@/data/sidebar-categories';
 import { cn } from '@/lib/utils';
@@ -77,10 +77,10 @@ export default function MobileCategoryDrillDown() {
           href={result.categoryPath}
           className="flex items-center gap-3 px-4 py-4 bg-blue-50 border-b-2 border-blue-200 hover:bg-blue-100 active:bg-blue-200 transition-colors"
         >
-          <span className="flex-1 text-sm font-semibold text-blue-700">
+          {/* Long titles (up to 40 chars) can never hold one line — wrap gracefully. */}
+          <span className="flex-1 text-lg font-semibold leading-snug text-blue-700">
             كل إعلانات {result.title}
           </span>
-          <ChevronLeft className="w-4 h-4 text-blue-400 shrink-0" />
         </Link>
 
         {/* Children list */}
@@ -96,17 +96,19 @@ export default function MobileCategoryDrillDown() {
                 key={child.path}
                 href={href}
                 className={cn(
-                  'flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 active:bg-gray-100 transition-colors',
+                  'flex items-center gap-3 px-4 py-4 hover:bg-gray-50 active:bg-gray-100 transition-colors',
                   i < result.children.length - 1 && 'border-b border-gray-100',
                 )}
               >
-                <span className="flex-1 text-sm text-gray-800">{child.title}</span>
+                {/* 18px Regular — one deliberate notch under the 20px root list (denser,
+                    icon-less surface; 20px would wrap every ≥24-char title). The extreme
+                    leaf names wrap either way — leading-snug keeps that tidy. */}
+                <span className="flex-1 text-lg leading-snug text-gray-800">{child.title}</span>
                 {hasChildren && (
-                  <span className="text-[11px] text-gray-400 shrink-0 me-1">
+                  <span className="text-xs text-gray-400 shrink-0 me-1">
                     {child.children!.length}
                   </span>
                 )}
-                <ChevronLeft className="w-4 h-4 text-gray-300 shrink-0" />
               </Link>
             );
           })}

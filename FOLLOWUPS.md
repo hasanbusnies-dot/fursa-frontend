@@ -1,5 +1,11 @@
 # Follow-ups (tracked, not dropped)
 
+## 0a. Cosmetic-pass item: Latin comma typo in sidebar-categories.ts
+«مركبات الطرق الوعرة، سيارات رياضية,بيكاب» has a Latin comma glued to «بيكاب»
+(should be «، بيكاب» with the Arabic comma + space). Found while measuring label
+widths 2026-07-18; deliberately NOT fixed in the mobile-sizing commit — queued for
+the founder's cosmetic pass.
+
 ## 0. Purchase-modal copy for extend-not-overwrite dopings — waiting on backend
 Backend is shipping extend-not-overwrite: buying a doping type that is already active
 EXTENDS remaining + purchased weeks instead of overwriting. Once it lands, the purchase

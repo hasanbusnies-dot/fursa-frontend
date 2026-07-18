@@ -2,7 +2,7 @@ import Link from 'next/link';
 import {
   Building2, Car, Wrench, ShoppingBag, Factory,
   Hammer, GraduationCap, Briefcase, PawPrint, UserPlus,
-  ChevronLeft, LayoutGrid, Clock,
+  LayoutGrid,
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -50,15 +50,19 @@ export function MobileCategoryList() {
           <Link
             key={href}
             href={href}
-            className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors${
+            className={`flex items-center gap-4 px-4 py-4 hover:bg-gray-50 active:bg-gray-100 transition-colors${
               i < CATEGORIES.length - 1 ? ' border-b border-gray-100' : ''
             }`}
           >
-            <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center shrink-0`}>
-              <Icon className={`w-4 h-4 ${iconColor}`} />
+            <div className={`w-14 h-14 rounded-2xl ${iconBg} flex items-center justify-center shrink-0`}>
+              <Icon className={`w-7 h-7 ${iconColor}`} />
             </div>
-            <span className="flex-1 text-sm font-medium text-gray-800">{title}</span>
-            <ChevronLeft className="w-4 h-4 text-gray-300 shrink-0" />
+            {/* text-xl + TRUE Medium 500: Tajawal has no 600, so font-semibold silently
+                renders faux-resolved Bold 700 — whose 20px width breaks the one-line
+                budget (220px vs 224px available). Medium's worst case is 211px.
+                No chevron: the whole row is the tap target; it bought nothing at 36px
+                of width the label needs. */}
+            <span className="flex-1 text-xl font-medium text-gray-800">{title}</span>
           </Link>
         ))}
 
