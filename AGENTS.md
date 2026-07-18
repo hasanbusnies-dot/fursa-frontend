@@ -31,7 +31,7 @@ The backend runs structural changes as numbered stages (R0 backup → author + d
 
 1. **API layer:** all HTTP goes through `src/services/api.ts` (`NEXT_PUBLIC_API_URL` — backend is `http://localhost:3001/api/v1` per `.env.local`, NOT 3000; 3000 is this dev server). Feature calls live in `src/services/*.service.ts`, never inline `fetch`.
 2. **Envelope rule:** the REST API returns `{ success, data }` (the `api` wrapper unwraps); the **catalog endpoints return RAW arrays** — no envelope. Don't "fix" either side.
-3. **State:** Zustand, persisted as `forsa-auth` in localStorage. Server components by default; `'use client'` only where hooks/interactivity demand it.
+3. **State:** Zustand. Auth is per-portal **realms** (auth.store.ts factory): consumer session under `forsa-auth`, staff portals under `forsa-{admin,agent,accounting}-auth` — isolated stores, per-realm cross-tab sync and refresh single-flight. `api.ts` resolves a request's realm as explicit `realm` option > portal pathname prefix > user; consumer features that mount on portal pathnames (notifications, messages, recommendations, push) pin `realm: 'user'`. Server components by default; `'use client'` only where hooks/interactivity demand it.
 4. **Styling:** Tailwind v4, `cn()` from `src/lib/utils.ts`, lucide-react icons. Brand: blue-600 primary, orange-500 secondary/CTA.
 5. **RTL:** UI text is Arabic; always use logical properties/utilities (`ms-`/`ps-`/`start-`/`end-`), never `ml-`/`left-` for direction-sensitive layout.
 6. **Printable / deep-linkable detail views are ROUTES, not modals** (human's standing preference).
