@@ -3,9 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Zap, Star, LayoutGrid, ArrowUp, Search, Flame, Type, RefreshCw,
-  CheckCircle2, XCircle, Clock, Package, Pencil, X, ChevronDown,
-  AlertTriangle,
+  Zap, CheckCircle2, XCircle, Package, Pencil, X, ChevronDown,
+  AlertTriangle, Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminNav } from '@/components/admin/AdminNav';
@@ -15,6 +14,8 @@ import {
   type ActiveDoping,
   type DopingPackage,
 } from '@/services/admin-dopings.service';
+import { dopingMeta } from '@/lib/dopings';
+import { formatMoney } from '@/lib/money';
 import { cn } from '@/lib/utils';
 import { UI_AR } from '@/lib/staff-labels';
 
@@ -31,24 +32,33 @@ const DOPING_TYPE_OPTIONS = [
   { value: 'REFRESH_DATE',    label: 'تحديث التاريخ' },
 ];
 
-const DOPING_META: Record<string, { label: string; icon: React.ElementType; iconBg: string; iconColor: string; badge: string; badgeBg: string }> = {
-  HOMEPAGE:        { label: 'واجهة الرئيسية', icon: Star,       iconBg: 'bg-yellow-50', iconColor: 'text-yellow-500', badge: 'الرئيسية', badgeBg: 'bg-yellow-100 text-yellow-800' },
-  CATEGORY:        { label: 'واجهة القسم',    icon: LayoutGrid, iconBg: 'bg-blue-50',   iconColor: 'text-blue-500',   badge: 'القسم',    badgeBg: 'bg-blue-100 text-blue-800'   },
-  TOP_OF_SEARCH:   { label: 'تصدّر البحث',    icon: ArrowUp,    iconBg: 'bg-indigo-50', iconColor: 'text-indigo-500', badge: 'التصدّر',  badgeBg: 'bg-indigo-100 text-indigo-800'},
-  DETAILED_SEARCH: { label: 'البحث المفصّل',  icon: Search,     iconBg: 'bg-purple-50', iconColor: 'text-purple-500', badge: 'مفصّل',    badgeBg: 'bg-purple-100 text-purple-800'},
-  URGENT:          { label: 'إعلان عاجل',     icon: Flame,      iconBg: 'bg-red-50',    iconColor: 'text-red-500',    badge: 'عاجل',     badgeBg: 'bg-red-100 text-red-800'    },
-  HIGHLIGHT:       { label: 'خط عريض وإطار',  icon: Type,       iconBg: 'bg-orange-50', iconColor: 'text-orange-500', badge: 'تمييز',    badgeBg: 'bg-orange-100 text-orange-800'},
-  REFRESH_DATE:    { label: 'تحديث التاريخ',  icon: RefreshCw,  iconBg: 'bg-green-50',  iconColor: 'text-green-500',  badge: 'مُحدّث',   badgeBg: 'bg-green-100 text-green-800' },
+// Icons/labels come from the shared dopingMeta (src/lib/dopings.ts) — the local
+// duplicate map was the same drift-bug class the mobile category list had. Only the
+// active-tab badge chip colors are panel-specific and stay here.
+const BADGE_BG: Record<string, string> = {
+  HOMEPAGE:        'bg-yellow-100 text-yellow-800',
+  CATEGORY:        'bg-blue-100 text-blue-800',
+  TOP_OF_SEARCH:   'bg-indigo-100 text-indigo-800',
+  DETAILED_SEARCH: 'bg-purple-100 text-purple-800',
+  URGENT:          'bg-red-100 text-red-800',
+  HIGHLIGHT:       'bg-orange-100 text-orange-800',
+  REFRESH:         'bg-green-100 text-green-800',
 };
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('ar', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-function formatPrice(price: number, currency: string) {
-  const n = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(price);
-  return currency === 'USD' ? `$${n}` : `${n} SYP`;
-}
+// The exact validation the backend applies (setPackagePriceSchema) — mirror it so a
+// rejected value never leaves the modal.
+const PRICE_RE = /^\d+(\.\d{1,2})?$/;
+const PRICE_CURRENCIES = ['SYP', 'USD'] as const;
+type PriceCurrency = (typeof PRICE_CURRENCIES)[number];
+
+const CURRENCY_LABEL_AR: Record<PriceCurrency, string> = {
+  SYP: 'ليرة سورية (SYP)',
+  USD: 'دولار أمريكي (USD)',
+};
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
@@ -73,23 +83,57 @@ function PriceModal({
 }: {
   pkg: DopingPackage;
   onClose: () => void;
-  onSaved: (updated: DopingPackage) => void;
+  /** Called after ANY currency saved successfully — the tab refetches the list. */
+  onSaved: () => void;
 }) {
-  const meta = DOPING_META[pkg.dopingType];
-  const [price, setPrice]     = useState(String(pkg.basePrice));
-  const [saving, setSaving]   = useState(false);
+  const meta = dopingMeta(pkg.type);
+  const MetaIcon = meta.icon;
+
+  const originalFor = (cur: PriceCurrency) =>
+    pkg.prices.find((r) => r.currency === cur)?.pricePerWeek ?? '';
+
+  // Values are money-STRINGS end-to-end (backend validates ^\d+(\.\d{1,2})?$).
+  const [values, setValues]     = useState<Record<PriceCurrency, string>>({
+    SYP: originalFor('SYP'),
+    USD: originalFor('USD'),
+  });
+  const [originals, setOriginals] = useState<Record<PriceCurrency, string>>({
+    SYP: originalFor('SYP'),
+    USD: originalFor('USD'),
+  });
+  const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    const val = Number(price);
-    if (!val || val <= 0) { toast.error('أدخل سعراً صحيحاً.'); return; }
+    // Only changed currencies PUT — an untouched empty field ("غير مسعّر") stays absent.
+    const changed = PRICE_CURRENCIES.filter((cur) => values[cur].trim() !== originals[cur]);
+    if (changed.length === 0) { onClose(); return; }
+
+    for (const cur of changed) {
+      const v = values[cur].trim();
+      if (!PRICE_RE.test(v) || Number(v) <= 0) {
+        toast.error(`سعر ${CURRENCY_LABEL_AR[cur]} غير صالح — رقم موجب بحد أقصى خانتين عشريتين.`);
+        return;
+      }
+    }
+
     setSaving(true);
+    let savedAny = false;
     try {
-      const res = await adminDopingsService.updatePackagePrice(pkg.id, val);
-      onSaved(res.data);
-      toast.success('تم تحديث السعر.');
+      for (const cur of changed) {
+        try {
+          await adminDopingsService.setPackagePrice(pkg.id, cur, values[cur].trim());
+          savedAny = true;
+          // Lock in the saved value so a later partial failure doesn't re-PUT it.
+          setOriginals((prev) => ({ ...prev, [cur]: values[cur].trim() }));
+        } catch (err) {
+          toast.error(`تعذّر حفظ سعر ${CURRENCY_LABEL_AR[cur]} — ${err instanceof Error ? err.message : 'حاول مجدداً'}`);
+          if (savedAny) onSaved();
+          return; // keep the modal open; the failed field is still editable
+        }
+      }
+      toast.success('تم تحديث الأسعار.');
+      onSaved();
       onClose();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'تعذّر التحديث.');
     } finally {
       setSaving(false);
     }
@@ -100,14 +144,12 @@ function PriceModal({
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            {meta && (
-              <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center', meta.iconBg)}>
-                <meta.icon className={cn('w-4 h-4', meta.iconColor)} />
-              </div>
-            )}
+            <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center', meta.iconBg)}>
+              <MetaIcon className={cn('w-4 h-4', meta.iconColor)} />
+            </div>
             <div>
-              <h3 className="text-sm font-bold text-gray-900">تحديث السعر</h3>
-              <p className="text-xs text-gray-500">{meta?.label ?? pkg.dopingType}</p>
+              <h3 className="text-sm font-bold text-gray-900">تعديل الأسعار</h3>
+              <p className="text-xs text-gray-500">{meta.label}</p>
             </div>
           </div>
           <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
@@ -115,27 +157,31 @@ function PriceModal({
           </button>
         </div>
 
-        {pkg.durationInWeeks && (
-          <p className="text-xs text-gray-500 mb-3 flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5" />
-            باقة {pkg.durationInWeeks} أسبوع
-          </p>
-        )}
+        {PRICE_CURRENCIES.map((cur) => (
+          <div key={cur} className="mb-3">
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+              السعر الأسبوعي — {CURRENCY_LABEL_AR[cur]}
+            </label>
+            <input
+              type="text"
+              inputMode="decimal"
+              dir="ltr"
+              value={values[cur]}
+              onChange={(e) => setValues((prev) => ({ ...prev, [cur]: e.target.value }))}
+              className="block w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-sm text-end focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition-colors"
+              placeholder={originals[cur] === '' ? 'غير مسعّر — أدخل قيمة لإنشائه' : '0'}
+              autoFocus={cur === 'SYP'}
+            />
+          </div>
+        ))}
 
-        <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-          السعر الأساسي ({pkg.currency})
-        </label>
-        <input
-          type="number"
-          min="1"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          className="block w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition-colors"
-          placeholder="0"
-          autoFocus
-        />
+        <p className="flex items-start gap-1.5 text-[11px] text-gray-400 leading-relaxed mb-4">
+          <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          السعران مستقلان تماماً — لا يوجد تحويل تلقائي بين العملتين. من يدفع بالليرة يُحاسب
+          بسعر الليرة، ومن يدفع بالدولار بسعر الدولار.
+        </p>
 
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-2">
           <button
             onClick={onClose}
             disabled={saving}
@@ -159,37 +205,64 @@ function PriceModal({
 // ── Package card ──────────────────────────────────────────────────────────────
 
 function PackageCard({ pkg, onEdit }: { pkg: DopingPackage; onEdit: () => void }) {
-  const meta = DOPING_META[pkg.dopingType];
+  const meta = dopingMeta(pkg.type);
+  const MetaIcon = meta.icon;
 
   return (
     <div className="bg-white shadow-pebble rounded-card p-5 hover:shadow-md transition-shadow flex flex-col gap-3">
       <div className="flex items-center gap-3">
-        <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', meta?.iconBg ?? 'bg-gray-100')}>
-          {meta ? <meta.icon className={cn('w-5 h-5', meta.iconColor)} /> : <Zap className="w-5 h-5 text-gray-400" />}
+        <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', meta.iconBg)}>
+          <MetaIcon className={cn('w-5 h-5', meta.iconColor)} />
         </div>
-        <div className="min-w-0">
-          <p className="text-sm font-bold text-gray-900 truncate">{meta?.label ?? pkg.dopingType}</p>
-          <p className="text-xs text-gray-400">
-            {pkg.durationInWeeks ? `${pkg.durationInWeeks} أسبوع` : 'لمرة واحدة'}
+        <div className="min-w-0 flex-1">
+          {/* Shared Arabic label; backend `name` (Turkish seeds) only as unknown-type fallback */}
+          <p className="text-sm font-bold text-gray-900 truncate">
+            {meta.label !== pkg.type ? meta.label : pkg.name}
           </p>
+        </div>
+        {pkg.isActive ? (
+          <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+            <CheckCircle2 className="w-3 h-3" />
+            نشط
+          </span>
+        ) : (
+          <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+            <XCircle className="w-3 h-3" />
+            موقوف
+          </span>
+        )}
+      </div>
+
+      {/* Two independent manually-set prices — no FX between them */}
+      <div>
+        <p className="text-[11px] text-gray-400 uppercase tracking-wider font-semibold mb-1.5">السعر الأسبوعي</p>
+        <div className="grid grid-cols-2 gap-2">
+          {PRICE_CURRENCIES.map((cur) => {
+            const row = pkg.prices.find((r) => r.currency === cur);
+            return (
+              <div key={cur} className="rounded-xl border border-gray-100 bg-gray-50/60 px-3 py-2">
+                <p className="text-[10px] text-gray-400 font-semibold">{CURRENCY_LABEL_AR[cur]}</p>
+                {row ? (
+                  <p className="text-base font-extrabold text-gray-900 leading-tight mt-0.5" dir="ltr">
+                    {formatMoney(row.pricePerWeek, cur)}
+                    {!row.isActive && <span className="ms-1 text-[10px] font-semibold text-amber-600" dir="rtl">موقوف</span>}
+                  </p>
+                ) : (
+                  <p className="text-sm font-semibold text-gray-300 mt-0.5">غير مسعّر</p>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      <div className="flex items-end justify-between">
-        <div>
-          <p className="text-[11px] text-gray-400 uppercase tracking-wider font-semibold">السعر الأساسي</p>
-          <p className="text-2xl font-extrabold text-gray-900 leading-none mt-0.5">
-            {formatPrice(pkg.basePrice, pkg.currency)}
-          </p>
-        </div>
-        <button
-          onClick={onEdit}
-          className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 transition-colors"
-        >
-          <Pencil className="w-3.5 h-3.5" />
-          {UI_AR.update}
-        </button>
-      </div>
+      <button
+        onClick={onEdit}
+        className="self-end flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 transition-colors"
+      >
+        <Pencil className="w-3.5 h-3.5" />
+        {UI_AR.update}
+      </button>
     </div>
   );
 }
@@ -315,14 +388,15 @@ function ActiveDopingsTab() {
                     typeName = 'خط عريض وإطار'; isActive = true;
                   }
 
-                  // Map typeName → DOPING_META for the icon/badge
+                  // Map typeName → shared dopingMeta for the icon; badge colors are local
                   const typeKey = typeName === 'واجهة الرئيسية' ? 'HOMEPAGE'
                     : typeName === 'واجهة القسم'    ? 'CATEGORY'
                     : typeName === 'تصدّر البحث'    ? 'TOP_OF_SEARCH'
                     : typeName === 'إعلان عاجل'     ? 'URGENT'
                     : typeName === 'خط عريض وإطار'  ? 'HIGHLIGHT'
                     : null;
-                  const meta = typeKey ? DOPING_META[typeKey] : null;
+                  const meta = typeKey ? dopingMeta(typeKey) : null;
+                  const MetaIcon = meta?.icon;
 
                   // ── Start date: prefer updatedAt, fall back to createdAt ──
                   const startDateStr = (raw.updatedAt as string) || (raw.createdAt as string) || null;
@@ -343,8 +417,8 @@ function ActiveDopingsTab() {
 
                       {/* Tür */}
                       <td className="px-4 py-3">
-                        <span className={cn('inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full', meta?.badgeBg ?? 'bg-gray-100 text-gray-600')}>
-                          {meta && <meta.icon className="w-3 h-3" />}
+                        <span className={cn('inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full', (typeKey && BADGE_BG[typeKey]) || 'bg-gray-100 text-gray-600')}>
+                          {MetaIcon && <MetaIcon className="w-3 h-3" />}
                           {typeName}
                         </span>
                       </td>
@@ -396,20 +470,19 @@ function PriceManagementTab() {
   const [loading,   setLoading]   = useState(true);
   const [editPkg,   setEditPkg]   = useState<DopingPackage | null>(null);
 
-  useEffect(() => {
+  const load = () => {
     adminDopingsService
       .getPackages()
-      .then((res) => setPackages(Array.isArray(res.data) ? res.data : []))
+      .then(setPackages)
       .catch((err) => {
         console.error('[AdminDopings] packages error:', err);
         toast.error('تعذّر تحميل الباقات.');
       })
       .finally(() => setLoading(false));
-  }, []);
-
-  const handleSaved = (updated: DopingPackage) => {
-    setPackages((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
   };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []);
 
   return (
     <>
@@ -417,14 +490,15 @@ function PriceManagementTab() {
         <PriceModal
           pkg={editPkg}
           onClose={() => setEditPkg(null)}
-          onSaved={handleSaved}
+          onSaved={load}
         />
       )}
 
       <div>
         <div className="flex items-center justify-between mb-5">
           <p className="text-sm text-gray-500">
-            أسعار الباقات أدناه هي الأسعار الأساسية التي يراها المستخدمون عند شراء التمييز.
+            لكل باقة سعران أسبوعيان مستقلان (ليرة ودولار) يُحدَّدان يدوياً — هما ما يُحاسَب به
+            المشتري بحسب عملة الدفع.
           </p>
           <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-3 py-1.5 rounded-full">
             {packages.length} باقة
