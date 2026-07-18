@@ -1,5 +1,14 @@
 # Follow-ups (tracked, not dropped)
 
+## 0. Purchase-modal copy for extend-not-overwrite dopings — waiting on backend
+Backend is shipping extend-not-overwrite: buying a doping type that is already active
+EXTENDS remaining + purchased weeks instead of overwriting. Once it lands, the purchase
+modal should say so when the owner already has that type live:
+«لديك X يوم متبقٍ من هذا الدوبينغ — سيتم إضافة المدة الجديدة إلى المتبقي.»
+X computes from the owner payload's `activeDopings` (already available; passed to the
+modal from my-listings / the dopings hub). Do NOT add this copy before the backend
+commit — until then it would describe behavior that doesn't exist yet.
+
 These were deliberately deferred from the refresh-token work (Yaklaşım A — balanced
 foundation). They are architectural hardening items, not blockers. Each is safe to do
 independently.

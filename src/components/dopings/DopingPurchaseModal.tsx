@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  X, Zap, Star, LayoutGrid, ArrowUp, Search,
-  Flame, Type, RefreshCw, CheckCircle, Clock,
+  X, Zap, CheckCircle, Clock, RefreshCw,
   Wallet, Loader2, AlertTriangle, Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -18,6 +17,7 @@ import {
 import { walletService, type Wallet as WalletInfo } from '@/services/wallet.service';
 import { ApiError } from '@/services/api';
 import { formatMoney, compareAmounts, multiplyAmount } from '@/lib/money';
+import { dopingMeta } from '@/lib/dopings';
 import { cn } from '@/lib/utils';
 
 // ── Types & config ────────────────────────────────────────────────────────────
@@ -28,12 +28,9 @@ type DurationWeeks = 1 | 2 | 4;
 
 interface DopingOption {
   type: DopingType | 'REFRESH_DATE';
-  /** DB DopingPackage.type this option is priced by. */
+  /** DB DopingPackage.type this option is priced by — also the DOPING_META key
+   *  (icon/colors/title come from the shared identity so surfaces can't drift). */
   packageType: string;
-  icon: React.ElementType;
-  iconBg: string;
-  iconColor: string;
-  title: string;
   description: string;
   /** true → duration selector (charged pricePerWeek × weeks); false → fixed. */
   timed: boolean;
@@ -44,40 +41,24 @@ const DOPING_OPTIONS: DopingOption[] = [
   {
     type: 'HOMEPAGE',
     packageType: 'HOMEPAGE',
-    icon: Star,
-    iconBg: 'bg-yellow-50',
-    iconColor: 'text-yellow-500',
-    title: 'واجهة الصفحة الرئيسية',
     description: 'اظهر للملايين على الصفحة الرئيسية.',
     timed: true,
   },
   {
     type: 'CATEGORY',
     packageType: 'CATEGORY',
-    icon: LayoutGrid,
-    iconBg: 'bg-blue-50',
-    iconColor: 'text-blue-500',
-    title: 'واجهة الفئة',
     description: 'أعلى واجهة في صفحة الفئة.',
     timed: true,
   },
   {
     type: 'TOP_OF_SEARCH',
     packageType: 'TOP_OF_SEARCH',
-    icon: ArrowUp,
-    iconBg: 'bg-indigo-50',
-    iconColor: 'text-indigo-500',
-    title: 'في أعلى القائمة',
     description: 'تصدر نتائج البحث دائماً.',
     timed: true,
   },
   {
     type: 'DETAILED_SEARCH',
     packageType: 'DETAILED_SEARCH',
-    icon: Search,
-    iconBg: 'bg-purple-50',
-    iconColor: 'text-purple-500',
-    title: 'واجهة البحث المتقدم',
     description: 'ابرز في نتائج البحث المتقدم.',
     timed: true,
   },
@@ -86,10 +67,6 @@ const DOPING_OPTIONS: DopingOption[] = [
     // — say so honestly instead of the old "one-time" label.
     type: 'URGENT',
     packageType: 'URGENT',
-    icon: Flame,
-    iconBg: 'bg-red-50',
-    iconColor: 'text-red-500',
-    title: 'إعلان عاجل',
     description: "الفت الانتباه بشارة 'عاجل' الحمراء.",
     timed: false,
     fixedDurationLabel: 'لمدة أسبوع',
@@ -97,10 +74,6 @@ const DOPING_OPTIONS: DopingOption[] = [
   {
     type: 'HIGHLIGHT',
     packageType: 'HIGHLIGHT',
-    icon: Type,
-    iconBg: 'bg-orange-50',
-    iconColor: 'text-orange-500',
-    title: 'خط عريض وإطار',
     description: 'ابرز في القائمة بإطار ملون.',
     timed: false,
     fixedDurationLabel: 'لمدة أسبوع',
@@ -108,10 +81,6 @@ const DOPING_OPTIONS: DopingOption[] = [
   {
     type: 'REFRESH_DATE',
     packageType: 'REFRESH',
-    icon: RefreshCw,
-    iconBg: 'bg-green-50',
-    iconColor: 'text-green-500',
-    title: 'تحديث تاريخ الإعلان',
     description: 'انقل إعلانك للأعلى بتحديث تاريخ النشر.',
     timed: false,
     fixedDurationLabel: 'لمرة واحدة',
@@ -212,7 +181,7 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
           idempotencyKey: idemKey,
         });
       }
-      toast.success(`تم تطبيق "${selectedType.title}" بنجاح!`);
+      toast.success(`تم تطبيق "${dopingMeta(selectedType.packageType).label}" بنجاح!`);
       onClose();
       router.refresh();
     } catch (err) {
@@ -262,6 +231,8 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
               {DOPING_OPTIONS.map((opt) => {
                 const selected = selectedType.type === opt.type;
                 const optPrice = priceFor(opt, currency);
+                const meta = dopingMeta(opt.packageType);
+                const MetaIcon = meta.icon;
                 return (
                   <button
                     key={opt.type}
@@ -280,14 +251,14 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
                     />
 
                     {/* Type icon */}
-                    <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0', opt.iconBg)}>
-                      <opt.icon className={cn(opt.iconColor)} style={{ width: 18, height: 18 }} />
+                    <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0', meta.iconBg)}>
+                      <MetaIcon className={cn(meta.iconColor)} style={{ width: 18, height: 18 }} />
                     </div>
 
                     {/* Title + description */}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-900 flex items-center gap-2 flex-wrap">
-                        {opt.title}
+                        {meta.label}
                         {opt.fixedDurationLabel && (
                           <span className="text-[10px] font-bold bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
                             {opt.fixedDurationLabel}
@@ -398,7 +369,7 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">ملخص الطلب</p>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">{selectedType.title}</span>
+                <span className="text-gray-600">{dopingMeta(selectedType.packageType).label}</span>
                 <span className="font-semibold text-gray-900">
                   {selectedType.timed
                     ? DURATION_OPTIONS.find((d) => d.weeks === duration)?.label

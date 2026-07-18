@@ -96,6 +96,9 @@ export interface Listing {
   showPhoneNumber?: boolean;
   acceptsOffers?: boolean;
   isFeatured?: boolean;
+  // Owner payload only (my-listings routes): active dopings, soonest-first;
+  // REFRESH never appears (it has no duration). Absent on public payloads.
+  activeDopings?: { type: string; expiresAt: string }[];
   // Doping / monetisation fields — each operates in its own domain
   isUrgent?: boolean;
   hasHighlightFrame?: boolean;

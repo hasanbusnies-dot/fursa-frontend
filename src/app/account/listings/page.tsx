@@ -11,6 +11,7 @@ import {
 import { listingsService } from '@/services/listings.service';
 import { useAuthStore } from '@/store/auth.store';
 import { DopingPurchaseModal } from '@/components/dopings/DopingPurchaseModal';
+import { dopingMeta, endsSoon, timeLeftAr } from '@/lib/dopings';
 import type { Listing } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -178,6 +179,33 @@ function ListingRow({
           {' · '}
           {formatDate(listing.createdAt)}
         </p>
+
+        {/* Active doping chips — one per doping (a listing can carry several at once).
+            Sourced from the owner payload's activeDopings; links to the dopings hub. */}
+        {(listing.activeDopings?.length ?? 0) > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {listing.activeDopings!.map((d) => {
+              const meta = dopingMeta(d.type);
+              const MetaIcon = meta.icon;
+              return (
+                <Link
+                  key={d.type}
+                  href="/account/dopings"
+                  className={cn(
+                    'inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full',
+                    meta.iconBg, meta.iconColor,
+                  )}
+                >
+                  <MetaIcon className="w-3 h-3" />
+                  {meta.label}
+                  <span className={cn('font-normal', endsSoon(d.expiresAt) ? 'text-amber-600 font-semibold' : 'text-gray-500')}>
+                    · {timeLeftAr(d.expiresAt)}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
 
         {/* Action buttons */}
         <div className="flex flex-wrap gap-2">

@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, FileText, Star, Bookmark, UserCheck,
   MessageSquare, HelpCircle, ShoppingCart, Shield, CreditCard,
-  Wallet, Bell, Car, Settings, ChevronDown, ChevronUp, Store,
+  Wallet, Bell, Car, Settings, ChevronDown, ChevronUp, Store, Rocket,
 } from 'lucide-react';
 
 // ── Nav definition ─────────────────────────────────────────────────────────────
@@ -48,6 +48,7 @@ const NAV: NavSection[] = [
     items: [
       { href: '/account/listings',          label: 'الإعلانات النشطة',      icon: FileText, exact: true },
       { href: '/account/listings/inactive', label: 'الإعلانات غير النشطة', icon: FileText },
+      { href: '/account/dopings',           label: 'تعزيزاتي',             icon: Rocket },
     ],
   },
   {
