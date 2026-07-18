@@ -125,9 +125,13 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
   // One idempotency key per modal open — a double-tap can't double-charge.
   const [idemKey, setIdemKey] = useState('');
 
-  // null = loading; [] / undefined balances = fetch failed (don't block — backend decides).
+  // null = loading. walletFailed distinguishes "fetch failed" (balances unknown → show
+  // «—», don't block — backend decides) from "loaded but a currency has no row"
+  // (balance rows are created lazily on first credit, so an absent row IS a zero
+  // balance and must render as 0.00, never as «—»).
   const [packages, setPackages] = useState<DopingPackageInfo[] | null>(null);
   const [wallet, setWallet]     = useState<WalletInfo | null>(null);
+  const [walletFailed, setWalletFailed] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -136,18 +140,26 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
     setError(null);
     setPackages(null);
     setWallet(null);
+    setWalletFailed(false);
     dopingsService.getPackages()
       .then((p) => { if (!cancelled) setPackages(p); })
       .catch(() => { if (!cancelled) setPackages([]); });
     walletService.getWallet()
       .then((w) => { if (!cancelled) setWallet(w); })
-      .catch(() => { if (!cancelled) setWallet({ status: 'ACTIVE', balances: [] }); });
+      .catch(() => { if (!cancelled) { setWalletFailed(true); setWallet({ status: 'ACTIVE', balances: [] }); } });
     return () => { cancelled = true; };
   }, [isOpen]);
 
   if (!isOpen) return null;
 
   const loading = packages === null || wallet === null;
+
+  /** Balance as money-string; '0' for a loaded-but-absent row; undefined only while
+   *  loading or after a failed fetch (unknown — rendered «—», never blocks payment). */
+  const balanceFor = (c: DopingCurrency): string | undefined => {
+    if (wallet === null || walletFailed) return undefined;
+    return wallet.balances.find((b) => b.currency === c)?.balance ?? '0';
+  };
 
   /** Real per-week/per-use price (money-STRING) for an option in the chosen currency. */
   const priceFor = (opt: DopingOption, cur: DopingCurrency): string | undefined =>
@@ -159,7 +171,7 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
     ? (selectedType.timed ? multiplyAmount(unitPrice, duration) : unitPrice)
     : undefined;
 
-  const balance = wallet?.balances.find((b) => b.currency === currency)?.balance;
+  const balance = balanceFor(currency);
   const insufficient =
     total !== undefined && balance !== undefined && compareAmounts(balance, total) < 0;
 
@@ -335,7 +347,7 @@ export function DopingPurchaseModal({ isOpen, onClose, listingId, listingTitle }
             </p>
             <div className="grid grid-cols-2 gap-2">
               {(['SYP', 'USD'] as const).map((c) => {
-                const bal = wallet?.balances.find((b) => b.currency === c)?.balance;
+                const bal = balanceFor(c); // '0' when loaded-but-unfunded; undefined only on failed fetch
                 return (
                   <button
                     key={c}
