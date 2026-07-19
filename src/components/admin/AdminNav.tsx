@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutList, Megaphone, Zap, Store, CalendarClock, Coins, ArrowLeftRight, UserPlus, Calculator } from 'lucide-react';
+import { LayoutList, Megaphone, Zap, Store, BadgeCheck, CalendarClock, Coins, ArrowLeftRight, UserPlus, Calculator } from 'lucide-react';
 
 const LINKS = [
   { href: '/admin/listings',       label: 'إدارة الإعلانات',         icon: LayoutList     },
   { href: '/admin/advertisements', label: 'الإعلانات الدعائية',      icon: Megaphone      },
   { href: '/admin/dopings',        label: 'إدارة التمييز',           icon: Zap            },
   { href: '/admin/stores',         label: 'اعتماد المتاجر',          icon: Store          },
+  { href: '/admin/memberships',    label: 'العضويات',                icon: BadgeCheck     },
   { href: '/admin/renewals',       label: 'التجديدات',               icon: CalendarClock  },
   { href: '/admin/commissions',    label: 'العمولات',                icon: Coins          },
   { href: '/admin/transfers',      label: 'اعتماد الحوالات',         icon: ArrowLeftRight },
