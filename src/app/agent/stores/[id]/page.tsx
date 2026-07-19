@@ -12,7 +12,7 @@ import {
   contractUrlOf,
   chargesOf,
   ownerPendingOf,
-  MEMBERSHIP_CAMPAIGNS,
+  MEMBERSHIP_CAMPAIGN_LABELS,
   type StoreDetail,
   type StoreStatus,
   type MembershipCampaign,
@@ -39,7 +39,7 @@ function formatDate(d?: string | null) {
 
 function campaignLabel(c?: string | null): string {
   if (!c) return '—';
-  return MEMBERSHIP_CAMPAIGNS[c as MembershipCampaign]?.label ?? c;
+  return MEMBERSHIP_CAMPAIGN_LABELS[c as MembershipCampaign] ?? c;
 }
 
 const METHOD_LABEL: Record<string, string> = {

@@ -13,7 +13,7 @@ import {
   type RenewalStateFilter,
 } from '@/services/renewals.service';
 import {
-  MEMBERSHIP_CAMPAIGNS,
+  MEMBERSHIP_CAMPAIGN_LABELS,
   type MembershipCampaign,
   type PageMeta,
 } from '@/services/stores.service';
@@ -43,7 +43,7 @@ function formatDate(d?: string | null) {
 
 function campaignLabel(c?: string | null): string | null {
   if (!c) return null;
-  return MEMBERSHIP_CAMPAIGNS[c as MembershipCampaign]?.label ?? c;
+  return MEMBERSHIP_CAMPAIGN_LABELS[c as MembershipCampaign] ?? c;
 }
 
 /** The actionable number — what the agent acts on. */

@@ -11,7 +11,7 @@ import {
   ownerStoreService,
   contractUrlOf,
   chargesOf,
-  MEMBERSHIP_CAMPAIGNS,
+  MEMBERSHIP_CAMPAIGN_LABELS,
   type StoreDetail,
   type StoreStatus,
   type MembershipCampaign,
@@ -38,7 +38,7 @@ function formatDate(d?: string | null) {
 
 function campaignLabel(c?: string | null): string {
   if (!c) return '—';
-  return MEMBERSHIP_CAMPAIGNS[c as MembershipCampaign]?.label ?? c;
+  return MEMBERSHIP_CAMPAIGN_LABELS[c as MembershipCampaign] ?? c;
 }
 
 const METHOD_LABEL: Record<string, string> = {
@@ -130,6 +130,9 @@ export default function OwnerStorePage() {
   // Renew gate: only the explicit false blocks (a charge would 409). Read off the
   // flag directly — never derived from daysRemaining.
   const renewBlocked = membership?.renewAllowed === false;
+  // Advertised monthly price on the pay button — the plan's USD full price (the
+  // SYP/USD choice happens inside the modal). No plan → plain label.
+  const fullPriceUsd = store.plan?.prices.USD?.FULL_PRICE;
 
   const renewWindowNote = (
     <p className="mt-4 flex items-center justify-center gap-1.5 rounded-xl bg-gray-50 border border-gray-200 py-2.5 px-3 text-xs font-semibold text-gray-500">
@@ -142,6 +145,7 @@ export default function OwnerStorePage() {
     <div className="space-y-4">
       {paying && (
         <OwnerMembershipPayModal
+          store={store}
           onClose={() => setPaying(false)}
           onCharged={(detail) => { setStore(detail); load(); }}
           onRenewBlocked={load}
@@ -280,7 +284,7 @@ export default function OwnerStorePage() {
                   className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600 transition-colors"
                 >
                   <BadgeCheck className="w-4 h-4" />
-                  دفع الاشتراك ({formatMoney(MEMBERSHIP_CAMPAIGNS.FULL_PRICE.price, 'USD')}/شهر)
+                  دفع الاشتراك{fullPriceUsd !== undefined ? ` (${formatMoney(fullPriceUsd, 'USD')}/شهر)` : ''}
                 </button>
               )}
             </div>

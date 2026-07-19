@@ -98,6 +98,21 @@ export interface ResendSetupLinkResult {
 
 export type MembershipCampaign = 'FULL_PRICE' | 'FIRST_MONTH_FREE' | 'DISCOUNT_33';
 export type MembershipMethod = 'ONLINE' | 'CASH' | 'FREE';
+export type MembershipCurrency = 'SYP' | 'USD';
+
+/** Computed campaign nets for ONE currency (money-STRINGS). The backend runs the same
+ *  campaign math as the charge itself, so displayed amount ≡ charged amount — never
+ *  re-derive discounts client-side. */
+export type MembershipCampaignPrices = Record<MembershipCampaign, string>;
+
+/** Active-plan block on the store detail (agent + owner + admin views). A null
+ *  currency ⇒ the plan has no price in it (render that option disabled); a null/absent
+ *  plan ⇒ charging is unavailable. */
+export interface MembershipPlanBlock {
+  name: string;
+  billingPeriodMonths: number;
+  prices: Record<MembershipCurrency, MembershipCampaignPrices | null>;
+}
 
 /** Membership block returned inside the store detail. */
 export interface Membership {
@@ -120,7 +135,7 @@ export interface MembershipCharge {
   campaign?: string | null;
   method?: string | null;
   amount?: string | null;          // STRING
-  currency?: string | null;        // USD
+  currency?: string | null;        // USD | SYP
   periodStart?: string | null;
   periodEnd?: string | null;
   createdAt: string;
@@ -130,31 +145,28 @@ export interface MembershipCharge {
   receiptUrl?: string | null;
 }
 
-/** Store detail = the store + its membership block + charge history. */
+/** Store detail = the store + its membership block + charge history + active plan. */
 export interface StoreDetail extends Store {
   membership?: Membership | null;
   charges?: MembershipCharge[];
+  plan?: MembershipPlanBlock | null;
 }
 
 export interface ChargeMembershipInput {
   campaign: MembershipCampaign;
   method: MembershipMethod;
+  currency: MembershipCurrency;    // which owner balance funds it, at the plan's price for that currency
   idempotencyKey: string;          // client-generated UUID per attempt
   paymentRef?: string;
   agentCashCollectionId?: string;  // required for CASH (from the prior topup)
 }
 
-// Campaign pricing (USD, money-STRINGS). NOTE: the GET membership block does not
-// return the price, so these mirror the AP-M3 contract: full 75, 33%-off 50.25,
-// first month free 0. If the backend makes these configurable, surface them from
-// the API instead of this map.
-export const MEMBERSHIP_CAMPAIGNS: Record<
-  MembershipCampaign,
-  { label: string; price: string; currency: 'USD' }
-> = {
-  FULL_PRICE:       { label: 'السعر الكامل',        price: '75',    currency: 'USD' },
-  DISCOUNT_33:      { label: 'خصم 33٪',             price: '50.25', currency: 'USD' },
-  FIRST_MONTH_FREE: { label: 'الشهر الأول مجاناً',  price: '0',     currency: 'USD' },
+// Campaign display labels only. Prices come from StoreDetail.plan (per-currency
+// computed campaign nets, dual manual pricing) — never hardcoded client-side.
+export const MEMBERSHIP_CAMPAIGN_LABELS: Record<MembershipCampaign, string> = {
+  FULL_PRICE:       'السعر الكامل',
+  DISCOUNT_33:      'خصم 33٪',
+  FIRST_MONTH_FREE: 'الشهر الأول مجاناً',
 };
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────
@@ -334,7 +346,8 @@ export const adminStoresService = {
 // ── Owner service (CORPORATE store owner, AP-M2.4) ─────────────────────────────────
 
 export interface OwnerChargeMembershipInput {
-  idempotencyKey: string; // client-generated UUID per attempt
+  currency: MembershipCurrency; // which of the owner's balances pays, at that currency's plan price
+  idempotencyKey: string;       // client-generated UUID per attempt
   paymentRef?: string;
 }
 
@@ -348,8 +361,9 @@ export const ownerStoreService = {
   },
 
   /** Self-serve membership payment: always FULL_PRICE / ONLINE, debited from the
-   *  owner's USD wallet (funded via the consumer online top-up). Propagates ApiError:
-   *  422 insufficient USD balance, 409 store not APPROVED, 403 wallet frozen. */
+   *  owner's selected wallet balance (funded via the consumer online top-up).
+   *  Propagates ApiError: 422 insufficient balance, 409 store not APPROVED /
+   *  renew window closed, 403 wallet frozen. */
   chargeMembership: async (input: OwnerChargeMembershipInput): Promise<StoreDetail> => {
     const res = await api.post<unknown>('/owner/store/membership/charge', {
       campaign: 'FULL_PRICE',

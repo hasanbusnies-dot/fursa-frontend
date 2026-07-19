@@ -6,10 +6,11 @@ import { toast } from 'sonner';
 import {
   agentStoresService,
   ownerUserIdOf,
-  MEMBERSHIP_CAMPAIGNS,
+  MEMBERSHIP_CAMPAIGN_LABELS,
   type StoreDetail,
   type MembershipCampaign,
   type MembershipMethod,
+  type MembershipCurrency,
 } from '@/services/stores.service';
 import { agentService } from '@/services/agent.service';
 import { ApiError } from '@/services/api';
@@ -17,7 +18,8 @@ import { formatMoney } from '@/lib/money';
 import { cn } from '@/lib/utils';
 import { CameraCapture } from '@/components/CameraCapture';
 
-// Campaign / method pickers + the CASH two-step (fund owner USD wallet → charge).
+// Campaign / currency / method pickers + the CASH two-step (fund owner wallet → charge).
+// Prices come from store.plan (per-currency computed campaign nets) — displayed ≡ charged.
 
 const CAMPAIGNS: MembershipCampaign[] = ['FULL_PRICE', 'DISCOUNT_33', 'FIRST_MONTH_FREE'];
 
@@ -25,6 +27,17 @@ const METHOD_META: Record<MembershipMethod, { label: string; hint: string; Icon:
   ONLINE: { label: 'إلكتروني', hint: 'يُخصم من محفظة المالك (يجب توفّر الرصيد)', Icon: Wallet   },
   CASH:   { label: 'نقداً',    hint: 'حصّل المبلغ نقداً ثم فعّل الاشتراك',        Icon: HandCoins },
   FREE:   { label: 'مجاني',    hint: 'متاح فقط مع عرض الشهر الأول مجاناً',       Icon: Gift     },
+};
+
+const CURRENCY_NAME: Record<MembershipCurrency, string> = {
+  SYP: 'ليرة سورية',
+  USD: 'دولار أمريكي',
+};
+
+// Only SYP can be unpriced (the backend requires a USD price), hence the SYP-specific text.
+const UNPRICED_NOTE: Record<MembershipCurrency, string> = {
+  SYP: 'غير متاح — لم يُحدَّد سعر العضوية بالليرة بعد',
+  USD: 'غير متاح',
 };
 
 type Phase = 'idle' | 'funding' | 'charging';
@@ -36,7 +49,10 @@ export function MembershipChargeModal({
   onClose: () => void;
   onCharged: () => void;
 }) {
+  const plan = store.plan ?? null;
+
   const [campaign, setCampaign] = useState<MembershipCampaign>('FULL_PRICE');
+  const [currency, setCurrency] = useState<MembershipCurrency>(() => (plan?.prices.USD ? 'USD' : 'SYP'));
   const [method, setMethod]     = useState<MembershipMethod>('ONLINE');
   const [phase, setPhase]       = useState<Phase>('idle');
   const [receipt, setReceipt]   = useState<File | null>(null); // required for the CASH funding step
@@ -57,14 +73,15 @@ export function MembershipChargeModal({
     return () => { document.body.style.overflow = prev; };
   }, []);
 
-  const price = MEMBERSHIP_CAMPAIGNS[campaign].price;
+  // money-STRING; undefined when no plan or the selected currency is unpriced.
+  const price = plan?.prices[currency]?.[campaign];
   const priceLabel = useMemo(
-    () => (isFree ? 'مجاني' : formatMoney(price, 'USD')),
-    [isFree, price],
+    () => (isFree ? 'مجاني' : price !== undefined ? formatMoney(price, currency) : '—'),
+    [isFree, price, currency],
   );
 
   const submit = async () => {
-    if (busy) return;
+    if (busy || price === undefined) return;
     // CASH funds the owner's wallet via a topup, which now requires a receipt photo.
     if (method === 'CASH' && !receipt) {
       toast.error('يجب التقاط صورة إيصال الاستلام.');
@@ -72,7 +89,7 @@ export function MembershipChargeModal({
     }
     try {
       if (method === 'CASH') {
-        // ── Step 1: capture receipt → fund the owner's USD wallet (TOPUP_CASH) ──
+        // ── Step 1: capture receipt → fund the owner's wallet in the charge currency (TOPUP_CASH) ──
         let ownerId = ownerUserIdOf(store);
         if (!ownerId) {
           const phone = store.ownerPhone ?? store.owner?.phone ?? null;
@@ -84,7 +101,7 @@ export function MembershipChargeModal({
         const topup = await agentService.createTopup({
           sellerUserId:   ownerId,
           amount:         price,
-          currency:       'USD',
+          currency,
           note:           'تمويل اشتراك العضوية',
           idempotencyKey: crypto.randomUUID(),
           receipt:        receipt!,
@@ -95,6 +112,7 @@ export function MembershipChargeModal({
         await agentStoresService.chargeMembership(store.id, {
           campaign,
           method: 'CASH',
+          currency,
           idempotencyKey: crypto.randomUUID(),
           agentCashCollectionId: topup.collection.id,
         });
@@ -103,6 +121,7 @@ export function MembershipChargeModal({
         await agentStoresService.chargeMembership(store.id, {
           campaign,
           method,
+          currency,
           idempotencyKey: crypto.randomUUID(),
         });
       }
@@ -154,14 +173,25 @@ export function MembershipChargeModal({
           </button>
         </div>
 
+        {plan === null ? (
+          /* No active plan configured — charging unavailable, nothing to pick. */
+          <div className="p-5">
+            <div className="rounded-xl bg-amber-50 border border-amber-200 p-4">
+              <p className="flex items-start gap-2 text-sm text-amber-800 leading-relaxed">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                تحصيل الاشتراك غير متاح حالياً — لا توجد خطة عضوية فعّالة. تواصل مع الإدارة.
+              </p>
+            </div>
+          </div>
+        ) : (
         <div className="p-5 space-y-5">
           {/* Campaign */}
           <div>
             <label className="block text-xs font-semibold text-slate-500 mb-2">العرض</label>
             <div className="space-y-2">
               {CAMPAIGNS.map((c) => {
-                const m = MEMBERSHIP_CAMPAIGNS[c];
                 const active = campaign === c;
+                const net = plan.prices[currency]?.[c];
                 return (
                   <button
                     key={c}
@@ -173,10 +203,48 @@ export function MembershipChargeModal({
                       active ? 'border-teal-500 bg-teal-50' : 'border-slate-200 hover:border-slate-300',
                     )}
                   >
-                    <span className="text-sm font-bold text-slate-800">{m.label}</span>
+                    <span className="text-sm font-bold text-slate-800">{MEMBERSHIP_CAMPAIGN_LABELS[c]}</span>
                     <span className={cn('text-sm font-extrabold', active ? 'text-teal-700' : 'text-slate-500')}>
-                      {c === 'FIRST_MONTH_FREE' ? 'مجاني' : formatMoney(m.price, 'USD')}
+                      {c === 'FIRST_MONTH_FREE' ? 'مجاني' : net !== undefined ? formatMoney(net, currency) : '—'}
                     </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Charge currency — which owner balance funds it, at that currency's plan price */}
+          <div>
+            <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-2">
+              <Wallet className="w-3.5 h-3.5" />
+              ادفع من رصيد
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {(['SYP', 'USD'] as const).map((c) => {
+                const priced = plan.prices[c] !== null;
+                const active = currency === c;
+                const amount = plan.prices[c]?.[campaign];
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCurrency(c)}
+                    disabled={busy || !priced}
+                    className={cn(
+                      'py-3 px-3 rounded-xl border text-center transition-colors',
+                      active ? 'border-teal-500 bg-teal-50' : 'border-slate-200 hover:border-slate-300',
+                      busy && 'opacity-50',
+                      !priced && 'opacity-50 cursor-not-allowed hover:border-slate-200',
+                    )}
+                  >
+                    <p className="text-sm font-bold text-slate-800">{CURRENCY_NAME[c]}</p>
+                    {priced ? (
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {isFree ? 'مجاني' : amount !== undefined ? formatMoney(amount, c) : '—'}
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-slate-400 mt-0.5 leading-snug">{UNPRICED_NOTE[c]}</p>
+                    )}
                   </button>
                 );
               })}
@@ -216,7 +284,7 @@ export function MembershipChargeModal({
           {method === 'CASH' && (
             <div className="space-y-3">
               <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2">
-                <Step n={1} label={`حصّل ${formatMoney(price, 'USD')} نقداً وصوّر الإيصال (شحن محفظة المالك)`} done={phase === 'charging'} active={phase === 'funding'} />
+                <Step n={1} label={`حصّل ${priceLabel} نقداً وصوّر الإيصال (شحن محفظة المالك)`} done={phase === 'charging'} active={phase === 'funding'} />
                 <Step n={2} label="فعّل الاشتراك" done={false} active={phase === 'charging'} />
               </div>
               <CameraCapture
@@ -239,7 +307,7 @@ export function MembershipChargeModal({
           <p className="flex items-start gap-1.5 text-[11px] text-slate-400">
             <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
             {method === 'ONLINE'
-              ? 'سيُخصم المبلغ من محفظة المالك بالدولار. تأكّد من توفّر الرصيد.'
+              ? `سيُخصم المبلغ من محفظة المالك ${currency === 'USD' ? 'بالدولار' : 'بالليرة السورية'}. تأكّد من توفّر الرصيد.`
               : method === 'CASH'
               ? 'سيتم شحن محفظة المالك بالمبلغ المُحصّل ثم خصمه للاشتراك.'
               : 'لن يتم خصم أي مبلغ — عرض الشهر الأول مجاناً.'}
@@ -247,13 +315,14 @@ export function MembershipChargeModal({
 
           <button
             onClick={submit}
-            disabled={busy || (method === 'CASH' && !receipt)}
+            disabled={busy || price === undefined || (method === 'CASH' && !receipt)}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-teal-600 text-white text-sm font-bold hover:bg-teal-500 transition-colors disabled:opacity-50"
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <BadgeCheck className="w-4 h-4" />}
             {phase === 'funding' ? 'جارٍ التحصيل…' : phase === 'charging' ? 'جارٍ التفعيل…' : 'تأكيد وتفعيل الاشتراك'}
           </button>
         </div>
+        )}
       </div>
     </div>
   );
