@@ -36,7 +36,7 @@ export default function FavoritesPage() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.replace('/login');
+      router.replace(`/login?redirect=${encodeURIComponent('/account/favorites')}`);
       return;
     }
     favoritesService.getAll()

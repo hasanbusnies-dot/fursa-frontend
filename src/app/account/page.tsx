@@ -81,7 +81,10 @@ export default function AccountDashboardPage() {
 
   useEffect(() => {
     if (!mounted) return;
-    if (!isAuthenticated) { router.replace('/login'); return; }
+    if (!isAuthenticated) {
+      router.replace(`/login?redirect=${encodeURIComponent('/account')}`);
+      return;
+    }
 
     Promise.allSettled([
       listingsService.getMyListings()
