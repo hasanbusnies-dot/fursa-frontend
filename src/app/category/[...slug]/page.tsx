@@ -774,7 +774,7 @@ export default function CategoryPage() {
                 className="flex items-center gap-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl px-4 py-2 hover:bg-gray-100 transition-colors"
               >
                 <SlidersHorizontal className="w-4 h-4" />
-                تصفية
+                فلاتر
                 {isActive && <span className="w-2 h-2 bg-orange-500 rounded-full inline-block" />}
               </button>
             </div>

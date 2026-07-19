@@ -6,6 +6,7 @@ import { Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { favoritesService } from '@/services/favorites.service';
 import { useAuthStore } from '@/store/auth.store';
+import { useFavoritesStore } from '@/store/favorites.store';
 import { cn } from '@/lib/utils';
 
 interface FavoriteButtonProps {
@@ -34,14 +35,26 @@ export function FavoriteButton({
 
   const shouldCheck = checkOnMountProp ?? false;
 
-  const [favorited, setFavorited] = useState(initialFavorited ?? false);
+  // Three sources of truth, in priority order:
+  //   1. initialFavorited — parent knows (favorites page: always true)
+  //   2. checkOnMount     — per-id check (detail page; one listing, one request)
+  //   3. the shared store — cards in a grid, loaded once for the whole session
+  const usesStore = initialFavorited === undefined && !shouldCheck;
+
+  const storeIds     = useFavoritesStore((s) => s.ids);
+  const storeLoaded  = useFavoritesStore((s) => s.loaded);
+  const ensureLoaded = useFavoritesStore((s) => s.ensureLoaded);
+  const setInStore   = useFavoritesStore((s) => s.setFavorited);
+  const resetStore   = useFavoritesStore((s) => s.reset);
+
+  const [localFavorited, setLocalFavorited] = useState(initialFavorited ?? false);
   const [checking,  setChecking]  = useState(shouldCheck && isAuthenticated);
   const [toggling,  setToggling]  = useState(false);
 
   // Sync when the parent explicitly provides an updated value (e.g. favorites page).
   // Skipped when initialFavorited is undefined to avoid overwriting a check-loaded value.
   useEffect(() => {
-    if (initialFavorited !== undefined) setFavorited(initialFavorited);
+    if (initialFavorited !== undefined) setLocalFavorited(initialFavorited);
   }, [initialFavorited]);
 
   useEffect(() => {
@@ -50,10 +63,27 @@ export function FavoriteButton({
       return;
     }
     favoritesService.check(listingId)
-      .then(setFavorited)
+      .then(setLocalFavorited)
       .catch(() => {})
       .finally(() => setChecking(false));
   }, [listingId, shouldCheck, isAuthenticated]);
+
+  // Card path: pull the session's favorite set in (single-flight — a 40-card
+  // grid still makes exactly one request), and clear it on logout.
+  useEffect(() => {
+    if (!usesStore) return;
+    if (isAuthenticated) void ensureLoaded();
+    else resetStore();
+  }, [usesStore, isAuthenticated, ensureLoaded, resetStore]);
+
+  const favorited = usesStore
+    ? (storeLoaded && storeIds.has(listingId))
+    : localFavorited;
+
+  const setFavorited = (value: boolean) => {
+    if (usesStore) setInStore(listingId, value);
+    else setLocalFavorited(value);
+  };
 
   const handleClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -73,6 +103,9 @@ export function FavoriteButton({
     try {
       const result = await favoritesService.toggle(listingId);
       setFavorited(result);
+      // Keep the shared set honest even when this button isn't reading from it
+      // (detail page / favorites page), so cards elsewhere show the new state.
+      if (!usesStore) setInStore(listingId, result);
       onToggle?.(result);
       toast.success(result ? 'تمت الإضافة إلى المفضلة!' : 'تمت الإزالة من المفضلة.');
       // The contextual push-permission moment (PushPrompt listens; no-op if already
