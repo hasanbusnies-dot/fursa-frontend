@@ -730,6 +730,10 @@ export default function CategoryPage() {
             <div className="flex flex-col items-center justify-center py-28 text-gray-400 gap-3">
               <SearchX className="w-10 h-10" />
               <p className="text-base font-medium text-gray-600">الفئة غير موجودة</p>
+              {/* Name the slug that failed to resolve. A reader learns nothing from a
+                  raw English slug — but when a link drifts from the catalog, this is
+                  the difference between "obvious" and "open devtools". */}
+              <code className="text-xs text-gray-300" dir="ltr">{lastSlug}</code>
               <Link href="/" className="text-sm text-blue-600 hover:underline font-medium">العودة إلى الرئيسية</Link>
             </div>
           )}
