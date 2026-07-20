@@ -49,11 +49,11 @@ export function MobileCategoryList() {
                 i < CURATED_ROOTS.length - 1 ? ' border-b border-gray-100' : ''
               }`}
             >
-              {/* Saturated solid CIRCLE + white glyph (sahibinden reference). strokeWidth
-                  2.25 (vs lucide's default 2) makes the outline read a touch bolder /
-                  filled-looking reversed on the color — lucide has no filled variants. */}
+              {/* Saturated solid CIRCLE + white glyph (sahibinden reference). Phosphor
+                  weight="fill" renders a SOLID pictogram (not an outline) — the whole
+                  point of moving off lucide, which is line-only. */}
               <div className={`w-14 h-14 rounded-full ${root.fill} flex items-center justify-center shrink-0`}>
-                <Icon className="w-7 h-7 text-white" strokeWidth={2.25} />
+                <Icon weight="fill" className="w-7 h-7 text-white" />
               </div>
               {/* min-w-0: without it the flex child refuses to shrink and truncate is a
                   silent no-op — the classic flexbox ellipsis failure. */}

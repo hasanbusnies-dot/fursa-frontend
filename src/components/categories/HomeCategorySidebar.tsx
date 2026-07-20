@@ -37,7 +37,9 @@ function RootGroup({ root, subs }: { root: CuratedRoot; subs: CatalogNode[] }) {
   const header = (
     <>
       <div className={`w-7 h-7 rounded-lg ${root.bg} flex items-center justify-center shrink-0`}>
-        <Icon className={`w-3.5 h-3.5 ${root.color}`} />
+        {/* weight="regular" (Phosphor line style) keeps the desktop sidebar's outline
+            look unchanged — only the mobile tile moved to the solid fill weight. */}
+        <Icon weight="regular" className={`w-3.5 h-3.5 ${root.color}`} />
       </div>
       <span className="flex-1 text-sm font-semibold text-gray-800 text-start">
         {root.label}
