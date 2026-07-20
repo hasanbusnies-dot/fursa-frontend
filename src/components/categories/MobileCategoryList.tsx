@@ -49,8 +49,11 @@ export function MobileCategoryList() {
                 i < CURATED_ROOTS.length - 1 ? ' border-b border-gray-100' : ''
               }`}
             >
-              <div className={`w-14 h-14 rounded-2xl ${root.bg} flex items-center justify-center shrink-0`}>
-                <Icon className={`w-7 h-7 ${root.color}`} />
+              {/* Saturated solid CIRCLE + white glyph (sahibinden reference). strokeWidth
+                  2.25 (vs lucide's default 2) makes the outline read a touch bolder /
+                  filled-looking reversed on the color — lucide has no filled variants. */}
+              <div className={`w-14 h-14 rounded-full ${root.fill} flex items-center justify-center shrink-0`}>
+                <Icon className="w-7 h-7 text-white" strokeWidth={2.25} />
               </div>
               {/* min-w-0: without it the flex child refuses to shrink and truncate is a
                   silent no-op — the classic flexbox ellipsis failure. */}

@@ -33,8 +33,13 @@ export interface CuratedRoot {
   /** Curated teaser text. Display-only; truncates with the RTL ellipsis. */
   subtitle: string;
   icon:     LucideIcon;
+  /** Glyph color + pale-tint tile bg for the DESKTOP sidebar's small square. */
   color:    string;
   bg:       string;
+  /** Saturated solid circle fill for the MOBILE category tile (white glyph on top),
+      per the sahibinden reference. Kept separate from `bg`/`color` so the desktop
+      sidebar's pale-tint square is untouched. Light hues go -600 so white stays legible. */
+  fill:     string;
   /** A real catalog slug this root opens. Mutually exclusive with `group`. */
   slug?:    string;
   /** Umbrella: real catalog root slugs listed on a curated landing screen. */
@@ -45,7 +50,7 @@ export const CURATED_ROOTS: CuratedRoot[] = [
   {
     id: 'real-estate', label: 'عقارات',
     subtitle: 'عقارات سكنية، عقارات تجارية، أراضي، مشاريع سكنية، أبنية / عمارات، ملكية مشتركة (تايم شير)، منشآت سياحية، مسابح للإيجار',
-    icon: Building2, color: 'text-red-600', bg: 'bg-red-50',
+    icon: Building2, color: 'text-red-600', bg: 'bg-red-50', fill: 'bg-red-500',
     slug: 'real-estate',
   },
   {
@@ -53,13 +58,13 @@ export const CURATED_ROOTS: CuratedRoot[] = [
     // Latin comma after «سيارات رياضية» fixed here (was FOLLOWUPS §0a, tracked
     // against the retired file — resolved rather than dropped with it).
     subtitle: 'سيارات، مركبات الطرق الوعرة، سيارات رياضية، بيكاب، سيارات كهربائية، دراجات نارية، ميني فان وفان، مركبات تجارية، مركبات للإيجار، مركبات بحرية، مركبات متضررة، كرفانات',
-    icon: Car, color: 'text-blue-600', bg: 'bg-blue-50',
+    icon: Car, color: 'text-blue-600', bg: 'bg-blue-50', fill: 'bg-blue-600',
     slug: 'vehicles',
   },
   {
     id: 'car-parts', label: 'قطع غيار وإكسسوارات وتعديل',
     subtitle: 'معدات السيارات، معدات الدراجات النارية، معدات المركبات البحرية',
-    icon: Wrench, color: 'text-slate-600', bg: 'bg-slate-100',
+    icon: Wrench, color: 'text-slate-600', bg: 'bg-slate-100', fill: 'bg-slate-600',
     // Promoted to top level by the founder; the catalog files it under `vehicles`.
     // Hidden from the vehicles drill-down so it is reachable in exactly one place.
     slug: 'car-parts-accessories',
@@ -67,7 +72,7 @@ export const CURATED_ROOTS: CuratedRoot[] = [
   {
     id: 'market', label: 'سوق المستعمل والجديد',
     subtitle: 'حواسيب، هواتف محمولة وإكسسوارات، كاميرات وتصوير، ديكور المنزل، إلكترونيات منزلية، أجهزة منزلية كهربائية، أزياء وإكسسوارات، ساعات، أم وطفل، هوايات وألعاب',
-    icon: ShoppingBag, color: 'text-orange-600', bg: 'bg-orange-50',
+    icon: ShoppingBag, color: 'text-orange-600', bg: 'bg-orange-50', fill: 'bg-orange-500',
     // Pure curated umbrella: the catalog has NO parent above these 11 (all are
     // roots with parent=null), so tapping this opens a curated landing, not a
     // catalog node. Order is the founder's emphasis — electronics first.
@@ -88,37 +93,37 @@ export const CURATED_ROOTS: CuratedRoot[] = [
   {
     id: 'industrial', label: 'آلات صناعية ومعدات',
     subtitle: 'آلات ثقيلة، آلات زراعية، صناعة، كهرباء وطاقة',
-    icon: Factory, color: 'text-purple-600', bg: 'bg-purple-50',
+    icon: Factory, color: 'text-purple-600', bg: 'bg-purple-50', fill: 'bg-purple-600',
     slug: 'professional-equipment',
   },
   {
     id: 'services', label: 'حرفيون وخدمات',
     subtitle: 'تجديد وديكور المنزل، نقل وشحن، صيانة وخدمات السيارات',
-    icon: Hammer, color: 'text-emerald-600', bg: 'bg-emerald-50',
+    icon: Hammer, color: 'text-emerald-600', bg: 'bg-emerald-50', fill: 'bg-emerald-600',
     slug: 'services',
   },
   {
     id: 'tutors', label: 'مدرسون خصوصيون',
     subtitle: 'ثانوي وجامعي، ابتدائي وإعدادي، لغات أجنبية، حاسوب، قيادة، رياضة، فنون، رقص، موسيقى وآلات موسيقية، مسرح وتمثيل، تنمية بشرية، دروس مهنية',
-    icon: GraduationCap, color: 'text-yellow-600', bg: 'bg-yellow-50',
+    icon: GraduationCap, color: 'text-yellow-600', bg: 'bg-yellow-50', fill: 'bg-amber-600',
     slug: 'private-lessons',
   },
   {
     id: 'jobs', label: 'وظائف',
     subtitle: 'محاماة واستشارات قانونية، تعليم، ترفيه وأنشطة، تجميل وعناية، تكنولوجيا المعلومات وتطوير البرمجيات، موارد بشرية، بناء وإنشاءات، إدارة وأعمال، حراسة وأمن',
-    icon: Briefcase, color: 'text-indigo-600', bg: 'bg-indigo-50',
+    icon: Briefcase, color: 'text-indigo-600', bg: 'bg-indigo-50', fill: 'bg-indigo-600',
     slug: 'job-listings',
   },
   {
     id: 'pets', label: 'عالم الحيوان',
     subtitle: 'إكسسوارات ومعدات، أعلاف وطعام، حيوانات أليفة، أسماك زينة، دواجن، مواشي (أبقار)، مواشي (أغنام)، كائنات بحرية',
-    icon: PawPrint, color: 'text-teal-600', bg: 'bg-teal-50',
+    icon: PawPrint, color: 'text-teal-600', bg: 'bg-teal-50', fill: 'bg-teal-600',
     slug: 'pets-and-plants',
   },
   {
     id: 'helpers', label: 'باحثون عن مساعدين',
     subtitle: 'جليسة أطفال ورضع، رعاية مسنين ومرضى، عاملة نظافة ومساعدة منزلية',
-    icon: UserPlus, color: 'text-orange-600', bg: 'bg-orange-50',
+    icon: UserPlus, color: 'text-orange-600', bg: 'bg-orange-50', fill: 'bg-orange-500',
     slug: 'helpers',
   },
 ];
