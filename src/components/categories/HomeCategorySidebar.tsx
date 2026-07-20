@@ -74,15 +74,34 @@ function RootGroup({ root, subs }: { root: CuratedRoot; subs: CatalogNode[] }) {
 
 type RootWithChildren = { root: CuratedRoot; children: CatalogNode[] };
 
+// Matches Tailwind's `lg` — the breakpoint at which app/page.tsx reveals this aside.
+const DESKTOP_QUERY = '(min-width: 1024px)';
+
 export function HomeCategorySidebar() {
   const router = useRouter();
   const [groups, setGroups] = useState<RootWithChildren[] | null>(null);
+
+  // The homepage hides this aside with `hidden lg:block` — which is CSS ONLY, so on a
+  // phone React still mounted it and ran the fetch wave below: ~10 catalog requests
+  // per load for a sidebar nobody can see, against a shared 300-req/15-min bucket.
+  // Gate on the actual viewport so mobile spends zero. Listening (not just reading
+  // once) keeps a resize-to-desktop correct without a reload.
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia(DESKTOP_QUERY);
+    const sync = () => setIsDesktop(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
 
   // Headings come from the curated config (no fetch); only the sub-lists are catalog
   // data. Fetch them all up front and commit once — so the whole tree paints expanded
   // in a single render. The old code let each RootGroup fetch its own children on
   // mount (1+N), which made the sub-lists pop in a second or two after the headings.
   useEffect(() => {
+    if (!isDesktop) return;
     let cancelled = false;
     (async () => {
       const catalogRoots = await catalogService.getChildren(null);
@@ -108,7 +127,7 @@ export function HomeCategorySidebar() {
       );
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [isDesktop]);
 
   return (
     <div className="bg-white rounded-card shadow-pebble p-4 space-y-3">
