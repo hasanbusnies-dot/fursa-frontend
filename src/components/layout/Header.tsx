@@ -121,8 +121,59 @@ export function Header() {
     <header className={`sticky top-0 z-50 bg-white/70 backdrop-blur-[20px] border-b border-gray-200/60${innerMobile ? ' hidden md:block' : ''}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20">
 
-        {/* ── Main row ── */}
-        <div className="flex items-center gap-3 h-16">
+        {/* ── Mobile header row (sm:hidden) ──
+            dir="ltr" pins physical LEFT/RIGHT for just this row so the bell sits at the
+            physical top-right (the founder's ask, matching the sahibinden reference),
+            without disturbing the RTL desktop row below or the RTL search bar / drawer.
+            Safe because the row carries no Arabic text — the logo is an image (wordmark
+            baked in) and the glyphs are symmetric — so forcing LTR mirrors nothing.
+            Logo stays physical-left in BOTH auth states; only the bell toggles. */}
+        <div dir="ltr" className="sm:hidden flex items-center gap-2 h-16">
+          <Link href="/" className="flex-shrink-0 flex items-center">
+            <Image
+              src="/forsa-logo-wide.png"
+              alt="فرصة GO — fursago.com"
+              width={379}
+              height={128}
+              className="h-[32px] w-auto rounded-lg"
+            />
+          </Link>
+
+          {/* Right-side cluster: [bell][hamburger], hamburger outermost at the far-right
+              edge. ms-auto on the CLUSTER (not the bell) so the pinning holds when the
+              bell is hidden logged-out. In this forced-LTR row ms-auto = margin-left:auto
+              = push to physical right. */}
+          <div className="ms-auto flex items-center gap-1">
+            {/* Bell → full-page notifications (better than a cramped dropdown on a
+                narrow screen). Logged-in only — hidden entirely when logged out. */}
+            {isAuthenticated && (
+              <Link
+                href="/account/notifications"
+                className="relative p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-gray-100 transition-colors"
+                aria-label="الإشعارات"
+                title="الإشعارات"
+              >
+                <Bell className="w-6 h-6" />
+                {notifUnread > 0 && (
+                  <span className="absolute top-0.5 right-0.5 min-w-4 h-4 px-1 rounded-full bg-blue-600 text-white text-[10px] font-bold leading-none flex items-center justify-center">
+                    {notifUnread > 9 ? '9+' : notifUnread}
+                  </span>
+                )}
+              </Link>
+            )}
+
+            <button
+              onClick={() => setMobileOpen((o) => !o)}
+              aria-label="Toggle menu"
+              className="p-2 rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* ── Main row (desktop; sm+) ── */}
+        <div className="hidden sm:flex items-center gap-3 h-16">
 
           {/* Logo: horizontal wordmark (فرصة GO + fursago.com baked into the
               image, solid brand-yellow bg), so no separate brand-text span.
@@ -333,15 +384,7 @@ export function Header() {
               <PlusCircle className="w-4 h-4" />
               أضف إعلان
             </Link>
-
-            {/* Mobile hamburger */}
-            <button
-              onClick={() => setMobileOpen((o) => !o)}
-              aria-label="Toggle menu"
-              className="sm:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
-            >
-              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+            {/* Mobile hamburger + logo + bell now live in the sm:hidden mobile row above. */}
           </div>
         </div>
 
