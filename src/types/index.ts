@@ -7,6 +7,10 @@ export interface CorporateProfile {
   companyName?: string;
   logo?: string;
   verified?: boolean;
+  logoUrl?: string | null;
+  /** Derived live by the backend: store APPROVED && membership paidUntil > now.
+      Gates the member-store seal + inline check in SellerBox. Detail payload only. */
+  memberBadge?: boolean;
 }
 
 export interface User {

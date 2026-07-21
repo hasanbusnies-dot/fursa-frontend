@@ -8,6 +8,7 @@ import {
   ImageOff, AlertCircle, Home, Phone, Calendar, Check, Settings,
   HelpCircle, Send, Tag, Store, BadgeCheck, ZoomIn, X,
 } from 'lucide-react';
+import { SealCheckIcon } from '@phosphor-icons/react/dist/ssr';
 import { toast } from 'sonner';
 import { listingsService } from '@/services/listings.service';
 import { catalogService, type CatalogFilterDef } from '@/services/catalog.service';
@@ -818,6 +819,44 @@ function OfferModal({ listing, onClose }: { listing: Listing; onClose: () => voi
 
 // ── Seller Box ────────────────────────────────────────────────────────────────
 
+/**
+ * 64px seller avatar: store logo (when set) or the blue initial disc, with the
+ * member-store seal half-overlapping the lower-left corner when memberBadge is
+ * true. The seal is Meta-Verified-style: Phosphor SealCheck (fill) in blue on a
+ * white backing disc — the disc shows white through the check cutout AND is the
+ * separation ring that keeps the seal legible on the blue fallback disc.
+ * -bottom-1/-left-1 are physical on purpose (lower-left in RTL too).
+ */
+function SellerAvatar({ logoUrl, initial, name, memberBadge }: {
+  logoUrl?: string | null; initial: string; name: string; memberBadge: boolean;
+}) {
+  return (
+    <div className="relative shrink-0">
+      {logoUrl ? (
+        <img
+          src={logoUrl}
+          alt={name}
+          className="w-16 h-16 rounded-full object-cover ring-1 ring-gray-200"
+        />
+      ) : (
+        <div className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-2xl">
+          {initial}
+        </div>
+      )}
+      {memberBadge && (
+        // 26px disc / 22px seal (2px white ring), offset -1.5 so the enlarged seal
+        // still sits half-out of the corner instead of swallowing the avatar edge.
+        <span
+          className="absolute -bottom-1.5 -left-1.5 w-[26px] h-[26px] rounded-full bg-white shadow-sm flex items-center justify-center"
+          aria-label="متجر معتمد"
+        >
+          <SealCheckIcon weight="fill" className="w-[22px] h-[22px] text-blue-600" />
+        </span>
+      )}
+    </div>
+  );
+}
+
 function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 'full' | 'identity' | 'line' | 'bar' }) {
   const router                        = useRouter();
   const { user, isAuthenticated }     = useAuthStore();
@@ -826,6 +865,11 @@ function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 
 
   const isOwner     = !!user && !!listing.user && user.id === listing.user.id;
   const isCorporate = listing.user?.userType === 'CORPORATE' || !!listing.user?.corporateProfile;
+  // Member-active store (backend-derived, detail payload only). Gates the avatar
+  // seal AND the inline name-check — NOT merely being corporate. The «عرض كل
+  // إعلانات المعرض» link stays on isCorporate: it's navigation, not trust.
+  const memberBadge = !!listing.user?.corporateProfile?.memberBadge;
+  const logoUrl     = isCorporate ? listing.user?.corporateProfile?.logoUrl : null;
 
   const profile = listing.user?.profile;
   const name = isCorporate && listing.user?.corporateProfile?.companyName
@@ -860,13 +904,11 @@ function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 
       <div>
         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">معلومات البائع</p>
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center shrink-0 text-white font-bold text-lg">
-            {initial}
-          </div>
+          <SellerAvatar logoUrl={logoUrl} initial={initial} name={name} memberBadge={memberBadge} />
           <div className="min-w-0">
             <p className="font-semibold text-gray-900 text-sm leading-snug flex items-center gap-1">
               <span className="truncate">{name}</span>
-              {isCorporate && (
+              {memberBadge && (
                 <BadgeCheck className="w-4 h-4 text-blue-500 shrink-0" aria-label="معرض موثّق" />
               )}
             </p>
@@ -901,7 +943,15 @@ function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 
   if (variant === 'line') {
     return (
       <div className="flex flex-wrap items-center gap-x-2 text-xs text-gray-500">
-        <span className="font-semibold text-gray-700">{name}</span>
+        <span className="font-semibold text-gray-700 inline-flex items-center gap-1">
+          {name}
+          {/* Inline member seal: bare fill-weight seal (no white disc — on the white
+              card the check cutout reads white by itself; a disc here would look like
+              a sticker in running text). Same memberBadge gate as the avatar seal. */}
+          {memberBadge && (
+            <SealCheckIcon weight="fill" className="w-4 h-4 text-blue-600 shrink-0" aria-label="متجر معتمد" />
+          )}
+        </span>
         {accountDate && <span>· عضو منذ {accountDate}</span>}
       </div>
     );
@@ -971,13 +1021,11 @@ function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 
       <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">معلومات البائع</p>
 
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center shrink-0 text-white font-bold text-lg">
-          {initial}
-        </div>
+        <SellerAvatar logoUrl={logoUrl} initial={initial} name={name} memberBadge={memberBadge} />
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-gray-900 text-sm leading-snug flex items-center gap-1">
             <span className="truncate">{name}</span>
-            {isCorporate && (
+            {memberBadge && (
               <BadgeCheck className="w-4 h-4 text-blue-500 shrink-0" aria-label="معرض موثّق" />
             )}
           </p>
