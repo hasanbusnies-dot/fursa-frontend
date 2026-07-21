@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -88,6 +88,46 @@ function ImageGallery({ images }: { images: Listing['images'] }) {
   const [lightboxOpen,  setLightboxOpen]  = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
+  // ── Scroll-snap strip (mobile swipe; desktop arrows/thumbs drive the same strip) ──
+  // All navigation goes through scrollIntoView — never scrollLeft, whose sign is the
+  // one genuinely RTL-cursed API. Native RTL scroll lays image 1 at the physical
+  // right, so swipe-left = next with zero direction logic.
+  const stripRef  = useRef<HTMLDivElement>(null);
+  const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const scrollToSlide = (i: number) => {
+    setSelected(i); // snappy highlight; the observer re-confirms on settle
+    slideRefs.current[i]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  };
+
+  // Sync `selected` (counter + thumbnail highlight) as swiped slides settle.
+  useEffect(() => {
+    if (images.length < 2) return;
+    const strip = stripRef.current;
+    if (!strip) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          const i = slideRefs.current.indexOf(e.target as HTMLDivElement);
+          if (i !== -1) setSelected(i);
+        }
+      },
+      { root: strip, threshold: 0.6 },
+    );
+    slideRefs.current.forEach((el) => el && io.observe(el));
+    return () => io.disconnect();
+  }, [images.length]);
+
+  // Non-first primary image: start the strip there (instant, before paint matters
+  // little at aspect-fixed sizes; block:'nearest' avoids scrolling the page).
+  useEffect(() => {
+    if (primaryIndex > 0) {
+      slideRefs.current[primaryIndex]?.scrollIntoView({ block: 'nearest', inline: 'center' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const openLightbox = () => { setLightboxIndex(selected); setLightboxOpen(true); };
   const closeLightbox = () => setLightboxOpen(false);
   const lbPrev = () => setLightboxIndex((i) => (i - 1 + images.length) % images.length);
@@ -125,11 +165,38 @@ function ImageGallery({ images }: { images: Listing['images'] }) {
           className="relative aspect-[4/3] bg-gray-100 rounded-field overflow-hidden group cursor-zoom-in"
           onClick={openLightbox}
         >
-          <img
-            src={images[selected].url}
-            alt={`صورة ${selected + 1}`}
-            className="w-full h-full object-cover"
-          />
+          {images.length > 1 ? (
+            /* Swipeable strip: native scroll IS the swipe (follows the finger, snaps
+               per image). overscroll-x-contain stops edge-swipes chaining into
+               browser back-navigation. Touch drags never fire the container's
+               click, so swiping can't accidentally open the lightbox. */
+            <div
+              ref={stripRef}
+              className="flex h-full overflow-x-auto snap-x snap-mandatory no-scrollbar overscroll-x-contain"
+            >
+              {images.map((img, i) => (
+                <div
+                  key={i}
+                  ref={(el) => { slideRefs.current[i] = el; }}
+                  className="w-full h-full shrink-0 snap-center"
+                >
+                  <img
+                    src={img.url}
+                    alt={`صورة ${i + 1}`}
+                    loading={i === primaryIndex ? 'eager' : 'lazy'}
+                    decoding="async"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <img
+              src={images[0].url}
+              alt="صورة 1"
+              className="w-full h-full object-cover"
+            />
+          )}
           {/* Zoom hint */}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors flex items-center justify-center pointer-events-none">
             <ZoomIn className="w-10 h-10 text-white opacity-0 group-hover:opacity-75 transition-opacity drop-shadow-lg" />
@@ -137,14 +204,14 @@ function ImageGallery({ images }: { images: Listing['images'] }) {
           {images.length > 1 && (
             <>
               <button
-                onClick={(e) => { e.stopPropagation(); setSelected((s) => Math.max(0, s - 1)); }}
+                onClick={(e) => { e.stopPropagation(); scrollToSlide(Math.max(0, selected - 1)); }}
                 disabled={selected === 0}
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 hover:bg-black/65 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-0"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); setSelected((s) => Math.min(images.length - 1, s + 1)); }}
+                onClick={(e) => { e.stopPropagation(); scrollToSlide(Math.min(images.length - 1, selected + 1)); }}
                 disabled={selected === images.length - 1}
                 className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 hover:bg-black/65 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-0"
               >
@@ -161,7 +228,7 @@ function ImageGallery({ images }: { images: Listing['images'] }) {
             {images.map((img, i) => (
               <button
                 key={i}
-                onClick={() => setSelected(i)}
+                onClick={() => scrollToSlide(i)}
                 className={`shrink-0 w-[72px] h-[54px] rounded-field overflow-hidden border-2 transition-all ${
                   i === selected
                     ? 'border-blue-600 ring-1 ring-blue-600'
