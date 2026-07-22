@@ -107,6 +107,19 @@ body {
   overflow-x: hidden;
 }
 
+/* App-open splash (SplashScreen.tsx): hidden by default; the pre-hydration
+   inline script in the root layout sets data-splash on <html> BEFORE first
+   paint when this open should show it — so the very first painted frame is the
+   splash, with no white flash and no hydration mismatch. The component owns the
+   attribute's removal after its fade. Deliberately display-based (not opacity):
+   the overlay must not intercept taps on loads where it never shows. */
+.splash-overlay {
+  display: none;
+}
+html[data-splash] .splash-overlay {
+  display: flex;
+}
+
 /* Utility: hide scrollbar while keeping element scrollable */
 .no-scrollbar {
   scrollbar-width: none;

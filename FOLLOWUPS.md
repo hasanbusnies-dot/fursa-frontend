@@ -1,5 +1,15 @@
 # Follow-ups (tracked, not dropped)
 
+## TWA splash ↔ video-splash first-frame alignment — waiting on the real video
+When the TWA ships, Android shows its manifest-derived static splash (today:
+white `background_color` + the 512 icon) BEFORE the web app loads and our video
+splash (`SplashScreen.tsx`, `/splash.mp4`) plays — two splashes back-to-back.
+To read as one continuous sequence, align `manifest.background_color` (and
+possibly the icon) with the VIDEO's first frame — e.g. if the video opens on
+blue-600 with the logo centered, set `background_color: '#2563eb'`. One-line
+manifest change + maybe an asset. Decide when the founder's final splash.mp4
+exists, since its first frame dictates the target. (2026-07-22)
+
 ## 0. Purchase-modal copy for extend-not-overwrite dopings — waiting on backend
 Backend is shipping extend-not-overwrite: buying a doping type that is already active
 EXTENDS remaining + purchased weeks instead of overwriting. Once it lands, the purchase
