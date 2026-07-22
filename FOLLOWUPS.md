@@ -1,14 +1,13 @@
 # Follow-ups (tracked, not dropped)
 
-## TWA splash ↔ video-splash first-frame alignment — waiting on the real video
-When the TWA ships, Android shows its manifest-derived static splash (today:
-white `background_color` + the 512 icon) BEFORE the web app loads and our video
-splash (`SplashScreen.tsx`, `/splash.mp4`) plays — two splashes back-to-back.
-To read as one continuous sequence, align `manifest.background_color` (and
-possibly the icon) with the VIDEO's first frame — e.g. if the video opens on
-blue-600 with the logo centered, set `background_color: '#2563eb'`. One-line
-manifest change + maybe an asset. Decide when the founder's final splash.mp4
-exists, since its first frame dictates the target. (2026-07-22)
+## PWA/TWA pre-splash ↔ our splash alignment — DONE for the image splash 2026-07-22
+Chrome/Android shows its manifest-derived launch screen (background_color +
+icon; not removable for installed PWAs) BEFORE the web app loads and our splash
+plays. Aligned: `manifest.background_color` is now `#ffcb00` — the dominant
+yellow of the image splash (`fursago.webp`) — so the two screens read as one
+continuous yellow sequence. REVISIT if the deferred VIDEO splash returns
+(`/splash.mp4` kept in the repo): re-align background_color to the video's
+first frame then.
 
 ## 0. Purchase-modal copy for extend-not-overwrite dopings — waiting on backend
 Backend is shipping extend-not-overwrite: buying a doping type that is already active

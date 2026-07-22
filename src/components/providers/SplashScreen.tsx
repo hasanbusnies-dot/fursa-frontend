@@ -3,37 +3,33 @@
 import { useEffect, useRef, useState } from 'react';
 
 /**
- * App-open splash: full-screen brand overlay playing /splash.mp4, then a 400ms
+ * App-open splash: full-screen brand image (/fursago.webp — the founder's
+ * fursago.png compressed 2.2MB → 27KB, same art), held briefly, then a 400ms
  * fade reveals the app (which boots BEHIND the splash — zero added wait).
+ * The video variant was deferred 2026-07-22; its asset (/splash.mp4) stays in
+ * the repo for when it returns.
  *
  * Show-gating lives in a pre-hydration inline script in the root layout: it
  * checks sessionStorage ('forsa-splash-shown') and sets `data-splash` on <html>
  * BEFORE first paint, and CSS (globals.css) shows this overlay only under that
  * attribute — so the first painted frame is the splash, no white flash, and the
- * server markup stays auth/storage-agnostic (no hydration mismatch). Once per
- * tab-session, full document loads only; SPA navigations never remount the root
- * layout, so they can never replay it.
+ * server markup stays storage-agnostic (no hydration mismatch; <html> carries
+ * suppressHydrationWarning for the intentional attribute). Once per
+ * tab-session, full document loads only; SPA navigations never remount the
+ * root layout, so they can never replay it.
  *
- * Exits (all converge on the same fade + unmount):
- *  - video ended (natural, expected ~1.5–2.5s)
- *  - no `canplay` within 1.2s — slow network / MISSING FILE / autoplay refused;
- *    the splash must never make the app slower than no splash
- *  - video error, or the play() promise rejecting (WebView battery-saver refusal)
- *  - 4s hard cap from mount, whatever else happens
- *  - tap anywhere (no visible button — the tap just works)
- *  - prefers-reduced-motion: no video at all — static logo ~800ms, then fade
+ * Exits (all converge on the same fade + unmount): the hold elapsing, image
+ * error (missing file must never trap the user), tap anywhere. The overlay bg
+ * is the image's own yellow, so even a slow/failed image shows brand color,
+ * never white/black. prefers-reduced-motion: the image is already static —
+ * only the fade is disabled (motion-reduce), the splash itself stays.
  */
-const FADE_MS    = 400;
-const CANPLAY_MS = 1200;
-const CAP_MS     = 4000;
-const REDUCED_MS = 800;
+const HOLD_MS = 1500;
+const FADE_MS = 400;
 
 export function SplashScreen() {
-  // 'idle' = server/first-client render (markup present, CSS decides visibility);
-  // the mount effect then either takes over ('video' | 'still') or unmounts.
-  const [phase, setPhase] = useState<'idle' | 'video' | 'still' | 'fading' | 'done'>('idle');
-  const videoRef  = useRef<HTMLVideoElement>(null);
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  // 'idle' = server/first-client render (markup present, CSS decides visibility).
+  const [phase, setPhase] = useState<'idle' | 'fading' | 'done'>('idle');
   const fadingRef = useRef(false);
 
   const startFade = () => {
@@ -55,29 +51,8 @@ export function SplashScreen() {
       setPhase('done');
       return;
     }
-    const arm = (ms: number) => {
-      const t = setTimeout(() => startFadeRef.current(), ms);
-      timersRef.current.push(t);
-      return t;
-    };
-
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setPhase('still');
-      arm(REDUCED_MS);
-    } else {
-      setPhase('video');
-      arm(CAP_MS);
-      const canplayTimer = arm(CANPLAY_MS);
-      const v = videoRef.current;
-      if (v) {
-        v.addEventListener('canplay', () => clearTimeout(canplayTimer), { once: true });
-        // autoPlay usually suffices; the explicit call surfaces the rejection
-        // (some WebViews refuse even muted autoplay under battery saver).
-        v.play().catch(() => startFadeRef.current());
-      }
-    }
-    return () => timersRef.current.forEach(clearTimeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const t = setTimeout(() => startFadeRef.current(), HOLD_MS);
+    return () => clearTimeout(t);
   }, []);
 
   if (phase === 'done') return null;
@@ -88,31 +63,17 @@ export function SplashScreen() {
     <div
       aria-hidden
       onClick={startFade}
-      className={`splash-overlay fixed inset-0 z-[400] items-center justify-center bg-blue-600 transition-opacity duration-[400ms] ${
+      className={`splash-overlay fixed inset-0 z-[400] bg-[#ffcb00] transition-opacity duration-[400ms] motion-reduce:transition-none ${
         phase === 'fading' ? 'opacity-0' : 'opacity-100'
       }`}
     >
-      {phase === 'still' ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src="/forsa-logo-512.png" alt="" className="w-40 h-40 rounded-3xl" />
-      ) : (
-        // object-cover fills the screen edge-to-edge (founder's ask — no black
-        // letterbox bars). Tradeoff: a 16:9 video in a portrait viewport gets its
-        // LEFT/RIGHT edges cropped to fill vertically — the logo must live in the
-        // centered safe area. If the full 16:9 width must stay visible, switch to
-        // object-contain: brand-blue margins instead of crop (overlay bg shows).
-        <video
-          ref={videoRef}
-          src="/splash.mp4"
-          autoPlay
-          muted
-          playsInline
-          preload="auto"
-          onEnded={startFade}
-          onError={startFade}
-          className="w-full h-full object-cover"
-        />
-      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/fursago.webp"
+        alt=""
+        onError={startFade}
+        className="w-full h-full object-cover"
+      />
     </div>
   );
 }

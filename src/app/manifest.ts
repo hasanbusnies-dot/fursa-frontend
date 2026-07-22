@@ -14,7 +14,11 @@ export default function manifest(): MetadataRoute.Manifest {
     display: 'standalone',
     dir: 'rtl',
     lang: 'ar',
-    background_color: '#ffffff',
+    // Matches the splash image's (fursago.webp) dominant yellow, so Chrome's own
+    // browser-generated launch screen (background_color + icon — it cannot be
+    // removed for installed PWAs) flows into our image splash as one continuous
+    // yellow sequence instead of white-screen-then-image.
+    background_color: '#ffcb00',
     theme_color: '#2563eb',
     icons: [
       { src: '/forsa-logo-192.png', sizes: '192x192', type: 'image/png' },
