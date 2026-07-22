@@ -72,20 +72,11 @@ Deferred during the entry-point repointing (Option a) change.
 ---
 _Owner: messaging/auth refactor. Raised during the Socket.io migration groundwork._
 
-## 5. Maskable PWA icon (Android adaptive icon) — LOW, pre-TWA
-**Where:** `src/app/manifest.ts` — icons are `purpose: any` only.
-
-**Problem:** Android adaptive icons crop to a central safe zone (~80% circle). The current
-`public/forsa-logo-*.png` artwork (wordmark spanning the full width) would get its edges
-clipped in a circular mask, so no `purpose: maskable` entry was declared — launchers fall
-back to shrinking the `any` icon inside a plain background, which is safe but less polished.
-
-**Fix:** export a dedicated maskable asset (mark centered inside the safe zone with padded
-solid background, e.g. `forsa-logo-maskable-512.png`) and add it to the manifest with
-`purpose: 'maskable'`. Do this before the TWA (mobile roadmap Phase 1) ships.
-
-Deferred during the logo integration (2026-07-09) because it needs a new asset from the
-logo source files, not code.
+## 5. Maskable PWA icon (Android adaptive icon) — RESOLVED 2026-07-22
+Resolved with the fursago icon set: `public/fursago-icon-maskable-{192,512}.png` (lockup at
+58% width inside the adaptive safe zone, flat #ffcb00) declared with `purpose: 'maskable'`
+in `src/app/manifest.ts`, alongside `purpose: any` variants at 78% width. All four generated
+from `public/fursago.png` so Chrome's PWA launch splash matches the in-app image splash.
 
 ## Stitch redesign deferrals (2026-07-10, uncommitted redesign build)
 Deferred on purpose while applying the DESIGN.md system; none block the local review.
