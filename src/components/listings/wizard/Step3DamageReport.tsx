@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import { Info } from 'lucide-react';
+import { CarDamageDiagram } from '../CarDamageDiagram';
 import {
-  SVG_PANELS, STATUS_LABELS, STATUS_COLORS, DAMAGE_STATUSES,
+  SVG_PANELS, STATUS_LABELS, STATUS_COLORS,
   nextDamageStatus,
   type DamageStatus, type DamageReportState,
 } from './schema';
@@ -20,144 +20,6 @@ function cyclePanel(report: DamageReportState, key: string): DamageReportState {
 
 function updateDetail(report: DamageReportState, key: string, detail: string): DamageReportState {
   return { ...report, [key]: { ...report[key], status: report[key]?.status ?? 'ORIGINAL', detail } };
-}
-
-// ── CSS-grid car map (top-down view, nose at top) ─────────────────────────────
-//
-// Grid rows:  front-bumper / fenders+hood / windshield / front-doors /
-//             rear-doors / rear-window / fenders+trunk / rear-bumper
-// Grid cols:  [left side 50px] [center 110px] [right side 50px]
-// Bumpers only occupy center column; windshield/rear-window are decorative.
-// Rockers are in PanelList only (too thin to show in grid map).
-
-function CarGrid({
-  report,
-  onPanelClick,
-}: {
-  report: DamageReportState;
-  onPanelClick: (key: string) => void;
-}) {
-  const [hovered, setHovered] = useState<string | null>(null);
-
-  // Label lookup — single source of truth is SVG_PANELS in schema.ts
-  const labelOf = (key: string) => SVG_PANELS.find((p) => p.key === key)?.label ?? key;
-
-  // Renders a single clickable panel div with damage-state color
-  function block(
-    key: string,
-    gridCol: string,
-    gridRow: string,
-    opts?: { leftWheel?: boolean; rightWheel?: boolean },
-  ) {
-    const status = (report[key]?.status ?? 'ORIGINAL') as DamageStatus;
-    const colors = STATUS_COLORS[status];
-    const isHov  = hovered === key;
-    return (
-      <div
-        key={key}
-        onClick={() => onPanelClick(key)}
-        onMouseEnter={() => setHovered(key)}
-        onMouseLeave={() => setHovered(null)}
-        title={labelOf(key)}
-        className="cursor-pointer rounded-md flex items-center justify-center text-center leading-tight text-[9px] font-medium text-gray-500 transition-all duration-150 px-0.5"
-        style={{
-          gridColumn: gridCol,
-          gridRow:    gridRow,
-          position:   'relative',
-          backgroundColor: colors.fill,
-          border: `1px solid ${isHov ? '#2563eb' : colors.stroke}`,
-          boxShadow:  isHov ? '0 0 0 2px #bfdbfe' : undefined,
-        }}
-      >
-        {opts?.leftWheel && (
-          <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-3 h-8 bg-gray-500 rounded-full z-10 pointer-events-none" />
-        )}
-        {opts?.rightWheel && (
-          <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-3 h-8 bg-gray-500 rounded-full z-10 pointer-events-none" />
-        )}
-        {labelOf(key)}
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col items-center gap-2 select-none">
-      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">▲ أمام</span>
-
-      {/* px-5 gives clearance for the wheel ovals; overflow:visible ensures they aren't clipped */}
-      <div className="px-5" style={{ overflow: 'visible' }}>
-        <div
-          className="grid gap-1"
-          style={{
-            gridTemplateColumns: '50px 110px 50px',
-            gridTemplateRows:    '26px 78px 10px 46px 46px 10px 78px 26px',
-            overflow: 'visible',
-          }}
-        >
-          {/* Row 1 – Front bumper (center only) */}
-          {block('frontBumper', '2', '1')}
-
-          {/*
-            Row 2 – Fenders + Hood.
-            RTL context: col '1' = visual RIGHT side, col '3' = visual LEFT side.
-            So RIGHT panels go in col '1', LEFT panels go in col '3'.
-          */}
-          {block('rightFrontFender', '1', '2', { rightWheel: true })}
-          {block('hood',             '2', '2')}
-          {block('leftFrontFender',  '3', '2', { leftWheel:  true })}
-
-          {/* Row 3 – Windshield strip (decorative, center only) */}
-          <div key="ws" className="rounded-sm bg-blue-100" style={{ gridColumn: '2', gridRow: '3' }} />
-
-          {/* Rows 4-5 – Doors (sides) + Roof spans both rows (center) */}
-          {block('frontRightDoor', '1', '4')}
-          {block('roofPanel',      '2', '4 / 6')}
-          {block('frontLeftDoor',  '3', '4')}
-          {block('rearRightDoor',  '1', '5')}
-          {block('rearLeftDoor',   '3', '5')}
-
-          {/* Row 6 – Rear window strip (decorative, center only) */}
-          <div key="rw" className="rounded-sm bg-blue-100" style={{ gridColumn: '2', gridRow: '6' }} />
-
-          {/* Row 7 – Rear fenders + Trunk */}
-          {block('rightRearFender', '1', '7', { rightWheel: true })}
-          {block('trunk',           '2', '7')}
-          {block('leftRearFender',  '3', '7', { leftWheel:  true })}
-
-          {/* Row 8 – Rear bumper (center only) */}
-          {block('rearBumper', '2', '8')}
-        </div>
-      </div>
-
-      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">▼ خلف</span>
-
-      {/* Hover tooltip */}
-      <div className="h-7 flex items-center justify-center">
-        {hovered ? (
-          <span className="text-xs text-gray-600 font-medium bg-gray-100 px-3 py-1 rounded-full">
-            <strong>{SVG_PANELS.find((p) => p.key === hovered)?.label}</strong>
-            {' — '}
-            {STATUS_LABELS[report[hovered]?.status ?? 'ORIGINAL']}
-          </span>
-        ) : (
-          <span className="text-xs text-gray-400 italic">انقر على قطعة لتغيير حالتها</span>
-        )}
-      </div>
-
-      {/* Color legend */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1.5 justify-center mt-1">
-        {DAMAGE_STATUSES.map((s) => (
-          <div key={s} className="flex items-center gap-1.5">
-            <span
-              className="w-3.5 h-3.5 rounded-sm border border-gray-300 shrink-0"
-              style={{ backgroundColor: STATUS_COLORS[s].fill }}
-            />
-            <span className="text-[11px] text-gray-600">{STATUS_LABELS[s]}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 // ── Panel detail list ─────────────────────────────────────────────────────────
@@ -243,9 +105,9 @@ export function Step3DamageReport({ damageReport, onChange }: Props) {
       )}
 
       <div className="flex flex-col lg:flex-row gap-6 items-start">
-        {/* Car grid map column */}
+        {/* Car diagram column */}
         <div className="w-full lg:w-auto lg:shrink-0 lg:max-w-[280px]">
-          <CarGrid
+          <CarDamageDiagram
             report={damageReport}
             onPanelClick={(key) => onChange(cyclePanel(damageReport, key))}
           />

@@ -25,29 +25,33 @@ export function nextDamageStatus(current: DamageStatus): DamageStatus {
   return DAMAGE_STATUSES[(idx + 1) % DAMAGE_STATUSES.length];
 }
 
-export type PanelDef = {
-  key: string; label: string; short: string;
-  x: number; y: number; w: number; h: number; rx?: number;
-};
+export type PanelDef = { key: string; label: string };
 
-// viewBox="0 0 300 496"
+// The 15 reportable panels — the API contract for attributes.damageReport keys.
+// 13 are drawn as shapes in CarDamageDiagram; the two rockers (عتبة) have no
+// drawn shape (the reference car art has none) and are marked via the panel
+// list only.
 export const SVG_PANELS: PanelDef[] = [
-  { key: 'frontBumper',      label: 'مصد أمامي',          short: 'M.Amami',  x: 90,  y: 16,  w: 120, h: 26,  rx: 10 },
-  { key: 'hood',             label: 'غطاء المحرك',        short: 'Ghata',    x: 78,  y: 46,  w: 144, h: 104, rx: 8  },
-  { key: 'leftFrontFender',  label: 'رفراف أمامي أيسر',   short: 'R.Am.Ys',  x: 32,  y: 46,  w: 42,  h: 104, rx: 6  },
-  { key: 'rightFrontFender', label: 'رفراف أمامي أيمن',   short: 'R.Am.Ym',  x: 226, y: 46,  w: 42,  h: 104, rx: 6  },
-  { key: 'frontLeftDoor',    label: 'باب أمامي أيسر',     short: 'B.Am.Ys',  x: 32,  y: 174, w: 64,  h: 88,  rx: 4  },
-  { key: 'roofPanel',        label: 'سقف',                short: 'Saqf',     x: 100, y: 174, w: 100, h: 88,  rx: 4  },
-  { key: 'frontRightDoor',   label: 'باب أمامي أيمن',     short: 'B.Am.Ym',  x: 204, y: 174, w: 64,  h: 88,  rx: 4  },
-  { key: 'leftRocker',       label: 'عتبة يسرى',          short: 'E.Ysr',    x: 32,  y: 264, w: 24,  h: 58,  rx: 3  },
-  { key: 'rearLeftDoor',     label: 'باب خلفي أيسر',      short: 'B.Kh.Ys',  x: 58,  y: 264, w: 84,  h: 58,  rx: 4  },
-  { key: 'rearRightDoor',    label: 'باب خلفي أيمن',      short: 'B.Kh.Ym',  x: 158, y: 264, w: 84,  h: 58,  rx: 4  },
-  { key: 'rightRocker',      label: 'عتبة يمنى',          short: 'E.Ymn',    x: 244, y: 264, w: 24,  h: 58,  rx: 3  },
-  { key: 'leftRearFender',   label: 'رفراف خلفي أيسر',    short: 'R.Kh.Ys',  x: 32,  y: 346, w: 42,  h: 104, rx: 6  },
-  { key: 'trunk',            label: 'باكاج',              short: 'Sandouq',  x: 78,  y: 346, w: 144, h: 104, rx: 8  },
-  { key: 'rightRearFender',  label: 'رفراف خلفي أيمن',    short: 'R.Kh.Ym',  x: 226, y: 346, w: 42,  h: 104, rx: 6  },
-  { key: 'rearBumper',       label: 'مصد خلفي',           short: 'M.Khalfi', x: 90,  y: 454, w: 120, h: 26,  rx: 10 },
+  { key: 'frontBumper',      label: 'مصد أمامي' },
+  { key: 'hood',             label: 'غطاء المحرك' },
+  { key: 'leftFrontFender',  label: 'رفراف أمامي أيسر' },
+  { key: 'rightFrontFender', label: 'رفراف أمامي أيمن' },
+  { key: 'frontLeftDoor',    label: 'باب أمامي أيسر' },
+  { key: 'roofPanel',        label: 'سقف' },
+  { key: 'frontRightDoor',   label: 'باب أمامي أيمن' },
+  { key: 'leftRocker',       label: 'عتبة يسرى' },
+  { key: 'rearLeftDoor',     label: 'باب خلفي أيسر' },
+  { key: 'rearRightDoor',    label: 'باب خلفي أيمن' },
+  { key: 'rightRocker',      label: 'عتبة يمنى' },
+  { key: 'leftRearFender',   label: 'رفراف خلفي أيسر' },
+  { key: 'trunk',            label: 'باكاج' },
+  { key: 'rightRearFender',  label: 'رفراف خلفي أيمن' },
+  { key: 'rearBumper',       label: 'مصد خلفي' },
 ];
+
+export const PANEL_LABELS: Record<string, string> = Object.fromEntries(
+  SVG_PANELS.map((p) => [p.key, p.label]),
+);
 
 export type PanelState = { status: DamageStatus; detail: string };
 export type DamageReportState = Record<string, PanelState>;

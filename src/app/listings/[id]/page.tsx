@@ -17,7 +17,11 @@ import { qaService, questionText, maskedAskerName, askerInitials, type Question 
 import { offersService } from '@/services/offers.service';
 import { useAuthStore } from '@/store/auth.store';
 import type { Listing, VehicleDetails } from '@/types';
-import { TECH_SPECS } from '@/components/listings/wizard/schema';
+import {
+  TECH_SPECS, PANEL_LABELS, STATUS_COLORS, STATUS_LABELS,
+  type DamageStatus,
+} from '@/components/listings/wizard/schema';
+import { CarDamageDiagram } from '@/components/listings/CarDamageDiagram';
 import { FavoriteButton } from '@/components/listings/FavoriteButton';
 import { FavoriteSellerButton } from '@/components/listings/FavoriteSellerButton';
 import { CompareButton } from '@/components/listings/CompareButton';
@@ -38,21 +42,22 @@ function formatDate(dateStr: string) {
 }
 
 // ── Damage report normalization ───────────────────────────────────────────────
+// Accepts both wire spellings ({status, detail} objects or bare strings,
+// UPPERCASE or legacy camelCase) and normalizes to the canonical DamageStatus
+// used by the shared CarDamageDiagram + schema color/label maps.
 
-type DamageNorm = 'original' | 'painted' | 'localPaint' | 'replaced';
-
-const STATUS_NORM: Record<string, DamageNorm> = {
-  ORIGINAL:      'original',
-  PAINTED:       'painted',
-  LOCAL_PAINTED: 'localPaint',
-  REPLACED:      'replaced',
-  original:      'original',
-  painted:       'painted',
-  localPaint:    'localPaint',
-  replaced:      'replaced',
+const STATUS_NORM: Record<string, DamageStatus> = {
+  ORIGINAL:      'ORIGINAL',
+  PAINTED:       'PAINTED',
+  LOCAL_PAINTED: 'LOCAL_PAINTED',
+  REPLACED:      'REPLACED',
+  original:      'ORIGINAL',
+  painted:       'PAINTED',
+  localPaint:    'LOCAL_PAINTED',
+  replaced:      'REPLACED',
 };
 
-type DamageEntry = { status: DamageNorm; detail?: string };
+type DamageEntry = { status: DamageStatus; detail?: string };
 
 function normalizeDamageReport(
   raw: Record<string, string | { status: string; detail?: string }>,
@@ -61,7 +66,7 @@ function normalizeDamageReport(
     Object.entries(raw).map(([key, val]) => {
       const s      = typeof val === 'string' ? val : val?.status ?? 'ORIGINAL';
       const detail = typeof val === 'string' ? undefined : val?.detail || undefined;
-      return [key, { status: STATUS_NORM[s] ?? 'original', detail }];
+      return [key, { status: STATUS_NORM[s] ?? 'ORIGINAL', detail }];
     }),
   );
 }
@@ -317,157 +322,12 @@ function ImageGallery({ images }: { images: Listing['images'] }) {
   );
 }
 
-// ── SVG Damage Map ────────────────────────────────────────────────────────────
-
-type DamageStatus = DamageNorm;
-
-const DAMAGE_COLORS: Record<DamageStatus, string> = {
-  original:   '#e5e7eb',
-  painted:    '#60a5fa',
-  localPaint: '#fb923c',
-  replaced:   '#f87171',
-};
-
-const DAMAGE_LABELS: Record<DamageStatus, string> = {
-  original:   'أصلي',
-  painted:    'مدهون',
-  localPaint: 'دهان محلي',
-  replaced:   'مستبدل',
-};
-
-const PANEL_AR: Record<string, string> = {
-  frontBumper:      'مصد أمامي',
-  hood:             'غطاء المحرك',
-  leftFrontFender:  'رفراف أمامي أيسر',
-  rightFrontFender: 'رفراف أمامي أيمن',
-  roofPanel:        'سقف',
-  frontLeftDoor:    'باب أمامي أيسر',
-  frontRightDoor:   'باب أمامي أيمن',
-  rearLeftDoor:     'باب خلفي أيسر',
-  rearRightDoor:    'باب خلفي أيمن',
-  leftRocker:       'عتبة يسرى',
-  rightRocker:      'عتبة يمنى',
-  leftRearFender:   'رفراف خلفي أيسر',
-  rightRearFender:  'رفراف خلفي أيمن',
-  trunk:            'باكاج',
-  rearBumper:       'مصد خلفي',
-};
+// ── Damage map (shared diagram + per-panel summary) ───────────────────────────
 
 function DamageMap({ damage }: { damage: Record<string, DamageEntry> }) {
-  const [hovered, setHovered] = useState<string | null>(null);
-
-  // RTL column mapping: col '1' = visual RIGHT, col '3' = visual LEFT
-  function block(
-    key: string,
-    gridCol: string,
-    gridRow: string,
-    opts?: { leftWheel?: boolean; rightWheel?: boolean },
-  ) {
-    const status = damage[key]?.status ?? 'original';
-    const color  = DAMAGE_COLORS[status as DamageStatus];
-    const label  = PANEL_AR[key] ?? key;
-    const isHov  = hovered === key;
-    return (
-      <div
-        key={key}
-        onMouseEnter={() => setHovered(key)}
-        onMouseLeave={() => setHovered(null)}
-        title={label}
-        className="rounded-md flex items-center justify-center text-center leading-tight text-[9px] font-medium text-gray-600 transition-all duration-150 px-0.5"
-        style={{
-          gridColumn: gridCol,
-          gridRow:    gridRow,
-          position:   'relative',
-          backgroundColor: color,
-          border: `1px solid ${isHov ? '#2563eb' : '#9ca3af'}`,
-          boxShadow: isHov ? '0 0 0 2px #bfdbfe' : undefined,
-        }}
-      >
-        {opts?.leftWheel && (
-          <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-3 h-8 bg-gray-500 rounded-full z-10 pointer-events-none" />
-        )}
-        {opts?.rightWheel && (
-          <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-3 h-8 bg-gray-500 rounded-full z-10 pointer-events-none" />
-        )}
-        {label}
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col items-center gap-6">
-      {/* ── Car grid map ── */}
-      <div className="flex flex-col items-center gap-2 select-none">
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">▲ أمام</span>
-
-        <div className="px-5" style={{ overflow: 'visible' }}>
-          <div
-            className="grid gap-1"
-            style={{
-              gridTemplateColumns: '50px 110px 50px',
-              gridTemplateRows:    '26px 78px 10px 46px 46px 10px 78px 26px',
-              overflow: 'visible',
-            }}
-          >
-            {/* Row 1 – Front bumper */}
-            {block('frontBumper', '2', '1')}
-
-            {/* Row 2 – Front fenders + Hood */}
-            {block('rightFrontFender', '1', '2', { rightWheel: true })}
-            {block('hood',             '2', '2')}
-            {block('leftFrontFender',  '3', '2', { leftWheel:  true })}
-
-            {/* Row 3 – Windshield (decorative) */}
-            <div key="ws" className="rounded-sm bg-blue-100" style={{ gridColumn: '2', gridRow: '3' }} />
-
-            {/* Rows 4-5 – Doors + Roof (spans both rows) */}
-            {block('frontRightDoor', '1', '4')}
-            {block('roofPanel',      '2', '4 / 6')}
-            {block('frontLeftDoor',  '3', '4')}
-            {block('rearRightDoor',  '1', '5')}
-            {block('rearLeftDoor',   '3', '5')}
-
-            {/* Row 6 – Rear window (decorative) */}
-            <div key="rw" className="rounded-sm bg-blue-100" style={{ gridColumn: '2', gridRow: '6' }} />
-
-            {/* Row 7 – Rear fenders + Trunk */}
-            {block('rightRearFender', '1', '7', { rightWheel: true })}
-            {block('trunk',           '2', '7')}
-            {block('leftRearFender',  '3', '7', { leftWheel:  true })}
-
-            {/* Row 8 – Rear bumper */}
-            {block('rearBumper', '2', '8')}
-          </div>
-        </div>
-
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">▼ خلف</span>
-
-        {/* Hover tooltip */}
-        <div className="h-7 flex items-center justify-center">
-          {hovered ? (
-            <span className="text-xs text-gray-600 font-medium bg-gray-100 px-3 py-1 rounded-full">
-              <strong>{PANEL_AR[hovered] ?? hovered}</strong>
-              {' — '}
-              {DAMAGE_LABELS[damage[hovered]?.status ?? 'original']}
-            </span>
-          ) : (
-            <span className="text-xs text-gray-400 italic">مرّر الماوس على قطعة لمعرفة حالتها</span>
-          )}
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="flex flex-wrap gap-3 justify-center">
-        {(Object.entries(DAMAGE_LABELS) as [DamageStatus, string][]).map(([status, label]) => (
-          <div key={status} className="flex items-center gap-1.5">
-            <span
-              className="w-4 h-4 rounded border border-gray-300 shrink-0"
-              style={{ backgroundColor: DAMAGE_COLORS[status as DamageStatus] }}
-            />
-            <span className="text-xs text-gray-600">{label}</span>
-          </div>
-        ))}
-      </div>
+      <CarDamageDiagram report={damage} />
 
       {/* Panel summary */}
       <div className="w-full grid grid-cols-2 gap-2">
@@ -477,12 +337,9 @@ function DamageMap({ damage }: { damage: Record<string, DamageEntry> }) {
             className={`flex flex-col bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-100 ${entry.detail ? 'col-span-2' : ''}`}
           >
             <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-600">{PANEL_AR[panel] ?? panel}</span>
-              <span
-                className="font-medium px-1.5 py-0.5 rounded shrink-0 ms-2"
-                style={{ backgroundColor: DAMAGE_COLORS[entry.status as DamageStatus], color: '#1f2937' }}
-              >
-                {DAMAGE_LABELS[entry.status]}
+              <span className="text-gray-600">{PANEL_LABELS[panel] ?? panel}</span>
+              <span className={`font-medium px-1.5 py-0.5 rounded shrink-0 ms-2 ${STATUS_COLORS[entry.status].badge}`}>
+                {STATUS_LABELS[entry.status]}
               </span>
             </div>
             {entry.detail && (
