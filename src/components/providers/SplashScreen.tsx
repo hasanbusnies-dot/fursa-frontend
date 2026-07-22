@@ -24,7 +24,7 @@ import { useEffect, useRef, useState } from 'react';
  * never white/black. prefers-reduced-motion: the image is already static —
  * only the fade is disabled (motion-reduce), the splash itself stays.
  */
-const HOLD_MS = 2800; // founder: 1.5s flashed by — hold long enough to actually see it
+const HOLD_MS = 2000; // founder wants exactly 2s (1.5s flashed by, 2.8s felt long)
 const FADE_MS = 400;
 
 export function SplashScreen() {
