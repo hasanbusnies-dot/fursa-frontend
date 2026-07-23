@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -25,6 +25,20 @@ import { RecommendationsPopover } from '@/components/layout/RecommendationsPopov
 import { ComparePopover } from '@/components/layout/ComparePopover';
 
 const PER_PAGE = 30;
+
+/**
+ * True when the query is a pasted ad number (رقم الإعلان) rather than free text.
+ * Mirrors the backend's `parseListingNumberQuery` (src/lib/fulltext.ts): strip
+ * '#', whitespace and the bidi marks that ride along when copying out of an
+ * RTL UI, then require 8–20 digits. The 8-digit floor keeps genuine free-text
+ * searches like "320" (BMW 320) or "2015" from being treated as ad numbers.
+ * Used only to decide whether a single result should jump straight to the
+ * listing — matching itself is the backend's job.
+ */
+const parseAdNumberQuery = (raw: string): string | null => {
+  const cleaned = raw.replace(/[#\s‎‏؜‪-‮]/g, '');
+  return /^\d{8,20}$/.test(cleaned) ? cleaned : null;
+};
 
 // ── URL ↔ FilterValues helpers ────────────────────────────────────────────────
 
@@ -569,10 +583,14 @@ function ListingsContent() {
   const [total,    setTotal]    = useState(0);
   const [meta,     setMeta]     = useState<{ page: number; totalPages: number; total: number } | null>(null);
   const [loading,  setLoading]  = useState(true);
+  // Set while navigating away to a single ad-number match, so the loading UI
+  // isn't torn down for a frame before the route changes.
+  const redirectingRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    redirectingRef.current = false;
     const f = applied;
     listingsService.getListings({
       limit:        PER_PAGE,
@@ -604,6 +622,16 @@ function ListingsContent() {
       sellerId:     sellerIdParam || undefined,
     }).then((result) => {
       if (cancelled) return;
+      // Pasted ad number that resolves to exactly one listing → go straight to
+      // it, instead of rendering a one-card result list (the sahibinden feel).
+      // `replace`, not `push`: pushing would leave this search URL in history,
+      // so Back would land here and immediately redirect forward again — a
+      // trap. With replace, Back returns to wherever the search started.
+      if (parseAdNumberQuery(searchQuery) && result.total === 1 && result.listings[0]?.id) {
+        redirectingRef.current = true;
+        router.replace(`/listings/${result.listings[0].id}`);
+        return; // keep the loading UI up through navigation (see finally)
+      }
       setListings(result.listings);
       setTotal(result.total);
       setMeta({ page: result.page, totalPages: result.totalPages, total: result.total });
@@ -612,7 +640,9 @@ function ListingsContent() {
       console.error('[ListingsPage] fetch error:', err);
       setListings([]); setTotal(0); setMeta(null);
     }).finally(() => {
-      if (!cancelled) setLoading(false);
+      // While redirecting, stay in the loading state — clearing it would flash
+      // an empty "no results" list for a frame before the route changes.
+      if (!cancelled && !redirectingRef.current) setLoading(false);
     });
     return () => { cancelled = true; };
   }, [applied, page, searchQuery, sortBy, sellerIdParam]);

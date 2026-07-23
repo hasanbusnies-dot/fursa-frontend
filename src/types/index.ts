@@ -66,6 +66,14 @@ export interface ListingImage {
 
 export interface Listing {
   id: string;
+  /**
+   * Public-facing ad number (رقم الإعلان) — a DB-sequence value starting at
+   * 100000001, unique and stable. Digits only, as a STRING (identifier, never
+   * arithmetic). Pasting it into search resolves to this listing exactly.
+   * Optional: pre-rollout payloads/caches may omit it, so the UI falls back to
+   * the id tail (and hides the copy/search affordance when it does).
+   */
+  listingNumber?: string;
   title: string;
   description: string;
   price: number;

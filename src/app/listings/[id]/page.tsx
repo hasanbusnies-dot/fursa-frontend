@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   MapPin, ChevronLeft, ChevronRight, MessageSquare,
   ImageOff, AlertCircle, Home, Phone, Calendar, Check, Settings,
-  HelpCircle, Send, Tag, Store, BadgeCheck, ZoomIn, X,
+  HelpCircle, Send, Tag, Store, BadgeCheck, ZoomIn, X, Copy,
 } from 'lucide-react';
 import { SealCheckIcon } from '@phosphor-icons/react/dist/ssr';
 import { toast } from 'sonner';
@@ -537,6 +537,69 @@ function formatAttrValue(value: unknown, unit?: string | null): string {
   return unit ? `${s} ${unit}` : s;
 }
 
+/**
+ * A spec table row. `value` is always the plain string — the NA sentinel check
+ * and the row key both read it — while `node` optionally overrides how that
+ * value is PAINTED. Rendering is `{row.node ?? row.value}` in every layout, so
+ * a row can gain an icon or a hint without turning `value` into a ReactNode and
+ * quietly breaking the `value === NA` styling test.
+ */
+type SpecRow = { label: string; value: string; node?: ReactNode };
+
+/**
+ * رقم الإعلان cell: the ad number, a copy button, and the hint telling the user
+ * what the number is FOR (paste it into search to find this listing again).
+ *
+ * The clipboard gets `listingNumber` straight from the payload — never text
+ * read back out of the DOM, which in this RTL layout would drag along bidi
+ * marks and the hint. Digits only, no '#': the copy must be an exact search
+ * match. (The API tolerates '#'/spaces/bidi marks anyway, but the clean value
+ * is what makes paste-and-search feel instant.)
+ */
+function ListingNumberCell({ listingNumber }: { listingNumber: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(listingNumber);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+      toast.success('تم النسخ');
+    } catch {
+      // No clipboard API (insecure origin) or permission denied.
+      toast.error('تعذّر النسخ');
+    }
+  };
+
+  return (
+    // inline-block (not flex): the number row and the hint below it inherit the
+    // parent cell's text alignment, which differs between the mobile (text-end)
+    // and desktop (start) layouts — so both read correctly without either
+    // layout needing to know about this cell.
+    <span className="inline-block">
+      <span className="inline-flex items-center gap-1">
+        <button
+          type="button"
+          onClick={copy}
+          aria-label="نسخ رقم الإعلان"
+          title="نسخ رقم الإعلان"
+          className="inline-flex items-center justify-center w-8 h-8 -m-1 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 transition-colors"
+        >
+          {copied
+            ? <Check className="w-4 h-4 text-emerald-500" />
+            : <Copy className="w-4 h-4" />}
+        </button>
+        <span dir="ltr" className="font-medium text-gray-900 tabular-nums">
+          {listingNumber}
+        </span>
+      </span>
+      <span className="block mt-0.5 text-[11px] font-normal text-gray-400 leading-tight">
+        انسخ الرقم وابحث به للعثور على الإعلان
+      </span>
+    </span>
+  );
+}
+
 function AdSpecsTable({ listing, filterDefs, compact = false }: {
   listing: Listing;
   filterDefs?: CatalogFilterDef[];
@@ -550,12 +613,23 @@ function AdSpecsTable({ listing, filterDefs, compact = false }: {
     return v ? 'يوجد' : 'لا يوجد';
   }
 
-  const headRows: { label: string; value: string }[] = [
-    { label: 'رقم الإعلان',   value: '#' + listing.id.slice(-8).toUpperCase() },
+  // `value` stays a plain string — it drives the NA styling check and the row key.
+  // `node` is an optional richer rendering for that same value (see SpecRow).
+  const headRows: SpecRow[] = [
+    listing.listingNumber
+      ? {
+          label: 'رقم الإعلان',
+          value: listing.listingNumber,
+          node: <ListingNumberCell listingNumber={listing.listingNumber} />,
+        }
+      // Pre-rollout payload with no ad number: show the id tail as before, but
+      // WITHOUT the copy button or the search hint — that number isn't
+      // searchable, and promising otherwise would be a lie.
+      : { label: 'رقم الإعلان', value: '#' + listing.id.slice(-8).toUpperCase() },
     { label: 'تاريخ الإعلان', value: formatDate(listing.createdAt) },
   ];
 
-  let rows: { label: string; value: string }[];
+  let rows: SpecRow[];
 
   if (isVehicleListing(listing)) {
     const make     = vd?.make        ?? raw.make        ?? vd?.brand     ?? raw.brand;
@@ -620,7 +694,7 @@ function AdSpecsTable({ listing, filterDefs, compact = false }: {
           {headRows.map((row) => (
             <div key={row.label} className="flex items-start justify-between gap-3 px-4 py-3 text-sm">
               <span className="text-gray-500 shrink-0">{row.label}</span>
-              <span className="font-medium text-end text-gray-900">{row.value}</span>
+              <span className="font-medium text-end text-gray-900">{row.node ?? row.value}</span>
             </div>
           ))}
         </div>
@@ -638,7 +712,7 @@ function AdSpecsTable({ listing, filterDefs, compact = false }: {
           <div key={row.label} className="flex items-start justify-between gap-3 px-4 py-3 text-sm">
             <span className="text-gray-500 shrink-0">{row.label}</span>
             <span className={`font-medium text-end ${row.value === NA ? 'text-gray-300' : 'text-gray-900'}`}>
-              {row.value}
+              {row.node ?? row.value}
             </span>
           </div>
         ))}
@@ -654,7 +728,7 @@ function AdSpecsTable({ listing, filterDefs, compact = false }: {
             {row.label}
           </span>
           <span className={`flex-1 px-4 py-2.5 font-medium ${row.value === NA ? 'text-gray-300' : 'text-gray-900'}`}>
-            {row.value}
+            {row.node ?? row.value}
           </span>
         </div>
       ))}
