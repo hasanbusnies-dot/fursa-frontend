@@ -112,3 +112,37 @@ Deferred on purpose while applying the DESIGN.md system; none block the local re
   `forsa-images` bucket because `POST /upload` puts everything there and no cleanup job
   exists. If a temp-cleanup job is ever added pre-launch, it MUST skip URLs referenced by
   listings/profiles — or uploads should move to a permanent prefix first.
+
+## Listing map Phase 2 deferrals (2026-07-25)
+
+Phase 1 shipped read-only display of a coordinate that already exists on the listing
+(`ListingMap.tsx` + the location tab). What it deliberately does NOT include:
+
+- **No coordinate picker in the add-listing wizard / edit page.** Sellers cannot set
+  `latitude`/`longitude` from the UI yet, so the map only appears on listings whose coords
+  were written server-side. Every listing in the dev DB today has null coords — the map
+  branch is unreachable through normal seller flow until this lands.
+- **No map on browse/search** (no results-map toggle, no bbox filtering). The backend
+  already keeps a PostGIS point column, so a "search this area" view is a backend-query
+  feature, not a rendering one.
+- **No geocoding** (address → coords or reverse). The address line above the map is the
+  raw neighborhood/district/city/governorate the seller typed; it is never derived from
+  the pin, and the pin is never derived from the text.
+- **Provider is swappable but unmonitored:** OpenFreeMap has no usage cap and no SLA.
+  `MAP_STYLE_URL` in `src/lib/map.ts` (overridable via `NEXT_PUBLIC_MAP_STYLE_URL`) is the
+  single swap point if it degrades — MapTiler/Protomaps/self-hosted all drop in there.
+- **Three map runtime files are vendored into `public/vendor/`** and copied by
+  `scripts/vendor-map-assets.mjs`, which `predev`/`prebuild` run so they cannot drift from
+  the installed version:
+  - `mapbox-gl-rtl-text.js` — Arabic glyph shaping, kept off unpkg so no third-party
+    origin sits in the runtime path (BSD; license file alongside).
+  - `maplibre/maplibre-gl-worker.mjs` + `maplibre/maplibre-gl-shared.mjs` — worked around
+    a **Turbopack/maplibre v6 incompatibility**: Turbopack rewrites `import.meta.url` to a
+    `file://` string, maplibre's worker-URL resolver bails to `''` on a non-http scheme,
+    and `new Worker('', {type:'module'})` then fetches the current document — the map dies
+    with "non-JavaScript MIME type of 'text/html'". `setWorkerUrl(MAP_WORKER_URL)` in
+    `ListingMap.tsx` bypasses the bundler. Broken identically in dev and prod builds.
+    (Turbopack's own fallback resolved the worker to `maplibre-gl-dev.mjs` — the whole
+    library — so it was wrong even when the scheme check passed.)
+    **Retest on any maplibre-gl or Next bump**: if upstream fixes this, the vendored worker
+    and the `setWorkerUrl` call can both go away.

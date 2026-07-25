@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import {
   MapPin, ChevronLeft, ChevronRight, MessageSquare,
   ImageOff, AlertCircle, Home, Phone, Calendar, Check, Settings,
-  HelpCircle, Send, Tag, Store, BadgeCheck, ZoomIn, X, Copy,
+  HelpCircle, Send, Tag, Store, BadgeCheck, ZoomIn, X, Copy, Navigation,
 } from 'lucide-react';
 import { SealCheckIcon } from '@phosphor-icons/react/dist/ssr';
 import { toast } from 'sonner';
@@ -27,6 +28,12 @@ import { FavoriteSellerButton } from '@/components/listings/FavoriteSellerButton
 import { CompareButton } from '@/components/listings/CompareButton';
 import { recommendationsService } from '@/services/recommendations.service';
 import { useMobileTitle } from '@/components/layout/MobileTopBar';
+import { toValidCoords, formatAddressLine, directionsUrl, currentPlatform } from '@/lib/map';
+
+// maplibre-gl (~800 kB) must never enter this route's first load. `ssr: false`
+// is legal here because the page is a Client Component; the import only fires
+// when the location tab is opened on a listing that actually has coordinates.
+const ListingMap = dynamic(() => import('@/components/listings/ListingMap'), { ssr: false });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -1106,6 +1113,67 @@ function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 
   );
 }
 
+// ── Location tab ──────────────────────────────────────────────────────────────
+
+/**
+ * Textual location + (when the seller pinned one) the exact coordinate on a map.
+ *
+ * Two branches, both text-first:
+ *  · No usable coordinate — the case for every listing predating the map picker
+ *    — renders the address line alone. No "coming soon" placeholder: a listing
+ *    without a pin is complete, not pending.
+ *  · With a coordinate: address line, the map (lazy chunk, mounted only while
+ *    this tab is open), and a directions link that hands off to the user's own
+ *    navigation app.
+ *
+ * If the map itself fails (offline, no WebGL, provider down) it reports up and
+ * we degrade to the same text-only view.
+ */
+function LocationTab({ listing }: { listing: Listing }) {
+  const [mapFailed, setMapFailed] = useState(false);
+  // Platform-specific handoff is resolved after mount so the first render (and
+  // any hydration diff) stays on the universal Google Maps link.
+  const [platform, setPlatform] = useState<ReturnType<typeof currentPlatform>>('other');
+  useEffect(() => { setPlatform(currentPlatform()); }, []);
+
+  const coords = toValidCoords(listing.latitude, listing.longitude);
+  const addressLine = formatAddressLine(listing);
+
+  const heading = (
+    <div className="flex items-start gap-2">
+      <MapPin className="w-4.5 h-4.5 text-orange-400 shrink-0 mt-0.5" style={{ width: 18, height: 18 }} />
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-gray-800 leading-relaxed">
+          {addressLine || <span className="text-gray-400 font-normal">لم يُحدَّد الموقع.</span>}
+        </p>
+        {listing.address?.trim() && (
+          <p className="text-xs text-gray-500 mt-0.5">{listing.address.trim()}</p>
+        )}
+      </div>
+    </div>
+  );
+
+  if (!coords || mapFailed) {
+    return <div className="py-2">{heading}</div>;
+  }
+
+  return (
+    <div className="space-y-3">
+      {heading}
+      <ListingMap coords={coords} label={listing.title} onError={() => setMapFailed(true)} />
+      <a
+        href={directionsUrl(coords, listing.title, platform)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+      >
+        <Navigation className="w-4 h-4 shrink-0" />
+        الحصول على الاتجاهات
+      </a>
+    </div>
+  );
+}
+
 // ── Tab Panel ─────────────────────────────────────────────────────────────────
 
 type TabId = 'details' | 'description' | 'damage' | 'specs' | 'location';
@@ -1224,13 +1292,9 @@ function TabPanel({ listing, filterDefs, mobile = false }: { listing: Listing; f
             : <p className="text-sm text-gray-400 text-center py-10">لا توجد مواصفات فنية مدرجة.</p>
         )}
 
-        {activeTab === 'location' && (
-          <div className="flex flex-col items-center justify-center py-10 text-center text-gray-400 gap-3">
-            <MapPin className="w-10 h-10 text-gray-300" />
-            <p className="font-medium text-gray-600">{listing.city}</p>
-            <p className="text-sm">خرائط قادمة قريباً.</p>
-          </div>
-        )}
+        {/* Mounted only while the tab is open — unmounting disposes the WebGL
+            context, and the map chunk is never fetched if nobody opens it. */}
+        {activeTab === 'location' && <LocationTab listing={listing} />}
       </div>
     </div>
   );

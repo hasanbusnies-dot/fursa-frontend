@@ -80,8 +80,19 @@ export interface Listing {
   currency: 'SYP' | 'USD';
   city: string;
   country?: string;
+  governorate?: string | null;
   district?: string;
   neighborhood?: string;
+  /** Free-text street line the seller typed (optional; often absent). */
+  address?: string | null;
+  /**
+   * Exact seller-provided coordinate, shown as-is on the listing map
+   * (sahibinden-style — no jitter or rounding). Both are null on listings
+   * created before the map picker existed, which is why every consumer runs
+   * them through `toValidCoords` in `lib/map.ts` before rendering.
+   */
+  latitude?: number | null;
+  longitude?: number | null;
   slug?: string;
   status?: string;
   // Top-level vehicle fields (sent flat in CreateListingPayload)
