@@ -9,6 +9,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { listingsService, type CreateListingPayload } from '@/services/listings.service';
 import { ApiError } from '@/services/api';
 import { useAuth } from '@/hooks/use-auth';
+import { toValidCoords, HIDE_MAP_ATTR_KEY } from '@/lib/map';
 import { StepIndicator } from './StepIndicator';
 import {
   Step0Catalog,
@@ -208,6 +209,9 @@ export function CreateListingForm({
 
     const data = form.getValues();
     const isVehicle = catalog.isVehicle;
+    // Optional map pin. Validated here rather than trusted from form state so a
+    // partially-set pair can't be published as a coordinate.
+    const pinCoords = toValidCoords(data.latitude, data.longitude);
 
     try {
       // Upload photos → get CDN URLs
@@ -254,7 +258,14 @@ export function CreateListingForm({
       } : undefined;
 
       // Category-specific attributes (generic categories) → Listing.attributes JSONB.
-      const attributes = Object.keys(catalog.attributes).length ? catalog.attributes : undefined;
+      // The map opt-out rides along under an underscore key, by the same
+      // convention the backend seeder uses for `_seed` — the detail page's spec
+      // table skips every `_`-prefixed key, so it never shows up as a row.
+      const mergedAttributes: Record<string, unknown> = {
+        ...catalog.attributes,
+        ...(data.hideMap ? { [HIDE_MAP_ATTR_KEY]: true } : {}),
+      };
+      const attributes = Object.keys(mergedAttributes).length ? mergedAttributes : undefined;
 
       setSubmitPhase('creating');
       await submitListing({
@@ -267,6 +278,10 @@ export function CreateListingForm({
         country:       data.country    || undefined,
         district:      data.district   || undefined,
         neighborhood:  data.neighborhood || undefined,
+        address:       data.address    || undefined,
+        // Map pin: both or neither. `toValidCoords` also rejects a stray 0,0, so
+        // a half-filled or zero-defaulted pair never reaches the API.
+        ...(pinCoords ? { latitude: pinCoords.lat, longitude: pinCoords.lng } : {}),
         condition:     data.condition,
         attributes,
         // Vehicle-only top-level fields
@@ -295,11 +310,23 @@ export function CreateListingForm({
       if (onSuccess) onSuccess();
       else router.push('/');
     } catch (err) {
-      toast.error(
-        err instanceof ApiError || err instanceof Error
-          ? err.message
-          : 'حدث خطأ ما. يرجى المحاولة مجدداً.',
-      );
+      // A 400 from the API carries per-field detail in `ApiError.errors`; showing
+      // only `message` turns every rejection into an unactionable "Validation
+      // failed". Name the fields instead, and log the full object so a mismatch
+      // between our schema and the backend's is diagnosable from the console.
+      if (err instanceof ApiError && err.errors && Object.keys(err.errors).length) {
+        console.error('[create listing] validation errors from API:', err.errors);
+        const detail = Object.entries(err.errors)
+          .map(([field, msgs]) => `${field}: ${(msgs ?? []).join('، ')}`)
+          .join(' | ');
+        toast.error(`${err.message} — ${detail}`);
+      } else {
+        toast.error(
+          err instanceof ApiError || err instanceof Error
+            ? err.message
+            : 'حدث خطأ ما. يرجى المحاولة مجدداً.',
+        );
+      }
     } finally {
       setSubmitPhase('idle');
     }

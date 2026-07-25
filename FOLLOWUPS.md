@@ -113,15 +113,15 @@ Deferred on purpose while applying the DESIGN.md system; none block the local re
   exists. If a temp-cleanup job is ever added pre-launch, it MUST skip URLs referenced by
   listings/profiles — or uploads should move to a permanent prefix first.
 
-## Listing map Phase 2 deferrals (2026-07-25)
+## Listing map — deferred out of Phase 1 (2026-07-25)
 
 Phase 1 shipped read-only display of a coordinate that already exists on the listing
-(`ListingMap.tsx` + the location tab). What it deliberately does NOT include:
+(`ListingMap.tsx` + the location tab). What it deliberately did NOT include:
 
-- **No coordinate picker in the add-listing wizard / edit page.** Sellers cannot set
-  `latitude`/`longitude` from the UI yet, so the map only appears on listings whose coords
-  were written server-side. Every listing in the dev DB today has null coords — the map
-  branch is unreachable through normal seller flow until this lands.
+- ~~**No coordinate picker in the add-listing wizard / edit page.**~~ **RESOLVED in
+  Phase 2** (same day): `ListingMapPicker` is mounted in `Step2AdDetails` and in
+  `/listings/edit/[id]`, so sellers set and correct their own pins. See the Phase 2
+  section at the end of this file for what that left open.
 - **No map on browse/search** (no results-map toggle, no bbox filtering). The backend
   already keeps a PostGIS point column, so a "search this area" view is a backend-query
   feature, not a rendering one.
@@ -146,3 +146,67 @@ Phase 1 shipped read-only display of a coordinate that already exists on the lis
     library — so it was wrong even when the scheme check passed.)
     **Retest on any maplibre-gl or Next bump**: if upstream fixes this, the vendored worker
     and the `setWorkerUrl` call can both go away.
+
+## Listing map Phase 2 — shipped 2026-07-25 (pin picker), and what it leaves open
+
+Phase 2 added `ListingMapPicker` (tap/drag pin, geolocation button, governorate-based
+centring) to the add-listing wizard and the edit page, plus the free-text `address`
+field. Remaining gaps:
+
+- **PostGIS `location` column still isn't written, and now needs a BACKFILL.** There is
+  no `ST_MakePoint` writer anywhere in `../forsa-backend/src` (verified: zero hits), so
+  every listing created from now on has latitude/longitude with a NULL `location`. When
+  proximity search ("listings near me") lands, changing the insert path is not enough —
+  ads created between now and then would be silently invisible to radius queries. The
+  writer must ship with:
+  ```sql
+  UPDATE listings SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)
+  WHERE latitude IS NOT NULL AND longitude IS NOT NULL AND location IS NULL;
+  ```
+- **"Hide map" is stored in JSONB, not a column — deliberately, and worth revisiting.**
+  The seller's opt-out rides in `Listing.attributes._hideMap` (`HIDE_MAP_ATTR_KEY` in
+  `lib/map.ts`), following the existing underscore convention for non-catalog internal
+  keys (`_seed`/`_seedKey` from the backend seeder); the detail page's spec table already
+  skips every `_`-prefixed key, so it never renders as a row. This needed ZERO backend
+  change — create and update already accept `attributes`, and detail returns it.
+  **The cleaner home is a real column** (`hideLocationMap Boolean @default(false)`), since
+  this is a persisted seller choice affecting public rendering, not a category attribute
+  (AGENTS §4 says attributes are catalog-driven). Migrating later costs one data step:
+  ```sql
+  -- after adding the column
+  UPDATE listings SET hide_location_map = true
+  WHERE attributes ->> '_hideMap' = 'true';
+  ```
+  plus changing `isLocationMapHidden()` and the one payload line in `CreateListingForm`.
+  Also note the JSONB flag is vulnerable to any future edit path that replaces
+  `attributes` wholesale — none does today (the edit page doesn't send attributes).
+- **The edit page has no "hide map" toggle** — only the wizard sets it. Because the edit
+  page never sends `attributes`, an existing flag survives edits untouched; a seller just
+  can't change their mind there yet.
+- **A pin can be moved but not erased.** `updateListingSchema` types latitude/longitude
+  as `optional()` and not `nullable()`, so an omitted field means "leave unchanged" and
+  there is no wire representation for "remove the pin". The edit page therefore passes
+  `allowClear={false}` to the picker rather than showing a clear button that silently
+  does nothing. Fix needs `.nullable()` on both fields backend-side plus a service that
+  writes null; then drop that prop.
+- **The wizard still has no `governorate` field.** «المحافظة» registers as `city`
+  (`Step2AdDetails.tsx`), so the backend's `governorate` column stays null and Phase 1's
+  address line shows city only. The picker's centring reads `city` for this reason.
+  Part of the Phase 3 location cleanup — when it lands, revisit both.
+- **«المنطقة» and «الحي» are free-text inputs; Phase 3 should make them dropdowns.**
+  District and neighborhood are typed by hand today (`Step2AdDetails.tsx`), so the same
+  place arrives spelled several ways — which blocks grouping, filtering by neighborhood,
+  and any "listings in this area" view, and is why the address line can read oddly. Needs
+  a structured district/neighborhood catalog per governorate on the backend (the same
+  shape as the doushesh catalog: seeded, slug-keyed, served for the frontend to render),
+  then cascading selects here: governorate → district → neighborhood. Do it together with
+  the `city`/`governorate` fix above — both touch the same four fields, and migrating the
+  existing free-text values is one pass rather than two.
+- **Geolocation needs a secure context.** Works on `localhost` and `https://fursago.com`;
+  silently unavailable over a LAN IP (`http://192.168.1.6:3000`), which is how a phone
+  reaches the dev server. Test the GPS button on a deployed preview, not over LAN.
+- **`/listings/edit/[id]` UI is Turkish** ("İlan Başlığı", "Fiyat", …) while the rest of
+  the app is Arabic. Pre-existing; the new map section there is Arabic per §3.5. Worth a
+  pass when that page is next touched.
+- Still deferred from Phase 1: no map on browse/search, no geocoding (address ↔ coords),
+  and self-hosted PMTiles as the provider escape hatch.

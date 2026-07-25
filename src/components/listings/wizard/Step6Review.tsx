@@ -7,6 +7,7 @@ import type { WizardFormData, DamageReportState } from './schema';
 import { SVG_PANELS, STATUS_LABELS } from './schema';
 import type { CatalogState } from './Step0Catalog';
 import type { CatalogFilterDef } from '@/services/catalog.service';
+import { toValidCoords } from '@/lib/map';
 
 // Human-readable rendering of a stored attribute value, keyed by the filter widget.
 function formatAttr(def: CatalogFilterDef, value: unknown): string | null {
@@ -118,8 +119,20 @@ export function Step6Review({ form, catalog, damageReport, photos, isSubmitting,
           <h3 className="text-lg font-bold text-gray-900 line-clamp-2">{d.title || '—'}</h3>
           <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-500">
             <MapPin className="w-3.5 h-3.5" />
-            <span>{[d.city, d.country].filter(Boolean).join(', ') || '—'}</span>
+            <span>{[d.neighborhood, d.district, d.city, d.country].filter(Boolean).join('، ') || '—'}</span>
           </div>
+          {/* Pin status — text only, deliberately: mounting a second map here
+              would pull the whole library in for a line of confirmation. The pin
+              is optional, so this never blocks publishing. */}
+          {d.hideMap ? (
+            <p className="mt-1 text-xs text-gray-400">الخريطة مخفية في إعلانك.</p>
+          ) : toValidCoords(d.latitude, d.longitude) ? (
+            <p className="mt-1 text-xs text-green-600">تم تحديد الموقع على الخريطة.</p>
+          ) : (
+            <p className="mt-1 text-xs text-gray-400">
+              لم تُحدِّد موقعًا على الخريطة — ستظهر منطقة تقريبية فقط.
+            </p>
+          )}
         </div>
 
         {/* Price bar */}

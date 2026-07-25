@@ -28,7 +28,14 @@ import { FavoriteSellerButton } from '@/components/listings/FavoriteSellerButton
 import { CompareButton } from '@/components/listings/CompareButton';
 import { recommendationsService } from '@/services/recommendations.service';
 import { useMobileTitle } from '@/components/layout/MobileTopBar';
-import { toValidCoords, formatAddressLine, directionsUrl, currentPlatform } from '@/lib/map';
+import {
+  toValidCoords,
+  formatAddressLine,
+  directionsUrl,
+  currentPlatform,
+  governorateCenter,
+  isLocationMapHidden,
+} from '@/lib/map';
 
 // maplibre-gl (~800 kB) must never enter this route's first load. `ssr: false`
 // is legal here because the page is a Client Component; the import only fires
@@ -1116,18 +1123,23 @@ function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 
 // ── Location tab ──────────────────────────────────────────────────────────────
 
 /**
- * Textual location + (when the seller pinned one) the exact coordinate on a map.
+ * Textual location, plus a map whose precision matches what we actually know.
  *
- * Two branches, both text-first:
- *  · No usable coordinate — the case for every listing predating the map picker
- *    — renders the address line alone. No "coming soon" placeholder: a listing
- *    without a pin is complete, not pending.
- *  · With a coordinate: address line, the map (lazy chunk, mounted only while
- *    this tab is open), and a directions link that hands off to the user's own
- *    navigation app.
+ * Three cases, all text-first:
+ *  a. The seller pinned a coordinate → that exact point, street zoom, with a pin
+ *     and a directions link.
+ *  b. No pin, but the governorate is one we know, and the seller didn't hide the
+ *     map → an APPROXIMATE view: the governorate centre, wide zoom, drawn as a
+ *     soft circle with a «موقع تقريبي» badge and NO pin, and no directions link
+ *     (routing someone to a governorate centroid would be fake precision).
+ *  c. Anything else — hidden by the seller, unknown governorate, or the map
+ *     failed to load → address text alone. A listing without a pin is complete,
+ *     not pending.
  *
- * If the map itself fails (offline, no WebGL, provider down) it reports up and
- * we degrade to the same text-only view.
+ * The rule behind case (b): the governorate centre is derived HERE, at render
+ * time, from the city field. It is never written to the listing — a listing with
+ * no pin keeps null coordinates in the database, so we never publish a fake
+ * exact location, and a later real pin simply replaces the approximation.
  */
 function LocationTab({ listing }: { listing: Listing }) {
   const [mapFailed, setMapFailed] = useState(false);
@@ -1138,6 +1150,12 @@ function LocationTab({ listing }: { listing: Listing }) {
 
   const coords = toValidCoords(listing.latitude, listing.longitude);
   const addressLine = formatAddressLine(listing);
+  const hidden = isLocationMapHidden(listing.attributes);
+  // Display-only derivation — never persisted. The wizard stores the chosen
+  // governorate in `city`, so that is the lookup key (with `governorate` first
+  // for whenever the backend column starts being populated).
+  const approxCenter =
+    !coords && !hidden ? governorateCenter(listing.governorate ?? listing.city) : null;
 
   const heading = (
     <div className="flex items-start gap-2">
@@ -1153,16 +1171,36 @@ function LocationTab({ listing }: { listing: Listing }) {
     </div>
   );
 
-  if (!coords || mapFailed) {
+  // (c) — nothing map-worthy, or the seller opted out, or the map broke.
+  if (mapFailed || (!coords && !approxCenter)) {
     return <div className="py-2">{heading}</div>;
   }
 
+  // (b) — approximate area. No pin, no directions: we don't know the address.
+  if (!coords && approxCenter) {
+    return (
+      <div className="space-y-3">
+        {heading}
+        <ListingMap
+          coords={approxCenter}
+          variant="approximate"
+          label={listing.title}
+          onError={() => setMapFailed(true)}
+        />
+        <p className="text-xs text-gray-500">
+          لم يحدد البائع موقعاً دقيقاً — تشير الدائرة إلى المنطقة التقريبية فقط.
+        </p>
+      </div>
+    );
+  }
+
+  // (a) — the seller's exact pin.
   return (
     <div className="space-y-3">
       {heading}
-      <ListingMap coords={coords} label={listing.title} onError={() => setMapFailed(true)} />
+      <ListingMap coords={coords!} label={listing.title} onError={() => setMapFailed(true)} />
       <a
-        href={directionsUrl(coords, listing.title, platform)}
+        href={directionsUrl(coords!, listing.title, platform)}
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"

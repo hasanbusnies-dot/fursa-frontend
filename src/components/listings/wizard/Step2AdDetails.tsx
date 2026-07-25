@@ -1,9 +1,17 @@
 'use client';
 
 import type { UseFormReturn } from 'react-hook-form';
+import dynamic from 'next/dynamic';
 import { AlertCircle, DollarSign } from 'lucide-react';
 import type { WizardFormData } from './schema';
 import { SYRIAN_GOVERNORATES } from './schema';
+import { toValidCoords, type Coords } from '@/lib/map';
+
+// maplibre stays out of the wizard's first load: same lazy boundary as the
+// read-only map on the detail page, and both share one chunk via the base hook.
+const ListingMapPicker = dynamic(() => import('@/components/listings/ListingMapPicker'), {
+  ssr: false,
+});
 
 interface Props { form: UseFormReturn<WizardFormData, any, WizardFormData> }
 
@@ -38,6 +46,23 @@ export function Step2AdDetails({ form }: Props) {
   const currency      = watch('currency');
   const description   = watch('description') ?? '';
   const acceptsOffers = watch('acceptsOffers') ?? true;
+
+  // The map pin lives in RHF like the acceptsOffers switch does — via
+  // watch + setValue, since the picker isn't a native input to register().
+  // «المحافظة» is stored in `city` (see the note on that field below), so that's
+  // what decides where the picker opens.
+  const governorate = watch('city');
+  const latitude    = watch('latitude');
+  const longitude   = watch('longitude');
+  const hideMap     = watch('hideMap') ?? false;
+  const pin = toValidCoords(latitude, longitude);
+
+  const setPin = (next: Coords | null) => {
+    // Cleared pins go back to undefined, never 0 — a real 0,0 would be a
+    // coordinate in the Gulf of Guinea, and `toValidCoords` rejects it anyway.
+    setValue('latitude',  next ? next.lat : undefined, { shouldDirty: true });
+    setValue('longitude', next ? next.lng : undefined, { shouldDirty: true });
+  };
 
   return (
     <div className="space-y-6">
@@ -171,6 +196,11 @@ export function Step2AdDetails({ form }: Props) {
             />
           </Field>
 
+          {/* NOTE: this is the governorate selector, but it registers as `city` —
+              the wizard has no separate `governorate` field, so the backend's
+              `governorate` column stays null. Pre-existing; tracked for the
+              Phase 3 location cleanup. Anything needing the governorate (e.g.
+              where the map picker opens) must read `city`. */}
           <Field label="المحافظة" required error={errors.city?.message}>
             <select {...register('city')} className={inputCls(errors.city?.message)}>
               <option value="">اختر المحافظة</option>
@@ -196,6 +226,73 @@ export function Step2AdDetails({ form }: Props) {
             />
           </Field>
 
+        </div>
+
+        {/* Street line — optional free text. The detail page already renders it
+            under the address line when present. */}
+        <div className="mt-4">
+          <Field
+            label="العنوان"
+            error={errors.address?.message}
+            hint="اختياري — اسم الشارع أو علامة مميزة قريبة."
+          >
+            <input
+              {...register('address')}
+              placeholder="مثال: شارع الثورة، مقابل الصيدلية"
+              className={inputCls(errors.address?.message)}
+            />
+          </Field>
+        </div>
+
+        {/* Map pin — below the address fields, refining what was typed above. */}
+        <div className="mt-5">
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+            الموقع على الخريطة
+          </label>
+
+          {hideMap ? (
+            <p className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-xs text-gray-500">
+              لن تظهر أي خريطة في إعلانك. يمكنك إعادة تفعيلها في أي وقت من الزر أدناه.
+            </p>
+          ) : (
+            <ListingMapPicker value={pin} onChange={setPin} governorate={governorate} />
+          )}
+
+          {/* Opt-out. Without a pin the detail page shows an APPROXIMATE circle
+              over the governorate (derived at render time, never stored); this
+              switch turns that off too, for sellers who want no map at all. */}
+          <div className="mt-3 flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-gray-800">إخفاء الخريطة من إعلاني</p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                لن تُعرض أي خريطة — لا الموقع الدقيق ولا المنطقة التقريبية.
+              </p>
+            </div>
+            {/* dir=ltr so the knob slides left→right regardless of page RTL */}
+            <div dir="ltr" className="shrink-0 ms-4">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={hideMap}
+                onClick={() => {
+                  const next = !hideMap;
+                  setValue('hideMap', next, { shouldDirty: true });
+                  // Hiding the map discards any pin: keeping a hidden coordinate
+                  // would store a location the seller asked us not to show.
+                  if (next) setPin(null);
+                }}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                  hideMap ? 'bg-blue-600' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                    hideMap ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

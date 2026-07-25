@@ -205,15 +205,33 @@ export const wizardSchema = z.object({
   fromWho:        z.string().optional(),
 
   // Step 2 — Ad Details + Location
+  // These bounds must never be LOOSER than the backend's createListingSchema —
+  // anything this schema accepts but the API rejects becomes a 400 the wizard
+  // can't explain, after the seller has filled in every step. Stricter is fine.
+  // Backend (listing.schemas.ts): title 5–150, description 20–5000, price ≤ 1e9,
+  // city 2–100, district/neighborhood ≤ 100, address ≤ 255.
   title:          z.string().min(5, 'حد أدنى 5 أحرف').max(100, 'حد أقصى 100 حرف'),
-  description:    z.string().min(10, 'حد أدنى 10 أحرف').max(2000, 'حد أقصى 2000 حرف'),
-  price:          z.number({ message: 'أدخل سعراً صحيحاً' }).positive('يجب أن يكون أكبر من صفر'),
+  description:    z.string().min(20, 'حد أدنى 20 حرفاً').max(2000, 'حد أقصى 2000 حرف'),
+  price:          z.number({ message: 'أدخل سعراً صحيحاً' })
+                    .positive('يجب أن يكون أكبر من صفر')
+                    .max(999_999_999, 'السعر كبير جداً'),
   currency:       z.enum(['SYP', 'USD']),
   acceptsOffers:  z.boolean().default(true),
   country:        z.string().min(1, 'الدولة مطلوبة'),
-  city:           z.string().min(1, 'المدينة مطلوبة'),
-  district:       z.string().optional(),
-  neighborhood:   z.string().optional(),
+  city:           z.string().min(2, 'المحافظة مطلوبة'),
+  district:       z.string().max(100, 'حد أقصى 100 حرف').optional(),
+  neighborhood:   z.string().max(100, 'حد أقصى 100 حرف').optional(),
+  address:        z.string().max(255, 'حد أقصى 255 حرفاً').optional(),
+  // Map pin — optional by design (a seller may not want to reveal an exact spot,
+  // and the detail page renders text-only when absent). Bounds mirror the backend
+  // (listing.schemas.ts). Set via setValue from the picker, never registered as an
+  // input; always sent as a PAIR or not at all.
+  latitude:       z.number().min(-90).max(90).optional(),
+  longitude:      z.number().min(-180).max(180).optional(),
+  // Seller opt-out: no map at all on the listing — not even the approximate
+  // governorate view the detail page otherwise derives from `city`. Rides in
+  // `attributes._hideMap` (see HIDE_MAP_ATTR_KEY) rather than a column.
+  hideMap:        z.boolean().optional(),
 
   // Step 4 — Tech specs
   technicalSpecs: z.array(z.string()).default([]),

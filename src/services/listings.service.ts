@@ -13,6 +13,10 @@ export interface CreateListingPayload {
   country?:     string;
   district?:    string;
   neighborhood?:string;
+  address?:     string;
+  /** Map pin. Always sent as a pair or omitted entirely — never a lone half. */
+  latitude?:    number;
+  longitude?:   number;
   condition?:   'NEW' | 'USED';
   make?:        string;
   series?:      string;
@@ -258,7 +262,15 @@ export const listingsService = {
 
   updateListing: async (
     id: string,
-    payload: Partial<Pick<CreateListingPayload, 'title' | 'description' | 'price' | 'currency'>>,
+    // `latitude`/`longitude` are here so a seller can FIX a wrong pin after
+    // publishing — dropping one shouldn't be a one-way door. The backend's
+    // updateListingSchema already accepts both.
+    payload: Partial<
+      Pick<
+        CreateListingPayload,
+        'title' | 'description' | 'price' | 'currency' | 'latitude' | 'longitude'
+      >
+    >,
   ): Promise<void> => {
     await api.patch<unknown>(`/listings/${id}`, payload);
   },

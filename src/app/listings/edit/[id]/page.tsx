@@ -3,10 +3,17 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { ArrowLeft, Save, Loader2, AlertCircle, ImageOff } from 'lucide-react';
 import { listingsService } from '@/services/listings.service';
 import { useAuthStore } from '@/store/auth.store';
+import { toValidCoords, type Coords } from '@/lib/map';
 import type { Listing } from '@/types';
+
+// Same lazy boundary as everywhere else — maplibre never enters a first load.
+const ListingMapPicker = dynamic(() => import('@/components/listings/ListingMapPicker'), {
+  ssr: false,
+});
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
@@ -72,6 +79,8 @@ export default function EditListingPage() {
   const [description, setDescription] = useState('');
   const [price,       setPrice]       = useState('');
   const [currency,    setCurrency]    = useState<'SYP' | 'USD'>('USD');
+  // Map pin — editable so a wrong pin isn't permanent.
+  const [pin,         setPin]         = useState<Coords | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -93,6 +102,7 @@ export default function EditListingPage() {
         setDescription(data.description ?? '');
         setPrice(data.price != null ? String(data.price) : '');
         setCurrency(data.currency ?? 'USD');
+        setPin(toValidCoords(data.latitude, data.longitude));
       })
       .catch(() => setNotFound(true))
       .finally(() => setFetching(false));
@@ -109,6 +119,10 @@ export default function EditListingPage() {
         description: description.trim(),
         price:       Number(price),
         currency,
+        // Both or neither. An omitted pair means "leave the stored pin alone" —
+        // the backend schema has no null for these, so a pin can be moved here
+        // but not erased (see the picker's `allowClear` note).
+        ...(pin ? { latitude: pin.lat, longitude: pin.lng } : {}),
       });
       setSaved(true);
       router.push('/account/listings');
@@ -217,6 +231,22 @@ export default function EditListingPage() {
                 <option value="SYP">SYP (ل.س)</option>
               </select>
             </div>
+          </div>
+
+          {/* Map pin — Arabic per §3.5; the rest of this page's Turkish copy is
+              pre-existing and tracked in FOLLOWUPS.md. */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              الموقع على الخريطة
+            </label>
+            <ListingMapPicker
+              value={pin}
+              onChange={setPin}
+              governorate={listing.governorate ?? listing.city}
+              allowClear={false}
+              hint="انقر أو اسحب لتصحيح موقع إعلانك على الخريطة."
+              className="h-[300px]"
+            />
           </div>
 
           {/* Error message */}
