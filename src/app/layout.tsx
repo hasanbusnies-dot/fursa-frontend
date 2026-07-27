@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { SITE_URL } from '@/lib/share';
 import { Cairo, Tajawal } from 'next/font/google';
 import { Toaster } from 'sonner';
 import './globals.css';
@@ -40,6 +41,14 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  /**
+   * Resolves every RELATIVE metadata URL (og:url, og:image) to an absolute one.
+   * Required: without it Next resolves against localhost, so production would
+   * emit `og:image: http://localhost:3000/og-default.png` — a link preview that
+   * renders blank for every recipient. Origin comes from NEXT_PUBLIC_SITE_URL;
+   * see lib/share.ts for why the fallback is the production origin.
+   */
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Forsa | Syria's Classifieds Platform",
     template: '%s | Forsa',
