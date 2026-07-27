@@ -41,7 +41,8 @@ export async function generateMetadata(
   // Next 15+ hands params in as a promise.
   const { id } = await params;
   const listing = await fetchListingForMetadata(id);
-  return buildListingMetadata(listing, id);
+  // Async because it probes the primary image for its dimensions.
+  return await buildListingMetadata(listing, id);
 }
 
 export default function ListingDetailPage() {

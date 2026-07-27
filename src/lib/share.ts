@@ -8,8 +8,6 @@
  * seller actually pastes into WhatsApp.
  */
 
-import { formatPrice } from './utils';
-
 /**
  * Public origin, no trailing slash.
  *
@@ -61,22 +59,26 @@ export function isShareable(status?: string | null): boolean {
   return status === 'ACTIVE';
 }
 
+/**
+ * NO PRICE FIELD — deliberately.
+ *
+ * The price is not shown in the link preview or the shared message: the point of
+ * a shared link is to bring someone INTO the listing, and a preview that already
+ * answers "how much?" gives them no reason to tap (sahibinden does the same).
+ * The price is still front-and-centre on the listing page itself.
+ *
+ * It is omitted from the TYPE, not just from the formatting, so a future caller
+ * cannot quietly reintroduce it by passing one more field — the compiler stops
+ * that. Keep it that way.
+ */
 export interface ShareSubject {
   title: string;
-  price?: number | null;
-  currency?: 'SYP' | 'USD' | null;
   city?: string | null;
 }
 
-/** «19,900 ل.س — إدلب», dropping whichever half is missing. */
-export function shareSubtitle({ price, currency, city }: ShareSubject): string {
-  const parts: string[] = [];
-  if (price != null && Number.isFinite(price)) {
-    parts.push(formatPrice(price, currency ?? 'SYP'));
-  }
-  const c = city?.trim();
-  if (c) parts.push(c);
-  return parts.join(' — ');
+/** Location only — «إدلب» — or empty when the listing has no city. */
+export function shareSubtitle({ city }: ShareSubject): string {
+  return city?.trim() ?? '';
 }
 
 /**

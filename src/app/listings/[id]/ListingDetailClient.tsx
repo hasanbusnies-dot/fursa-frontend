@@ -1677,12 +1677,7 @@ export default function ListingDetailClient() {
               {isShareable(listing.status) && (
                 <ShareButton
                   listingId={listing.id}
-                  subject={{
-                    title: listing.title,
-                    price: listing.price,
-                    currency: listing.currency,
-                    city: listing.city,
-                  }}
+                  subject={{ title: listing.title, city: listing.city }}
                 />
               )}
             </div>
@@ -1730,12 +1725,7 @@ export default function ListingDetailClient() {
             {isShareable(listing.status) && (
               <ShareButton
                 listingId={listing.id}
-                subject={{
-                  title: listing.title,
-                  price: listing.price,
-                  currency: listing.currency,
-                  city: listing.city,
-                }}
+                subject={{ title: listing.title, city: listing.city }}
               />
             )}
             {listing.user?.id && authUser?.id !== listing.user.id && (
