@@ -13,6 +13,12 @@ export interface CreateListingPayload {
   country?:     string;
   district?:    string;
   neighborhood?:string;
+  /**
+   * Deepest catalog region the seller picked (PLACE slug, or the GOVERNORATE slug
+   * for «أخرى»). When present the backend resolves city/governorate/neighborhood
+   * from it and IGNORES the text fields above — so the two can never disagree.
+   */
+  regionSlug?:  string;
   address?:     string;
   /** Map pin. Always sent as a pair or omitted entirely — never a lone half. */
   latitude?:    number;
@@ -265,10 +271,14 @@ export const listingsService = {
     // `latitude`/`longitude` are here so a seller can FIX a wrong pin after
     // publishing — dropping one shouldn't be a one-way door. The backend's
     // updateListingSchema already accepts both.
+    // `regionSlug`/`neighborhood` ride along so the edit surface can correct a
+    // wrong location, not just a wrong pin. The backend's updateListingSchema
+    // accepts both and re-resolves the denormalized columns from the slug.
     payload: Partial<
       Pick<
         CreateListingPayload,
-        'title' | 'description' | 'price' | 'currency' | 'latitude' | 'longitude'
+        | 'title' | 'description' | 'price' | 'currency' | 'latitude' | 'longitude'
+        | 'regionSlug' | 'neighborhood'
       >
     >,
   ): Promise<void> => {

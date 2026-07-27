@@ -210,3 +210,44 @@ field. Remaining gaps:
   pass when that page is next touched.
 - Still deferred from Phase 1: no map on browse/search, no geocoding (address ↔ coords),
   and self-hosted PMTiles as the provider escape hatch.
+
+## Phase 3b — location cascade (shipped; these remain)
+
+- **The listing READ payload does not expose `regionSlug`.** The write paths take one
+  (`POST`/`PATCH /listings`), but no read path on the backend includes the `region`
+  relation, so `GET /listings/:id` returns only the denormalized text. Consequence:
+  `/listings/edit/[id]` cannot PREFILL the cascade with the listing's current place —
+  it shows the stored location as text and opens an empty cascade only when the seller
+  clicks «تغيير». Fix is one line backend-side (`region: { select: { slug: true } }` on
+  the listing select); then the edit cascade can open pre-filled and this opt-in dance
+  goes away. Until then, note the safety property it relies on: omitting `regionSlug`
+  from a PATCH leaves `regionId`/`city`/`governorate`/`neighborhood` untouched.
+- **The wizard's `district` field is now written by nothing.** The cascade sets
+  `regionSlug` + `city` + (for «أخرى») `neighborhood`; `district` stayed in the zod schema
+  and `CreateListingPayload` because the browse filters still send a `district` query
+  param and older listings still carry the column. Retire it with the `city`/`governorate`
+  cleanup above, not before — verify the browse filter first (§2).
+- **Aleppo city neighborhoods hang under the جبل سمعان district, not the governorate.**
+  So an Aleppo *city* seller has to pick a district whose name is a rural-sounding
+  administrative unit before their حي appears. The governorate-scoped search box covers
+  it (typing the neighborhood name finds it regardless of district), but if 3a-2 is ever
+  re-seeded, attaching city neighborhoods directly to the GOVERNORATE would let
+  `getGovernorateShape` return `mode: 'places'` for Aleppo too — the code already handles
+  that branch, it just has no data taking it today.
+- **`SearchableCombobox` caps the rendered list at 60 rows** (`MAX_RENDERED`) and tells
+  the seller to keep typing. al-Hasakah's largest district holds 487 places, and a real
+  virtualiser was not worth pulling in for one control. Revisit if the combobox gets
+  reused somewhere the tail matters more.
+- **The hybrid threshold switches search STRATEGY, not whether the fetch happens.**
+  `PLACE_FETCH_ALL_MAX = 150` decides client-filter vs server-search, but the catalog API
+  exposes `hasChildren` (boolean) and no CHILD COUNT, so a list's size is only knowable
+  after it has been downloaded — al-Hasakah's 487 places are fetched once (cached for the
+  session) even though typing then goes to the server. Adding `childCount: r._count.children`
+  to `shape()` in the backend's `locations.controller.ts` would make the threshold
+  preventive and let large districts skip the download entirely. One line, backend-side.
+- **`دمشق` (the city itself, `placeType: 'city'`) sorts under «القرى والبلدات».** The
+  group split is `neighbourhood`/`quarter`/`suburb`/`borough` → «الأحياء», everything else
+  → «القرى والبلدات», which follows the agreed labels literally but reads oddly for the
+  one row that is a city inside its own governorate. Harmless today (it is 1 of 113 in
+  Damascus); if it bothers anyone, either rename the lower group or special-case
+  `level === 'PLACE' && placeType === 'city'` into the upper one.

@@ -51,6 +51,22 @@ export const MAP_PIN_ZOOM = 16;
  */
 export const MAP_GOVERNORATE_ZOOM = 11;
 
+/**
+ * Zoom for a district — between the governorate overview and a named place.
+ * A district is an administrative grouping that can span tens of kilometres, so
+ * this stays deliberately wide.
+ */
+export const MAP_DISTRICT_ZOOM = 12;
+
+/**
+ * Zoom for a named neighborhood/village picked from the location catalog.
+ *
+ * Close enough that the seller can see the streets they're about to drop a pin
+ * on, but NOT `MAP_PIN_ZOOM` — a catalog centroid is the middle of a whole
+ * place, and opening at pin zoom would frame it like a precise address.
+ */
+export const MAP_PLACE_ZOOM = 14;
+
 /** Brand orange-500 — the marker colour, matching the CTA palette. */
 export const MAP_MARKER_COLOR = '#f97316';
 

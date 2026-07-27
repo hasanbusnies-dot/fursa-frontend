@@ -4,10 +4,21 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { ArrowLeft, Save, Loader2, AlertCircle, ImageOff } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, AlertCircle, ImageOff, MapPin, Pencil } from 'lucide-react';
 import { listingsService } from '@/services/listings.service';
 import { useAuthStore } from '@/store/auth.store';
-import { toValidCoords, type Coords } from '@/lib/map';
+import {
+  toValidCoords,
+  formatAddressLine,
+  MAP_GOVERNORATE_ZOOM,
+  MAP_PLACE_ZOOM,
+  type Coords,
+} from '@/lib/map';
+import {
+  LocationCascade,
+  EMPTY_LOCATION,
+  type LocationValue,
+} from '@/components/listings/LocationCascade';
 import type { Listing } from '@/types';
 
 // Same lazy boundary as everywhere else — maplibre never enters a first load.
@@ -82,6 +93,23 @@ export default function EditListingPage() {
   // Map pin — editable so a wrong pin isn't permanent.
   const [pin,         setPin]         = useState<Coords | null>(null);
 
+  /**
+   * Location editing is OPT-IN here, unlike the wizard.
+   *
+   * The listing read payload carries only the denormalized text
+   * (city/governorate/neighborhood) — it does NOT expose `regionSlug`, because no
+   * read path on the backend includes the region relation. So there is nothing to
+   * prefill the cascade WITH, and a cascade that opened blank next to a listing
+   * that already has a location would read as "no location set".
+   *
+   * Instead the stored location is shown as text, and the cascade appears only
+   * when the seller asks to change it. Leaving it closed sends no `regionSlug`,
+   * which the backend treats as "leave the location alone" (listing.service.ts
+   * update: `const loc = regionSlug ? await resolveLocation(…) : null`).
+   */
+  const [editingLocation, setEditingLocation] = useState(false);
+  const [location,        setLocation]        = useState<LocationValue>(EMPTY_LOCATION);
+
   useEffect(() => { setMounted(true); }, []);
 
   // Auth guard — after hydration only
@@ -123,6 +151,18 @@ export default function EditListingPage() {
         // the backend schema has no null for these, so a pin can be moved here
         // but not erased (see the picker's `allowClear` note).
         ...(pin ? { latitude: pin.lat, longitude: pin.lng } : {}),
+        // Only sent when the seller actually reopened the location. Omitting it
+        // leaves regionId/city/governorate/neighborhood exactly as stored.
+        ...(editingLocation && location.regionSlug
+          ? {
+              regionSlug: location.regionSlug,
+              // Free text belongs to «أخرى» only — for a catalog pick the backend
+              // overwrites `neighborhood` with the region's own name.
+              ...(location.isOther && location.freeText.trim()
+                ? { neighborhood: location.freeText.trim() }
+                : {}),
+            }
+          : {}),
       });
       setSaved(true);
       router.push('/account/listings');
@@ -233,8 +273,52 @@ export default function EditListingPage() {
             </div>
           </div>
 
-          {/* Map pin — Arabic per §3.5; the rest of this page's Turkish copy is
+          {/* Location — Arabic per §3.5; the rest of this page's Turkish copy is
               pre-existing and tracked in FOLLOWUPS.md. */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              الموقع
+            </label>
+
+            {!editingLocation ? (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                <span className="flex min-w-0 items-center gap-2 text-sm text-gray-700">
+                  <MapPin className="h-4 w-4 shrink-0 text-gray-400" />
+                  <span className="truncate">
+                    {formatAddressLine({
+                      neighborhood: listing.neighborhood,
+                      district: listing.district,
+                      city: listing.city,
+                      governorate: listing.governorate,
+                    }) || 'غير محدد'}
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setEditingLocation(true)}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-600 transition-colors hover:bg-white"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  تغيير
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3 rounded-xl border border-gray-200 p-4">
+                <LocationCascade value={location} onChange={setLocation} />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingLocation(false);
+                    setLocation(EMPTY_LOCATION);
+                  }}
+                  className="text-xs font-semibold text-gray-500 underline-offset-2 hover:underline"
+                >
+                  إلغاء التغيير والإبقاء على الموقع الحالي
+                </button>
+              </div>
+            )}
+          </div>
+
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
               الموقع على الخريطة
@@ -243,6 +327,10 @@ export default function EditListingPage() {
               value={pin}
               onChange={setPin}
               governorate={listing.governorate ?? listing.city}
+              center={location.center}
+              centerZoom={
+                location.regionSlug && !location.isOther ? MAP_PLACE_ZOOM : MAP_GOVERNORATE_ZOOM
+              }
               allowClear={false}
               hint="انقر أو اسحب لتصحيح موقع إعلانك على الخريطة."
               className="h-[300px]"

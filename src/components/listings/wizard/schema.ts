@@ -221,6 +221,18 @@ export const wizardSchema = z.object({
   city:           z.string().min(2, 'المحافظة مطلوبة'),
   district:       z.string().max(100, 'حد أقصى 100 حرف').optional(),
   neighborhood:   z.string().max(100, 'حد أقصى 100 حرف').optional(),
+  /**
+   * The DEEPEST location-catalog region the seller picked — a PLACE slug, or the
+   * GOVERNORATE slug when they chose «أخرى» and typed a name into `neighborhood`
+   * (Model B). A SLUG, never an id: `regions.id` is deliberately absent from every
+   * catalog payload.
+   *
+   * The backend's `resolveLocation` derives city/governorate/neighborhood FROM this
+   * and overwrites whatever text we post — so `city` below is sent for the legacy
+   * no-region path and as a belt-and-braces value, not as the source of truth.
+   * Optional because the backend still accepts a city-only payload.
+   */
+  regionSlug:     z.string().max(120).optional(),
   address:        z.string().max(255, 'حد أقصى 255 حرفاً').optional(),
   // Map pin — optional by design (a seller may not want to reveal an exact spot,
   // and the detail page renders text-only when absent). Bounds mirror the backend

@@ -3,9 +3,15 @@
 import type { UseFormReturn } from 'react-hook-form';
 import dynamic from 'next/dynamic';
 import { AlertCircle, DollarSign } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import type { WizardFormData } from './schema';
-import { SYRIAN_GOVERNORATES } from './schema';
-import { toValidCoords, type Coords } from '@/lib/map';
+import { toValidCoords, MAP_GOVERNORATE_ZOOM, MAP_PLACE_ZOOM, type Coords } from '@/lib/map';
+import {
+  LocationCascade,
+  EMPTY_LOCATION,
+  type LocationValue,
+} from '@/components/listings/LocationCascade';
+import { locationsService } from '@/services/locations.service';
 
 // maplibre stays out of the wizard's first load: same lazy boundary as the
 // read-only map on the detail page, and both share one chunk via the base hook.
@@ -49,13 +55,83 @@ export function Step2AdDetails({ form }: Props) {
 
   // The map pin lives in RHF like the acceptsOffers switch does — via
   // watch + setValue, since the picker isn't a native input to register().
-  // «المحافظة» is stored in `city` (see the note on that field below), so that's
-  // what decides where the picker opens.
   const governorate = watch('city');
+  const regionSlug  = watch('regionSlug');
   const latitude    = watch('latitude');
   const longitude   = watch('longitude');
   const hideMap     = watch('hideMap') ?? false;
   const pin = toValidCoords(latitude, longitude);
+
+  /**
+   * The cascade's own shape (selected slugs + the camera target) lives here, not
+   * in RHF: it holds view state the payload has no field for, and RHF only needs
+   * the three values that get submitted.
+   *
+   * This step UNMOUNTS when the seller moves to step 3, so the cascade has to be
+   * rebuilt from the form on the way back. `regionSlug` is the only durable
+   * anchor — `getPath` turns it back into a governorate + centre.
+   */
+  const [location, setLocation] = useState<LocationValue>(EMPTY_LOCATION);
+  const [rehydrated, setRehydrated] = useState(false);
+
+  useEffect(() => {
+    if (rehydrated) return;
+    if (!regionSlug) {
+      setRehydrated(true);
+      return;
+    }
+    let alive = true;
+    (async () => {
+      const [path, region] = await Promise.all([
+        locationsService.getPath(regionSlug),
+        locationsService.getRegion(regionSlug),
+      ]);
+      if (!alive) return;
+      const gov = path.find((p) => p.level === 'GOVERNORATE') ?? null;
+      // regionSlug === the governorate itself ⇒ this was an «أخرى» pick, and the
+      // seller's text is sitting in `neighborhood`.
+      const isOther = !!gov && gov.slug === regionSlug;
+      setLocation({
+        regionSlug,
+        isOther,
+        freeText: isOther ? (form.getValues('neighborhood') ?? '') : '',
+        governorateSlug: gov?.slug ?? null,
+        governorateName: gov?.nameAr ?? governorate ?? null,
+        center:
+          region && region.lat != null && region.lng != null
+            ? { lat: region.lat, lng: region.lng }
+            : null,
+      });
+      setRehydrated(true);
+    })();
+    return () => { alive = false; };
+  }, [regionSlug, rehydrated, governorate, form]);
+
+  /**
+   * Cascade → RHF. `city` keeps holding the GOVERNORATE name: it is what the
+   * column has always held and it is NOT NULL on the backend, so it must be
+   * written even though `regionSlug` is now the source of truth.
+   *
+   * `neighborhood` is only sent for «أخرى» — for a catalog pick the backend
+   * overwrites it with the region's own name, so posting anything else would be
+   * a value that silently loses.
+   */
+  const onLocationChange = useCallback(
+    (next: LocationValue) => {
+      setLocation(next);
+      setValue('regionSlug', next.regionSlug ?? undefined, { shouldDirty: true });
+      setValue('city', next.governorateName ?? '', { shouldDirty: true, shouldValidate: true });
+      setValue('neighborhood', next.isOther ? next.freeText || undefined : undefined, {
+        shouldDirty: true,
+      });
+    },
+    [setValue],
+  );
+
+  // Governorate → district → place, each narrowing the camera.
+  const mapZoom = location.regionSlug && !location.isOther
+    ? MAP_PLACE_ZOOM
+    : MAP_GOVERNORATE_ZOOM;
 
   const setPin = (next: Coords | null) => {
     // Cleared pins go back to undefined, never 0 — a real 0,0 would be a
@@ -187,7 +263,6 @@ export function Step2AdDetails({ form }: Props) {
       <div>
         <h3 className="text-sm font-bold text-gray-800 mb-4">الموقع</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
           <Field label="الدولة" required error={errors.country?.message}>
             <input
               {...register('country')}
@@ -195,37 +270,18 @@ export function Step2AdDetails({ form }: Props) {
               className={inputCls(errors.country?.message)}
             />
           </Field>
+        </div>
 
-          {/* NOTE: this is the governorate selector, but it registers as `city` —
-              the wizard has no separate `governorate` field, so the backend's
-              `governorate` column stays null. Pre-existing; tracked for the
-              Phase 3 location cleanup. Anything needing the governorate (e.g.
-              where the map picker opens) must read `city`. */}
-          <Field label="المحافظة" required error={errors.city?.message}>
-            <select {...register('city')} className={inputCls(errors.city?.message)}>
-              <option value="">اختر المحافظة</option>
-              {SYRIAN_GOVERNORATES.map((g) => (
-                <option key={g} value={g}>{g}</option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="المنطقة" error={errors.district?.message}>
-            <input
-              {...register('district')}
-              placeholder="مثال: المزة، الحمدانية"
-              className={inputCls(errors.district?.message)}
-            />
-          </Field>
-
-          <Field label="الحي" error={errors.neighborhood?.message}>
-            <input
-              {...register('neighborhood')}
-              placeholder="مثال: شارع 6، بلوك B"
-              className={inputCls(errors.neighborhood?.message)}
-            />
-          </Field>
-
+        {/* Governorate → [district] → place. The district step appears only for
+            governorates whose places are actually spread across several of them;
+            for a single-district governorate (دمشق) it would be a dead
+            one-option select, so the cascade skips it. See LocationCascade. */}
+        <div className="mt-4">
+          <LocationCascade
+            value={location}
+            onChange={onLocationChange}
+            governorateError={errors.city?.message}
+          />
         </div>
 
         {/* Street line — optional free text. The detail page already renders it
@@ -255,7 +311,13 @@ export function Step2AdDetails({ form }: Props) {
               لن تظهر أي خريطة في إعلانك. يمكنك إعادة تفعيلها في أي وقت من الزر أدناه.
             </p>
           ) : (
-            <ListingMapPicker value={pin} onChange={setPin} governorate={governorate} />
+            <ListingMapPicker
+              value={pin}
+              onChange={setPin}
+              governorate={governorate}
+              center={location.center}
+              centerZoom={mapZoom}
+            />
           )}
 
           {/* Opt-out. Without a pin the detail page shows an APPROXIMATE circle

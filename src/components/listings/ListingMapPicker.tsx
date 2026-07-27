@@ -43,6 +43,16 @@ export default function ListingMapPicker({
   onChange,
   /** The governorate the seller selected — the wizard keeps it in `city`. */
   governorate,
+  /**
+   * Explicit view target, taking precedence over `governorate`. Fed by the
+   * location cascade so the camera narrows as the seller descends
+   * (governorate → district → place) instead of only ever knowing the
+   * governorate's centre. Still only a VIEW hint: it never creates a pin.
+   */
+  center,
+  /** Zoom to use with `center`. Place-level picks want to be closer in than a
+   *  governorate overview. */
+  centerZoom,
   onError,
   allowClear = true,
   hint = 'حدّد موقع إعلانك على الخريطة لمساعدة المشترين على العثور عليه. هذه الخطوة اختيارية.',
@@ -51,6 +61,8 @@ export default function ListingMapPicker({
   value: Coords | null;
   onChange: (coords: Coords | null) => void;
   governorate?: string | null;
+  center?: Coords | null;
+  centerZoom?: number;
   onError?: () => void;
   /**
    * Hidden on the edit surface: the backend's updateListingSchema types
@@ -72,7 +84,13 @@ export default function ListingMapPicker({
 
   // Captured once: where the map opens. `hasPin` is true only when the seller
   // already had a coordinate — never for a governorate/Damascus fallback.
-  const initialViewRef = useRef(pickerInitialView(value, governorate));
+  // An explicit `center` (from the location cascade) outranks the governorate
+  // name lookup, but never outranks the seller's own existing pin.
+  const initialViewRef = useRef(
+    !value && center
+      ? { center, zoom: centerZoom ?? MAP_GOVERNORATE_ZOOM, hasPin: false }
+      : pickerInitialView(value, governorate),
+  );
 
   const { containerRef, mapRef, ready } = useListingMapBase({
     center: initialViewRef.current.center,
@@ -152,10 +170,34 @@ export default function ListingMapPicker({
     if (governorate === lastGovRef.current) return;
     lastGovRef.current = governorate;
     if (value) return;
-    const center = governorateCenter(governorate);
-    if (!center) return; // unknown or cleared — leave the view where it is
-    map.flyTo({ center: [center.lng, center.lat], zoom: MAP_GOVERNORATE_ZOOM });
-  }, [governorate, value, mapRef, ready]);
+    // An explicit `center` owns the camera when one is supplied — otherwise the
+    // two effects would fight, and the coarse governorate lookup would win by
+    // firing last.
+    if (center) return;
+    const c = governorateCenter(governorate);
+    if (!c) return; // unknown or cleared — leave the view where it is
+    map.flyTo({ center: [c.lng, c.lat], zoom: MAP_GOVERNORATE_ZOOM });
+  }, [governorate, center, value, mapRef, ready]);
+
+  /**
+   * Follow the location cascade. Same rule as the governorate effect — only
+   * while there is NO pin, and never creating one — but driven by real region
+   * coordinates, so the camera narrows governorate → district → place as the
+   * seller descends instead of sitting at the governorate centre the whole time.
+   *
+   * Compared on VALUE, not identity: the cascade rebuilds its state object on
+   * every change, so an identity check would re-fly on unrelated edits.
+   */
+  const lastCenterRef = useRef<string | null>(null);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !center) return;
+    const key = `${center.lat},${center.lng},${centerZoom ?? ''}`;
+    if (key === lastCenterRef.current) return;
+    lastCenterRef.current = key;
+    if (value) return; // the seller's own pin outranks any derived view
+    map.flyTo({ center: [center.lng, center.lat], zoom: centerZoom ?? MAP_GOVERNORATE_ZOOM });
+  }, [center, centerZoom, value, mapRef, ready]);
 
   /**
    * GPS fix → pin. Deliberately behind a button rather than prompted on mount:

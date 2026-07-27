@@ -278,6 +278,11 @@ export function CreateListingForm({
         country:       data.country    || undefined,
         district:      data.district   || undefined,
         neighborhood:  data.neighborhood || undefined,
+        // The deepest catalog region. When present the backend resolves
+        // city/governorate/neighborhood from it and discards the text above, so
+        // the two can't drift; `city` is still sent because the column is NOT NULL
+        // and the legacy no-region path relies on it.
+        regionSlug:    data.regionSlug || undefined,
         address:       data.address    || undefined,
         // Map pin: both or neither. `toValidCoords` also rejects a stray 0,0, so
         // a half-filled or zero-defaulted pair never reaches the API.
