@@ -194,8 +194,10 @@ function ImageGallery({ images }: { images: Listing['images'] }) {
     setDragging(false);
     setDragX(0);
     if (Math.abs(dx) < SWIPE_THRESHOLD) return;
-    // RTL: image 1 sits at the physical right, so a leftward drag means "forward".
-    if (dx < 0) lbNext(); else lbPrev();
+    // Direction of travel, matching the inline gallery: its RIGHT chevron advances
+    // (scrollToSlide(selected + 1)), so RIGHT is forward everywhere in this page.
+    // Swiping right therefore goes to the NEXT photo. This was inverted.
+    if (dx > 0) lbNext(); else lbPrev();
   };
 
   // Keyboard navigation + scroll lock
@@ -204,10 +206,9 @@ function ImageGallery({ images }: { images: Listing['images'] }) {
     document.body.style.overflow = 'hidden';
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closeLightbox();
-      // Matches the on-screen chevrons AND the RTL strip: the LEFT arrow moves
-      // forward. (These were the other way round, contradicting both.)
-      if (e.key === 'ArrowLeft')  lbNext();
-      if (e.key === 'ArrowRight') lbPrev();
+      // Right = forward, same as the inline gallery's chevrons and the swipe above.
+      if (e.key === 'ArrowRight') lbNext();
+      if (e.key === 'ArrowLeft')  lbPrev();
     };
     document.addEventListener('keydown', onKey);
     return () => {
@@ -351,19 +352,22 @@ function ImageGallery({ images }: { images: Listing['images'] }) {
           {/* Prev / Next */}
           {images.length > 1 && (
             <>
+              {/* Right = next, left = previous — the same mapping the inline gallery
+                  uses. The lightbox had these reversed relative to it, so the two
+                  galleries disagreed about which way was forward. */}
               <button
                 onClick={(e) => { e.stopPropagation(); lbPrev(); }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center transition-colors"
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center transition-colors"
                 title="السابق"
               >
-                <ChevronRight className="w-7 h-7" />
+                <ChevronLeft className="w-7 h-7" />
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); lbNext(); }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center transition-colors"
                 title="التالي"
               >
-                <ChevronLeft className="w-7 h-7" />
+                <ChevronRight className="w-7 h-7" />
               </button>
             </>
           )}

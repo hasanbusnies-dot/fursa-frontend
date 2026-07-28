@@ -3,14 +3,22 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+// Category hrefs are CATALOG ROOT SLUGS under /category/<slug> — singular, one
+// segment. They were pointing at /categories/<slug> (plural), a route that has
+// never existed, and two of the slugs were invented rather than taken from the
+// catalog ('electronics' → electronic-devices, 'jobs' → job-listings). Slugs are
+// a backend contract: verify against GET /catalog/categories before adding a row.
 const FOOTER_LINKS = {
   'الفئات': [
-    { label: 'عقارات',      href: '/categories/real-estate' },
-    { label: 'مركبات',      href: '/categories/vehicles' },
-    { label: 'إلكترونيات',  href: '/categories/electronics' },
-    { label: 'وظائف',       href: '/categories/jobs' },
-    { label: 'خدمات',       href: '/categories/services' },
+    { label: 'عقارات',      href: '/category/real-estate' },
+    { label: 'مركبات',      href: '/category/vehicles' },
+    { label: 'إلكترونيات',  href: '/category/electronic-devices' },
+    { label: 'وظائف',       href: '/category/job-listings' },
+    { label: 'خدمات',       href: '/category/services' },
   ],
+  // All five now resolve to static pages under src/app/<route>/page.tsx.
+  // /terms and /privacy are also linked from the signup form's consent line, so
+  // they must never 404 again — a user agrees to them at registration.
   'المساعدة': [
     { label: 'من نحن',           href: '/about' },
     { label: 'اتصل بنا',         href: '/contact' },
