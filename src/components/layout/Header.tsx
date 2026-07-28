@@ -129,9 +129,29 @@ export function Header() {
             without disturbing the RTL desktop row below or the RTL search bar / drawer.
             Safe because the row carries no Arabic text — the logo is an image (wordmark
             baked in) and the glyphs are symmetric — so forcing LTR mirrors nothing.
-            Logo stays physical-left in BOTH auth states; only the bell toggles. */}
-        <div dir="ltr" className="sm:hidden flex items-center gap-2 h-16">
-          <Link href="/" className="flex-shrink-0 flex items-center">
+
+            Logo stays physical-left in BOTH auth states; only the bell toggles.
+            Desktop (sm+) is a separate row below and is untouched. */}
+        <div dir="ltr" className="sm:hidden relative flex items-center gap-2 h-16">
+          {/* ── GOLD BAND (revert marker: delete this div + the three `relative`
+              classes it needs, and the row is byte-identical to the pre-gradient
+              layout) ──
+              Brand #ffcb00 at its strongest behind the left-aligned logo, fading to
+              nothing about two-thirds across, so the wordmark sits in a soft glow
+              rather than a hard-edged yellow block. -left-4 cancels the container's
+              px-4 so the band starts at the screen edge, not at the padding.
+              pointer-events-none + aria-hidden: purely decorative, and it can never
+              intercept a tap meant for the logo or the bell. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 -left-4 right-0"
+            style={{
+              background:
+                'linear-gradient(90deg, rgba(255,203,0,0.55) 0%, rgba(255,203,0,0.45) 28%, rgba(255,203,0,0.16) 55%, rgba(255,203,0,0) 78%)',
+            }}
+          />
+
+          <Link href="/" className="relative flex-shrink-0 flex items-center">
             <Image
               src="/forsa-logo-wide.png"
               alt="فرصة GO — fursago.com"
@@ -144,8 +164,8 @@ export function Header() {
           {/* Right-side cluster: [bell][hamburger], hamburger outermost at the far-right
               edge. ms-auto on the CLUSTER (not the bell) so the pinning holds when the
               bell is hidden logged-out. In this forced-LTR row ms-auto = margin-left:auto
-              = push to physical right. */}
-          <div className="ms-auto flex items-center gap-1">
+              = push to physical right. `relative` lifts it above the decorative band. */}
+          <div className="relative ms-auto flex items-center gap-1">
             {/* Bell → full-page notifications (better than a cramped dropdown on a
                 narrow screen). Logged-in only — hidden entirely when logged out. */}
             {isAuthenticated && (

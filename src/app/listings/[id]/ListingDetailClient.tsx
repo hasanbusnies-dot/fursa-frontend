@@ -159,14 +159,55 @@ function ImageGallery({ images }: { images: Listing['images'] }) {
   const lbPrev = () => setLightboxIndex((i) => (i - 1 + images.length) % images.length);
   const lbNext = () => setLightboxIndex((i) => (i + 1) % images.length);
 
+  // ── Lightbox swipe (mobile) ──────────────────────────────────────────────
+  // The inline strip gets its swipe free from native RTL scroll-snap; the lightbox
+  // is a single <img>, so the gesture is tracked by hand. Direction matches the
+  // strip and the on-screen chevrons: dragging LEFT advances to the next image.
+  //
+  // Deliberately never calls preventDefault and bails on multi-touch, so pinch-zoom
+  // on the photo keeps working — the gesture is additive, not a replacement.
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+
+  const SWIPE_THRESHOLD = 50; // px of horizontal travel that commits to a change
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1 || images.length < 2) { touchStart.current = null; return; }
+    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    setDragging(true);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    const s = touchStart.current;
+    if (!s || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - s.x;
+    const dy = e.touches[0].clientY - s.y;
+    // Vertical-dominant drag isn't a page swipe — let it be (pinch/scroll intent).
+    if (Math.abs(dy) > Math.abs(dx)) return;
+    setDragX(dx);
+  };
+
+  const onTouchEnd = () => {
+    const dx = dragX;
+    touchStart.current = null;
+    setDragging(false);
+    setDragX(0);
+    if (Math.abs(dx) < SWIPE_THRESHOLD) return;
+    // RTL: image 1 sits at the physical right, so a leftward drag means "forward".
+    if (dx < 0) lbNext(); else lbPrev();
+  };
+
   // Keyboard navigation + scroll lock
   useEffect(() => {
     if (!lightboxOpen) return;
     document.body.style.overflow = 'hidden';
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape')     closeLightbox();
-      if (e.key === 'ArrowLeft')  lbPrev();
-      if (e.key === 'ArrowRight') lbNext();
+      if (e.key === 'Escape') closeLightbox();
+      // Matches the on-screen chevrons AND the RTL strip: the LEFT arrow moves
+      // forward. (These were the other way round, contradicting both.)
+      if (e.key === 'ArrowLeft')  lbNext();
+      if (e.key === 'ArrowRight') lbPrev();
     };
     document.addEventListener('keydown', onKey);
     return () => {
@@ -174,6 +215,11 @@ function ImageGallery({ images }: { images: Listing['images'] }) {
       document.removeEventListener('keydown', onKey);
     };
   }, [lightboxOpen, images.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // A stale drag offset would leave the next-opened photo visually shifted.
+  useEffect(() => {
+    if (!lightboxOpen) { setDragX(0); setDragging(false); touchStart.current = null; }
+  }, [lightboxOpen]);
 
   if (!images.length) {
     return (
@@ -271,8 +317,12 @@ function ImageGallery({ images }: { images: Listing['images'] }) {
       {/* ── Lightbox ── */}
       {lightboxOpen && (
         <div
-          className="fixed inset-0 z-[300] bg-black/95 flex items-center justify-center"
+          className="fixed inset-0 z-[300] bg-black/95 flex items-center justify-center touch-pan-y"
           onClick={closeLightbox}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          onTouchCancel={onTouchEnd}
         >
           {/* Close */}
           <button
@@ -288,7 +338,14 @@ function ImageGallery({ images }: { images: Listing['images'] }) {
             src={images[lightboxIndex].url}
             alt={`صورة ${lightboxIndex + 1}`}
             className="max-w-[90vw] max-h-[85vh] object-contain select-none rounded-sm shadow-2xl"
+            // The photo follows the finger, then springs back (or lands on the next
+            // image) on release — without the follow, a swipe feels unresponsive.
+            style={{
+              transform: dragX ? `translateX(${dragX}px)` : undefined,
+              transition: dragging ? 'none' : 'transform 180ms ease-out',
+            }}
             onClick={(e) => e.stopPropagation()}
+            draggable={false}
           />
 
           {/* Prev / Next */}
