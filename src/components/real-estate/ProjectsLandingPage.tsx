@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SYRIAN_GOVERNORATES } from '@/components/listings/wizard/schema';
+import { AddListingLink } from '@/components/listings/AddListingLink';
 import { listingsService } from '@/services/listings.service';
 import { catalogService } from '@/services/catalog.service';
 import { api } from '@/services/api';
@@ -168,14 +169,10 @@ function EmptyShowcase() {
         <p className="text-base font-semibold text-gray-500">لا توجد مشاريع حالياً</p>
         <p className="text-sm text-gray-400 mt-0.5">كن أول من يضيف مشروعه السكني</p>
       </div>
-      <Link
-        href="/listings/create"
-        prefetch={false}
-        className="inline-flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors"
-      >
+      <AddListingLink className="inline-flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors">
         <PlusCircle className="w-4 h-4" />
         أضف مشروعك الآن
-      </Link>
+      </AddListingLink>
     </div>
   );
 }
@@ -352,13 +349,9 @@ export default function ProjectsLandingPage() {
             <h3 className="text-xl font-extrabold text-white">هل أنت مطوّر عقاري؟</h3>
             <p className="text-orange-100 text-sm mt-1">سجّل مشروعك على فرصة واوصل إلى آلاف المشترين المحتملين</p>
           </div>
-          <Link
-            href="/listings/create"
-            prefetch={false}
-            className="shrink-0 bg-white text-orange-600 font-extrabold text-sm px-6 py-3 rounded-xl hover:bg-orange-50 transition-colors shadow-lg shadow-orange-700/20 whitespace-nowrap"
-          >
+          <AddListingLink className="shrink-0 bg-white text-orange-600 font-extrabold text-sm px-6 py-3 rounded-xl hover:bg-orange-50 transition-colors shadow-lg shadow-orange-700/20 whitespace-nowrap">
             أضف مشروعك الآن
-          </Link>
+          </AddListingLink>
         </div>
       </section>
 

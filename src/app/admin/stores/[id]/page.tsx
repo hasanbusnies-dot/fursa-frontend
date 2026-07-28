@@ -5,17 +5,19 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Store, ChevronLeft, AlertTriangle, UserRound, UserCog, Phone, MapPin,
-  CalendarDays, BadgeCheck, ShieldX, Clock, CheckCircle2, XCircle, Ban,
+  CalendarDays, BadgeCheck, ShieldX, Clock, CheckCircle2, XCircle, Ban, Building2,
 } from 'lucide-react';
 import { useAdminAuthStore } from '@/store/auth.store';
 import {
   adminStoresService,
   contractUrlOf,
   chargesOf,
+  COMPANY_TYPE_AR,
   type StoreDetail,
   type StoreStatus,
 } from '@/services/stores.service';
 import { ContractDoc } from '@/components/stores/ContractDoc';
+import { StoreSourceBadge, isSelfService } from '@/components/stores/StoreSourceBadge';
 import { formatMoney } from '@/lib/money';
 import { cn } from '@/lib/utils';
 import {
@@ -114,8 +116,12 @@ export default function AdminStoreDetailPage() {
           const membership = store.membership ?? null;
           const memberActive = membership?.badge === true;
           const charges = chargesOf(store);
-          const agent = store.agent ?? store.registeredBy ?? null;
+          const agent = store.agent ?? store.registeredBy ?? store.registeredByAgent ?? null;
           const ownerPhone = store.ownerPhone ?? store.owner?.phone ?? null;
+          const selfService = isSelfService(store);
+          // Present only where the backend includes the owner's corporate profile.
+          // Absent ⇒ render nothing; it does NOT mean "no tax number".
+          const corp = store.corporateProfile ?? null;
 
           return (
             <div className="space-y-4">
@@ -135,10 +141,13 @@ export default function AdminStoreDetailPage() {
                       )}
                     </div>
                   </div>
-                  <span className={cn('shrink-0 inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full', meta.cls)}>
-                    <meta.Icon className="w-3 h-3" />
-                    {meta.label}
-                  </span>
+                  <div className="shrink-0 flex items-center gap-1.5">
+                    <StoreSourceBadge store={store} />
+                    <span className={cn('inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full', meta.cls)}>
+                      <meta.Icon className="w-3 h-3" />
+                      {meta.label}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="mt-4 space-y-1.5 text-xs text-gray-600">
@@ -153,13 +162,18 @@ export default function AdminStoreDetailPage() {
                       {ownerPhone}
                     </p>
                   )}
-                  {agent && (
+                  {agent ? (
                     <p className="flex items-center gap-1.5">
                       <UserCog className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                       <span>{agent.name ?? agent.phone ?? agent.id}</span>
                       <span className="text-gray-400">(المندوب المُسجِّل)</span>
                     </p>
-                  )}
+                  ) : selfService ? (
+                    <p className="flex items-center gap-1.5 text-gray-400">
+                      <UserCog className="w-3.5 h-3.5 shrink-0" />
+                      لا يوجد مندوب — سجّل المالك نشاطه بنفسه عبر الموقع
+                    </p>
+                  ) : null}
                   {store.address && (
                     <p className="flex items-start gap-1.5">
                       <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" />
@@ -183,13 +197,56 @@ export default function AdminStoreDetailPage() {
                   <ContractDoc
                     url={contractUrlOf(store)}
                     label="عرض العقد"
-                    emptyLabel="لا يوجد عقد"
+                    // Self-service applications carry no paper contract by design.
+                    emptyLabel={selfService ? 'لا يوجد عقد (تسجيل ذاتي)' : 'لا يوجد عقد'}
                     expiredLabel="انتهت صلاحية الرابط، حدّث الصفحة."
                     alt={`عقد ${store.name}`}
                     dir="ltr"
                   />
                 </div>
               </div>
+
+              {/* ── Business details (what the admin actually reviews) ──
+                  Rendered only when the payload carries the owner's corporate
+                  profile — see the note on Store.corporateProfile. */}
+              {corp && (
+                <div className="rounded-card bg-white shadow-pebble p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Building2 className="w-4 h-4 text-orange-500" />
+                    <h2 className="text-sm font-bold text-gray-800">بيانات النشاط</h2>
+                  </div>
+                  <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs">
+                    <div>
+                      <dt className="text-gray-400 mb-0.5">الاسم التجاري</dt>
+                      <dd className="font-semibold text-gray-800">{corp.companyName ?? '—'}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-gray-400 mb-0.5">نوع النشاط</dt>
+                      <dd className="font-semibold text-gray-800">
+                        {corp.companyType ? COMPANY_TYPE_AR[corp.companyType] : '—'}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-gray-400 mb-0.5">الرقم الضريبي</dt>
+                      <dd className="font-semibold text-gray-800">
+                        {corp.taxExempt ? (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                            معفى من الرقم الضريبي
+                          </span>
+                        ) : (
+                          <span dir="ltr" className="inline-block">{corp.taxNumber || '— لم يُقدَّم'}</span>
+                        )}
+                      </dd>
+                    </div>
+                    {corp.registrationNumber && (
+                      <div>
+                        <dt className="text-gray-400 mb-0.5">رقم السجل التجاري</dt>
+                        <dd className="font-semibold text-gray-800" dir="ltr">{corp.registrationNumber}</dd>
+                      </div>
+                    )}
+                  </dl>
+                </div>
+              )}
 
               {/* Membership block (read-only) */}
               <div className="rounded-card bg-white shadow-pebble p-5">

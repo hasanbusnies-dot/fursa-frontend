@@ -10,6 +10,7 @@ import {
 import { toast } from 'sonner';
 import { offersService, type Offer, type OfferStatus } from '@/services/offers.service';
 import { useAuthStore } from '@/store/auth.store';
+import { AddListingLink } from '@/components/listings/AddListingLink';
 import { cn } from '@/lib/utils';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -363,14 +364,10 @@ export default function SellerOffersPage() {
           <h1 className="text-2xl font-bold text-gray-900">عروض منتجاتي</h1>
           <p className="text-sm text-gray-500 mt-0.5">إدارة العروض الواردة من المشترين على إعلاناتك</p>
         </div>
-        <Link
-          href="/listings/create"
-          prefetch={false}
-          className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-2.5 rounded-xl transition-colors text-sm shrink-0"
-        >
+        <AddListingLink className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-2.5 rounded-xl transition-colors text-sm shrink-0">
           <Plus className="w-4 h-4" />
           إعلان جديد
-        </Link>
+        </AddListingLink>
       </div>
 
       <div className="bg-white rounded-card shadow-pebble overflow-hidden">
@@ -464,14 +461,10 @@ export default function SellerOffersPage() {
               <p className="text-sm text-gray-500 mb-8 max-w-sm leading-relaxed">
                 أضف منتجاتك الآن، وابدأ في تقييم العروض الواردة من المشترين لتحقيق الأرباح.
               </p>
-              <Link
-                href="/listings/create"
-                prefetch={false}
-                className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm"
-              >
+              <AddListingLink className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm">
                 <Plus className="w-4 h-4" />
                 أضف إعلان الآن
-              </Link>
+              </AddListingLink>
             </div>
           ) : (
             <div className="space-y-4">

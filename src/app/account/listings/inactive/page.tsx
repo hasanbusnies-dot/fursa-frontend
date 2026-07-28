@@ -10,6 +10,7 @@ import {
 import { toast } from 'sonner';
 import { listingsService } from '@/services/listings.service';
 import { useAuthStore } from '@/store/auth.store';
+import { AddListingLink } from '@/components/listings/AddListingLink';
 import type { Listing } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -307,14 +308,10 @@ export default function InactiveListingsPage() {
             <h1 className="text-2xl font-bold text-gray-900">إعلاناتي غير النشطة</h1>
             {name && <p className="text-sm text-gray-500 mt-0.5">{name}</p>}
           </div>
-          <Link
-            href="/listings/create"
-            prefetch={false}
-            className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-2.5 rounded-xl transition-colors text-sm"
-          >
+          <AddListingLink className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-2.5 rounded-xl transition-colors text-sm">
             <Plus className="w-4 h-4" />
             إعلان جديد
-          </Link>
+          </AddListingLink>
         </div>
 
         {/* Content */}

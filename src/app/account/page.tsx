@@ -4,9 +4,12 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  FileText, MessageSquare, PlusCircle, Star, ArrowRight,
+  FileText, MessageSquare, PlusCircle, Star, ArrowRight, Lock,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import { useStoreGate } from '@/store/store-gate.store';
+import { StoreGateNotice } from '@/components/account/StoreGateNotice';
+import { displayNameOf } from '@/lib/user';
 import { listingsService } from '@/services/listings.service';
 import { favoritesService } from '@/services/favorites.service';
 import { ListingCard } from '@/components/listings/ListingCard';
@@ -68,6 +71,7 @@ function StatCard({
 export default function AccountDashboardPage() {
   const router          = useRouter();
   const { user, isAuthenticated } = useAuthStore();
+  const gate            = useStoreGate();
 
   const [mounted,      setMounted]      = useState(false);
   const [loading,      setLoading]      = useState(true);
@@ -99,10 +103,18 @@ export default function AccountDashboardPage() {
 
   if (!mounted || !isAuthenticated) return <DashboardSkeleton />;
 
-  const firstName = user?.profile?.firstName ?? user?.email?.split('@')[0] ?? '';
+  // Company name for a business, person name otherwise (never "undefined").
+  const firstName = displayNameOf(user);
 
   return (
     <>
+      {/* ── Business under review — the landing state right after corporate signup.
+             Shown on BOTH breakpoints (the mobile branch below is menu-only), and on
+             every later visit while the store is still pending. ──────────────── */}
+      {gate.locked && (
+        <StoreGateNotice gate={gate} surface="generic" className="mb-4" />
+      )}
+
       {/* ── Mobile: full account menu list (reuses the desktop sidebar) ──── */}
       <div className="lg:hidden">
         <AccountSidebar />
@@ -140,21 +152,37 @@ export default function AccountDashboardPage() {
           loading={loading}
         />
 
-        {/* CTA card */}
-        <Link
-          href="/listings/create"
-          prefetch={false}
-          className="group bg-gradient-to-br from-orange-500 to-pink-500 rounded-2xl p-5 hover:shadow-md hover:from-orange-600 hover:to-pink-600 transition-all"
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-              <PlusCircle className="w-5 h-5 text-white" />
+        {/* CTA card — greyed out and inert while the business awaits approval */}
+        {gate.locked ? (
+          <div
+            aria-disabled
+            title="قيد المراجعة — يُفتح بعد اعتماد حسابك"
+            className="bg-gray-100 border border-gray-200 rounded-2xl p-5 cursor-not-allowed select-none"
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div className="w-10 h-10 rounded-xl bg-gray-200 flex items-center justify-center">
+                <Lock className="w-5 h-5 text-gray-400" />
+              </div>
             </div>
-            <ArrowRight className="w-4 h-4 text-white/50 group-hover:text-white transition-colors" />
+            <p className="text-2xl font-extrabold text-gray-400 mb-0.5 leading-none">أضف إعلان</p>
+            <p className="text-sm text-gray-400">يُفتح بعد اعتماد حسابك</p>
           </div>
-          <p className="text-2xl font-extrabold text-white mb-0.5 leading-none">أضف إعلان</p>
-          <p className="text-sm text-white/80">أنشئ إعلاناً جديداً الآن</p>
-        </Link>
+        ) : (
+          <Link
+            href="/listings/create"
+            prefetch={false}
+            className="group bg-gradient-to-br from-orange-500 to-pink-500 rounded-2xl p-5 hover:shadow-md hover:from-orange-600 hover:to-pink-600 transition-all"
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                <PlusCircle className="w-5 h-5 text-white" />
+              </div>
+              <ArrowRight className="w-4 h-4 text-white/50 group-hover:text-white transition-colors" />
+            </div>
+            <p className="text-2xl font-extrabold text-white mb-0.5 leading-none">أضف إعلان</p>
+            <p className="text-sm text-white/80">أنشئ إعلاناً جديداً الآن</p>
+          </Link>
+        )}
 
       </div>
 

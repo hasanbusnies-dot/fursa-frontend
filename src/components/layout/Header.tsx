@@ -7,9 +7,11 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   Search, PlusCircle, Menu, X, ChevronDown,
   User, LayoutDashboard, MessageSquare, FileText,
-  Star, Bookmark, UserCheck, LogOut, Store, Bell,
+  Star, Bookmark, UserCheck, LogOut, Store, Bell, Lock,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import { useStoreGate } from '@/store/store-gate.store';
+import { displayNameOf } from '@/lib/user';
 import { useNotificationsStore } from '@/store/notifications.store';
 import { messagesService } from '@/services/messages.service';
 import { shouldShowMobileTopBar } from './MobileTopBar';
@@ -42,9 +44,9 @@ export function Header() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const notifUnread = useNotificationsStore((s) => s.unreadCount);
 
-  const displayName = user?.profile?.firstName
-    ?? user?.email?.split('@')[0]
-    ?? 'Hesabım';
+  const storeGate = useStoreGate();
+
+  const displayName = displayNameOf(user, 'حسابي');
 
   function handleSearch() {
     const q = searchQuery.trim();
@@ -375,15 +377,28 @@ export function Header() {
               </div>
             )}
 
-            {/* Post Ad CTA — desktop only; mobile uses BottomNav */}
-            <Link
-              href="/listings/create"
-              prefetch={false}
-              className="hidden md:flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-semibold px-4 py-2 rounded-btn transition-colors whitespace-nowrap"
-            >
-              <PlusCircle className="w-4 h-4" />
-              أضف إعلان
-            </Link>
+            {/* Post Ad CTA — desktop only; mobile uses BottomNav.
+                Greyed out for a business still awaiting approval; the route itself
+                enforces it (CreateListingForm), this is just honest signalling. */}
+            {storeGate.locked ? (
+              <span
+                aria-disabled
+                title="قيد المراجعة — يُفتح بعد اعتماد حسابك"
+                className="hidden md:flex items-center gap-1.5 bg-gray-200 text-gray-400 text-sm font-semibold px-4 py-2 rounded-btn whitespace-nowrap cursor-not-allowed select-none"
+              >
+                <Lock className="w-4 h-4" />
+                أضف إعلان
+              </span>
+            ) : (
+              <Link
+                href="/listings/create"
+                prefetch={false}
+                className="hidden md:flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-semibold px-4 py-2 rounded-btn transition-colors whitespace-nowrap"
+              >
+                <PlusCircle className="w-4 h-4" />
+                أضف إعلان
+              </Link>
+            )}
             {/* Mobile hamburger + logo + bell now live in the sm:hidden mobile row above. */}
           </div>
         </div>

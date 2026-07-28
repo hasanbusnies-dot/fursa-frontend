@@ -8,6 +8,8 @@ import {
   AlertTriangle, Inbox, Receipt,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import { useStoreGate } from '@/store/store-gate.store';
+import { StoreGateBlock } from '@/components/account/StoreGateNotice';
 import {
   dopingsService,
   type MyActiveDopingRow,
@@ -185,6 +187,7 @@ function EmptyState({ tab }: { tab: Tab }) {
 export default function MyDopingsPage() {
   const router          = useRouter();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const gate            = useStoreGate();
 
   const [tab, setTab] = useState<Tab>('active');
 
@@ -216,6 +219,9 @@ export default function MyDopingsPage() {
   useEffect(() => { if (isAuthenticated) load(); }, [isAuthenticated, load]);
 
   if (!isAuthenticated) return null;
+
+  // The dopings router is requireApprovedStore'd server-side too.
+  if (gate.locked || (gate.gated && gate.loading)) return <StoreGateBlock surface="dopings" />;
 
   const meta = tab === 'active' ? activeMeta : historyMeta;
   const isEmpty = tab === 'active' ? activeRows.length === 0 : historyRows.length === 0;

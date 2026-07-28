@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/auth.store';
+import { useStoreGate } from '@/store/store-gate.store';
+import { StoreGateBlock } from '@/components/account/StoreGateNotice';
 import { ApiError } from '@/services/api';
 import {
   walletService,
@@ -282,6 +284,7 @@ function SkeletonRow() {
 export default function WalletPage() {
   const router          = useRouter();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const gate            = useStoreGate();
 
   const [wallet, setWallet]         = useState<WalletData | null>(null);
   const [walletError, setWalletErr] = useState(false);
@@ -365,6 +368,10 @@ export default function WalletPage() {
   const onType     = (t: WalletTxType | 'ALL')   => { setTF(t); setPage(1); };
 
   if (!isAuthenticated) return null;
+
+  // A business awaiting approval has no wallet surface — the whole /wallet router is
+  // requireApprovedStore'd server-side, so every call here would 403 anyway.
+  if (gate.locked || (gate.gated && gate.loading)) return <StoreGateBlock surface="wallet" />;
 
   const balanceFor = (c: string) => wallet?.balances.find((b) => b.currency === c)?.balance ?? '0';
   const frozen = wallet?.status === 'FROZEN';

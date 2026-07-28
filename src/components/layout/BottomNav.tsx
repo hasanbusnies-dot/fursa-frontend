@@ -3,8 +3,9 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, PlusCircle, Star, User, LogIn } from 'lucide-react';
+import { Home, Search, PlusCircle, Star, User, LogIn, Lock } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import { useStoreGate } from '@/store/store-gate.store';
 import { cn } from '@/lib/utils';
 
 interface NavItem {
@@ -29,6 +30,7 @@ const INDICATOR_W = 28;
 export function BottomNav() {
   const pathname = usePathname();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const storeGate = useStoreGate();
 
   // ── Sliding active-tab indicator (measured refs, physical coords) ──
   // getBoundingClientRect + physical left/translateX make RTL correct by
@@ -151,17 +153,31 @@ export function BottomNav() {
 
         {/* Add Ad — elevated center button. NOT in tabRefs — the indicator never
             lands here, it only glides behind. `relative` keeps this painting above
-            the (positioned) indicator as it passes. */}
-        <Link
-          href="/listings/create"
-          prefetch={false}
-          className="relative flex flex-col items-center gap-1 -mt-5"
-        >
-          <div className="w-14 h-14 rounded-full bg-orange-500 shadow-[0_4px_14px] shadow-orange-500/45 flex items-center justify-center transition-transform active:scale-95">
-            <PlusCircle className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-[10px] font-semibold text-orange-500">أضف إعلان</span>
-        </Link>
+            the (positioned) indicator as it passes.
+            Inert + grey for a business awaiting approval (the route enforces it). */}
+        {storeGate.locked ? (
+          <span
+            aria-disabled
+            title="قيد المراجعة — يُفتح بعد اعتماد حسابك"
+            className="relative flex flex-col items-center gap-1 -mt-5 cursor-not-allowed select-none"
+          >
+            <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center">
+              <Lock className="w-6 h-6 text-gray-400" />
+            </div>
+            <span className="text-[10px] font-semibold text-gray-400">قيد المراجعة</span>
+          </span>
+        ) : (
+          <Link
+            href="/listings/create"
+            prefetch={false}
+            className="relative flex flex-col items-center gap-1 -mt-5"
+          >
+            <div className="w-14 h-14 rounded-full bg-orange-500 shadow-[0_4px_14px] shadow-orange-500/45 flex items-center justify-center transition-transform active:scale-95">
+              <PlusCircle className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-[10px] font-semibold text-orange-500">أضف إعلان</span>
+          </Link>
+        )}
 
         {/* Regular tabs — last two */}
         {navItems.slice(2).map(({ href, match, label, Icon }, i) => (

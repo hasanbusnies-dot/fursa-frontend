@@ -18,6 +18,7 @@ import {
   type StoreStatus,
 } from '@/services/stores.service';
 import { ContractDoc } from '@/components/stores/ContractDoc';
+import { StoreSourceBadge, isSelfService } from '@/components/stores/StoreSourceBadge';
 import { ResendSetupLinkButton } from '@/components/stores/ResendSetupLinkButton';
 import { cn } from '@/lib/utils';
 import { STORE_STATUS_AR, UI_AR } from '@/lib/staff-labels';
@@ -137,6 +138,7 @@ function StoreCard({
   const phone = ownerPhoneOf(store);
   const agent = agentOf(store);
   const isPending = store.status === 'PENDING';
+  const selfService = isSelfService(store);
 
   return (
     <div className="bg-white shadow-pebble rounded-card overflow-hidden shadow-sm flex flex-col">
@@ -148,10 +150,13 @@ function StoreCard({
           >
             {store.name}
           </Link>
-          <span className={cn('shrink-0 inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full', meta.cls)}>
-            <meta.Icon className="w-3 h-3" />
-            {meta.label}
-          </span>
+          <div className="shrink-0 flex items-center gap-1.5">
+            <StoreSourceBadge store={store} />
+            <span className={cn('inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full', meta.cls)}>
+              <meta.Icon className="w-3 h-3" />
+              {meta.label}
+            </span>
+          </div>
         </div>
 
         <div className="mt-3 space-y-1.5 text-xs text-gray-600">
@@ -172,13 +177,20 @@ function StoreCard({
               <span>{[store.address, store.city, store.governorate].filter(Boolean).join(', ')}</span>
             </p>
           )}
-          {agent && (
+          {agent ? (
             <p className="flex items-center gap-1.5">
               <UserCog className="w-3.5 h-3.5 text-gray-400 shrink-0" />
               <span>{agent.name ?? agent.phone ?? agent.id}</span>
               <span className="text-gray-400">(المندوب المُسجِّل)</span>
             </p>
-          )}
+          ) : selfService ? (
+            // Explain the absence rather than leaving a silent gap where the agent
+            // line sits on every other row.
+            <p className="flex items-center gap-1.5 text-gray-400">
+              <UserCog className="w-3.5 h-3.5 shrink-0" />
+              لا يوجد مندوب — سجّل المالك نشاطه بنفسه
+            </p>
+          ) : null}
           <p className="flex items-center gap-1.5">
             <CalendarDays className="w-3.5 h-3.5 text-gray-400 shrink-0" />
             {formatDate(store.createdAt)}
@@ -191,7 +203,9 @@ function StoreCard({
           <ContractDoc
             url={photo}
             label="عرض العقد"
-            emptyLabel="لا يوجد عقد"
+            // A self-service application has no paper contract by design — say so, so
+            // the admin doesn't read it as a missing document.
+            emptyLabel={selfService ? 'لا يوجد عقد (تسجيل ذاتي)' : 'لا يوجد عقد'}
             expiredLabel="انتهت صلاحية الرابط، حدّث الصفحة."
             alt={`عقد ${store.name}`}
             dir="ltr"

@@ -4,6 +4,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
+import { useStoreGate } from '@/store/store-gate.store';
+import { GateLockChip } from './StoreGateNotice';
+import { displayNameOf, initialOf } from '@/lib/user';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, FileText, Star, Bookmark, UserCheck,
@@ -114,11 +117,18 @@ function active(href: string, exact: boolean, pathname: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+// Sections a business can't use until its store is APPROVED — the same surfaces the
+// backend 403s (wallet + dopings routers; listings via assertStoreApproved).
+// «متجري» is deliberately NOT here: /account/store IS the page that explains the
+// pending state, so it stays reachable and self-locks. It only gets the chip.
+const GATED_HREFS = new Set(['/account/wallet', '/account/dopings']);
+
 // ── Sidebar ────────────────────────────────────────────────────────────────────
 
 export function AccountSidebar() {
   const pathname  = usePathname();
   const { user }  = useAuthStore();
+  const gate      = useStoreGate();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   function toggleExpanded(label: string) {
@@ -129,11 +139,8 @@ export function AccountSidebar() {
     });
   }
 
-  const displayName = user?.profile
-    ? `${user.profile.firstName} ${user.profile.lastName}`.trim()
-    : user?.email ?? '';
-
-  const initial = displayName.charAt(0).toUpperCase() || '?';
+  const displayName = displayNameOf(user);
+  const initial     = initialOf(user);
 
   // The "متجري" section is owner-only — INDIVIDUAL consumers never see it.
   const sections = user?.userType === 'CORPORATE'
@@ -287,6 +294,25 @@ export function AccountSidebar() {
                 );
               }
 
+              // ── Gated item: locked until the business is approved ───────
+              // Rendered as a dead row with the reason, not a link — clicking through
+              // would only hit a page that 403s. /account/store is exempt (see
+              // GATED_HREFS) because it is where the reason lives.
+              if (item.href && gate.locked && GATED_HREFS.has(item.href)) {
+                return (
+                  <div
+                    key={ii}
+                    aria-disabled
+                    title="قيد المراجعة — يُفتح بعد اعتماد حسابك"
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-400 select-none cursor-not-allowed"
+                  >
+                    <item.icon className="w-4 h-4 shrink-0 text-gray-300" />
+                    <span className="flex-1 truncate">{item.label}</span>
+                    <GateLockChip />
+                  </div>
+                );
+              }
+
               // ── Coming-soon item (no href, no children) ─────────────────
               if (!item.href) {
                 return (
@@ -322,6 +348,9 @@ export function AccountSidebar() {
                     )}
                   />
                   <span className="flex-1 truncate">{item.label}</span>
+                  {/* «متجري» stays clickable while pending — it is the screen that
+                      explains the lock — but it carries the same status chip. */}
+                  {gate.locked && item.href === '/account/store' && <GateLockChip />}
                 </Link>
               );
             })}

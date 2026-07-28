@@ -9,6 +9,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { listingsService, type CreateListingPayload } from '@/services/listings.service';
 import { ApiError } from '@/services/api';
 import { useAuth } from '@/hooks/use-auth';
+import { useStoreGate } from '@/store/store-gate.store';
+import { StoreGateBlock } from '@/components/account/StoreGateNotice';
 import { toValidCoords, HIDE_MAP_ATTR_KEY } from '@/lib/map';
 import { StepIndicator } from './StepIndicator';
 import {
@@ -66,6 +68,7 @@ export function CreateListingForm({
   const router = useRouter();
   const submitListing = createListing ?? listingsService.create;
   const { isAuthenticated } = useAuth();
+  const gate = useStoreGate();
   const [stepIdx, setStepIdx] = useState(0);
 
   // ── Client-side auth guard ───────────────────────────────────────────────
@@ -76,6 +79,12 @@ export function CreateListingForm({
       router.replace(`/login?redirect=${encodeURIComponent('/listings/create')}`);
     }
   }, [mounted, isAuthenticated, router]);
+
+  // ── Business-approval guard ──────────────────────────────────────────────
+  // THE chokepoint for the add-listing lock. Every entry point (header CTA, bottom
+  // nav, in-account empty states, a typed URL) converges on this route, so blocking
+  // here covers all of them — the styled-off buttons elsewhere are courtesy only.
+  // The backend refuses too (assertStoreApproved in listing.service.create).
 
   // ── React-Hook-Form (all scalar fields) ───────────────────────────────────
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -339,6 +348,18 @@ export function CreateListingForm({
 
   // ── Render ─────────────────────────────────────────────────────────────────
   if (mounted && !isAuthenticated) return null;
+
+  // A business whose store isn't APPROVED gets the «قيد المراجعة» card instead of the
+  // wizard — filling in six steps only to eat a 403 on submit is the worst outcome.
+  if (mounted && isAuthenticated && (gate.locked || (gate.gated && gate.loading))) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 px-4" dir="rtl">
+        <div className="max-w-2xl mx-auto">
+          <StoreGateBlock surface="listing" />
+        </div>
+      </div>
+    );
+  }
 
   const isReview = !!current.customNav;
 

@@ -20,6 +20,22 @@ export type CompanyType =
   | 'SERVICES'
   | 'OTHER';
 
+/** Arabic labels for CompanyType — the ONE map. Shared by the consumer signup form,
+ *  the agent registration form and the admin store detail so the same business type
+ *  never reads differently on two screens. */
+export const COMPANY_TYPE_AR: Record<CompanyType, string> = {
+  REAL_ESTATE_AGENCY: 'مكتب عقاري',
+  CAR_SHOWROOM:       'معرض سيارات',
+  STORE:              'متجر',
+  SERVICES:           'خدمات',
+  OTHER:              'أخرى',
+};
+
+/** How a store entered the system. AGENT = a field agent registered it on paper
+ *  (contract photo required); SELF_SERVICE = the owner applied at corporate signup
+ *  (no agent, no contract). Both land PENDING in the same admin queue. */
+export type StoreRegistrationSource = 'AGENT' | 'SELF_SERVICE';
+
 /** A store document. `url` is a ready-to-use signed (time-limited) URL. */
 export interface StoreDocument {
   id: string;
@@ -56,6 +72,27 @@ export interface Store {
   owner?: { id?: string; name?: string; phone?: string } | null;
   agent?: { id?: string; name?: string; phone?: string } | null;
   registeredBy?: { id?: string; name?: string; phone?: string } | null;
+
+  // ── Provenance (self-service corporate signup) ──
+  // The admin LIST returns registrationSource explicitly; the DETAIL does not, but
+  // registeredByAgentId === null ⇔ SELF_SERVICE is enforced by a DB CHECK constraint
+  // (stores_source_agent_ck), so `storeSourceOf()` derives it. Never coalesce a null
+  // agent id into an agent — a null genuinely means "no agent, owner applied directly".
+  registrationSource?: StoreRegistrationSource | null;
+  registeredByAgentId?: string | null;
+  /** Admin detail only: the registering agent, null for a self-service application. */
+  registeredByAgent?: { id: string; phone?: string | null; name?: string | null } | null;
+
+  /** The owner's corporate profile. Present only where the backend includes it
+   *  (admin detail); read defensively — an absent block renders nothing, it does
+   *  NOT mean the business has no tax number. */
+  corporateProfile?: {
+    companyName?: string | null;
+    companyType?: CompanyType | null;
+    taxNumber?: string | null;
+    taxExempt?: boolean | null;
+    registrationNumber?: string | null;
+  } | null;
 }
 
 export interface RegisterStoreInput {
@@ -199,6 +236,24 @@ function parsePage(res: unknown, page: number, limit: number): StoresPage {
 /** The signed contract-photo URL from the store's documents[] (ready for <img src>). */
 export function contractUrlOf(store: Store): string | null {
   return store.documents?.find((d) => d.type === 'CONTRACT')?.url ?? null;
+}
+
+/**
+ * How this store was registered. Prefers the explicit `registrationSource` (admin
+ * LIST payload); falls back to the agent-identity fields, where "no registering
+ * agent" ⇔ self-service — a pairing the DB enforces via stores_source_agent_ck.
+ * Returns null only when neither signal is present, so callers can render nothing
+ * rather than guess AGENT and mislabel a self-service application.
+ */
+export function storeSourceOf(store: Store): StoreRegistrationSource | null {
+  if (store.registrationSource) return store.registrationSource;
+  if (store.registeredByAgentId !== undefined) {
+    return store.registeredByAgentId === null ? 'SELF_SERVICE' : 'AGENT';
+  }
+  if (store.registeredByAgent !== undefined) {
+    return store.registeredByAgent === null ? 'SELF_SERVICE' : 'AGENT';
+  }
+  return null;
 }
 
 /** The owner's user id — needed to fund the owner's USD wallet for a CASH charge.
@@ -354,9 +409,14 @@ export interface OwnerChargeMembershipInput {
 export const ownerStoreService = {
   /** The logged-in owner's own store: same detail shape as the agent endpoint
    *  (status, membership block, charge history with signed receipts, documents).
-   *  Propagates ApiError(404) when the corporate user has no store. */
+   *  NOT approval-gated on the backend — a PENDING/REJECTED owner still reads their
+   *  own status + rejectionReason, which is what drives the «قيد المراجعة» lock.
+   *  Propagates ApiError(404) when the corporate user has no store.
+   *
+   *  realm pinned to 'user': the store gate is consulted from cross-cutting chrome
+   *  (Header CTA, BottomNav) that can render while a staff portal pathname is active. */
   getStore: async (): Promise<StoreDetail> => {
-    const res = await api.get<unknown>('/owner/store');
+    const res = await api.get<unknown>('/owner/store', { realm: 'user' });
     return unwrap<StoreDetail>(res) as StoreDetail;
   },
 

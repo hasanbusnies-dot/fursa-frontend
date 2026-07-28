@@ -6,13 +6,14 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, AlertCircle, User, Building2 } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, User, Building2, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Label } from '@/components/ui/Label';
 import { FormError } from '@/components/ui/FormError';
 import { authService } from '@/services/auth.service';
+import { COMPANY_TYPE_AR, type CompanyType } from '@/services/stores.service';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
@@ -33,32 +34,81 @@ const COUNTRY_CODES = [
 
 type AccountType = 'INDIVIDUAL' | 'CORPORATE';
 
+// The five business types, in the picker's order. Labels come from the shared
+// COMPANY_TYPE_AR so signup, the agent form and the admin detail always agree.
+const COMPANY_TYPE_OPTIONS: CompanyType[] = [
+  'CAR_SHOWROOM', 'REAL_ESTATE_AGENCY', 'STORE', 'SERVICES', 'OTHER',
+];
+
+// Backend parity (auth.schemas.ts). The phone rule applies to the COMPOSED
+// «countryCode + localDigits» string, not the local part alone — a 15-digit local
+// number behind '+963' is 19 chars and the API rejects it at 16.
+const PHONE_MIN = 8;
+const PHONE_MAX = 16;
+
 const schema = z
   .object({
-    accountType:     z.enum(['INDIVIDUAL', 'CORPORATE']),
-    firstName:       z.string().min(2, 'الاسم الأول يجب أن يكون حرفين على الأقل'),
-    lastName:        z.string().min(2, 'الاسم الأخير يجب أن يكون حرفين على الأقل'),
-    email:           z.string().email('يرجى إدخال بريد إلكتروني صحيح'),
-    phone:           z.string().min(7, 'رقم الهاتف قصير جداً').max(15, 'رقم الهاتف طويل جداً').regex(/^\d+$/, 'يجب أن يحتوي رقم الهاتف على أرقام فقط'),
-    password:        z.string().min(8, 'كلمة المرور يجب أن تكون 8 أحرف على الأقل'),
+    accountType:  z.enum(['INDIVIDUAL', 'CORPORATE']),
+    countryCode:  z.string().min(1),
+    // Individual-only (see superRefine) — a business has no person name on the API.
+    firstName:    z.string().optional(),
+    lastName:     z.string().optional(),
+    email:        z.string().email('يرجى إدخال بريد إلكتروني صحيح'),
+    phone:        z.string().regex(/^\d+$/, 'يجب أن يحتوي رقم الهاتف على أرقام فقط'),
+    password: z
+      .string()
+      .min(8, 'كلمة المرور يجب أن تكون 8 أحرف على الأقل')
+      .regex(/[A-Z]/, 'يجب أن تحتوي على حرف إنجليزي كبير واحد على الأقل (A-Z)')
+      .regex(/[0-9]/, 'يجب أن تحتوي على رقم واحد على الأقل'),
     confirmPassword: z.string(),
-    companyName:     z.string().optional(),
-    taxNumber:       z.string().optional(),
+    // Corporate-only
+    companyName:  z.string().optional(),
+    companyType:  z.string().optional(),
+    taxNumber:    z.string().optional(),
+    // NOT .default(false): a defaulted field makes zod's INPUT type differ from its
+    // OUTPUT type, and react-hook-form's resolver generic then rejects the schema.
+    // The initial value comes from defaultValues below instead.
+    taxExempt:    z.boolean(),
   })
-  .refine((d) => d.password === d.confirmPassword, {
-    message: 'كلمتا المرور غير متطابقتين',
-    path: ['confirmPassword'],
-  })
-  .refine(
-    (d) => d.accountType !== 'CORPORATE' || (d.companyName ?? '').trim().length >= 2,
-    { message: 'اسم الشركة مطلوب', path: ['companyName'] }
-  )
-  .refine(
-    (d) => d.accountType !== 'CORPORATE' || (d.taxNumber ?? '').trim().length >= 5,
-    { message: 'الرقم الضريبي يجب أن يكون 5 أحرف على الأقل', path: ['taxNumber'] }
-  );
+  .superRefine((d, ctx) => {
+    const issue = (path: keyof typeof d, message: string) =>
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], message });
+
+    if (d.password !== d.confirmPassword) {
+      issue('confirmPassword', 'كلمتا المرور غير متطابقتين');
+    }
+
+    const full = `${d.countryCode}${d.phone}`;
+    if (full.length < PHONE_MIN) issue('phone', 'رقم الهاتف قصير جداً');
+    if (full.length > PHONE_MAX) issue('phone', 'رقم الهاتف طويل جداً');
+
+    if (d.accountType === 'INDIVIDUAL') {
+      if ((d.firstName ?? '').trim().length < 2) issue('firstName', 'الاسم الأول يجب أن يكون حرفين على الأقل');
+      if ((d.lastName ?? '').trim().length < 2)  issue('lastName',  'الاسم الأخير يجب أن يكون حرفين على الأقل');
+      return;
+    }
+
+    if ((d.companyName ?? '').trim().length < 2) issue('companyName', 'اسم الشركة مطلوب');
+    if (!d.companyType) issue('companyType', 'يرجى اختيار نوع النشاط');
+    // Exempt is the explicit alternative to a number — one or the other, never both
+    // (the API 400s on «taxExempt && taxNumber»).
+    if (!d.taxExempt) {
+      const t = (d.taxNumber ?? '').trim();
+      if (!t) issue('taxNumber', 'أدخل الرقم الضريبي أو اختر «معفى»');
+      else if (t.length > 50) issue('taxNumber', 'حد أقصى 50 حرفاً');
+    }
+  });
 
 type FormData = z.infer<typeof schema>;
+
+// Every key the form can actually render an error on. A server error keyed to
+// anything else (a contract field we don't collect) must fall through to the banner
+// instead of vanishing into setError on a non-existent field — that silent failure is
+// exactly what made corporate signup look like a dead button.
+const FORM_FIELDS = new Set<string>([
+  'firstName', 'lastName', 'email', 'phone', 'password', 'confirmPassword',
+  'companyName', 'companyType', 'taxNumber', 'taxExempt',
+]);
 
 const TABS: { type: AccountType; label: string; Icon: React.ElementType }[] = [
   { type: 'INDIVIDUAL', label: 'فردي',    Icon: User      },
@@ -79,49 +129,88 @@ export function RegisterForm() {
     register,
     handleSubmit,
     setValue,
+    watch,
     setError,
     clearErrors,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { accountType: 'INDIVIDUAL' },
+    defaultValues: { accountType: 'INDIVIDUAL', countryCode: '+963', taxExempt: false },
   });
+
+  const taxExempt = watch('taxExempt');
 
   const switchTab = (type: AccountType) => {
     setAccountType(type);
     setValue('accountType', type);
-    if (type === 'INDIVIDUAL') clearErrors(['companyName', 'taxNumber']);
+    clearErrors(
+      type === 'INDIVIDUAL'
+        ? ['companyName', 'companyType', 'taxNumber']
+        : ['firstName', 'lastName'],
+    );
+  };
+
+  // Checking «معفى» clears + locks the tax input; unchecking hands it back.
+  const toggleExempt = (checked: boolean) => {
+    setValue('taxExempt', checked);
+    if (checked) {
+      setValue('taxNumber', '');
+      clearErrors('taxNumber');
+    }
   };
 
   const onSubmit = async (data: FormData) => {
     setServerError(null);
     try {
-      const base = {
-        firstName: data.firstName,
-        lastName:  data.lastName,
-        email:     data.email,
-        password:  data.password,
-        phone:     `${selectedCountryCode}${data.phone}`,
-      };
+      const phone = `${selectedCountryCode}${data.phone}`;
 
       const res =
         data.accountType === 'CORPORATE'
           ? await authService.registerCorporate({
-              ...base,
-              companyName: data.companyName!,
-              taxNumber:   data.taxNumber!,
+              phone,
+              email:       data.email,
+              password:    data.password,
+              companyName: data.companyName!.trim(),
+              companyType: data.companyType as CompanyType,
+              // Mutually exclusive — send exactly one.
+              ...(data.taxExempt
+                ? { taxExempt: true }
+                : { taxNumber: data.taxNumber!.trim() }),
             })
-          : await authService.registerIndividual(base);
+          : await authService.registerIndividual({
+              firstName: data.firstName!.trim(),
+              lastName:  data.lastName!.trim(),
+              email:     data.email,
+              password:  data.password,
+              phone,
+            });
 
       setAuth(res.user, res.token, res.refreshToken);
-      toast.success('تم إنشاء حسابك بنجاح! مرحباً بك في فرصة.');
-      router.push('/');
+
+      if (data.accountType === 'CORPORATE') {
+        // The account is live and logged in; the STORE is what awaits approval.
+        toast.success('تم إرسال حسابك للمراجعة', {
+          description: 'سنراجع بيانات نشاطك قريباً. تُفتح أقسام المتجر وإضافة الإعلانات والمحفظة فور الموافقة.',
+          duration: 8000,
+        });
+        router.push('/account');
+      } else {
+        toast.success('تم إنشاء حسابك بنجاح! مرحباً بك في فرصة.');
+        router.push('/');
+      }
       router.refresh();
     } catch (err) {
       if (err instanceof ApiError && err.errors && Object.keys(err.errors).length > 0) {
+        const unmapped: string[] = [];
         Object.entries(err.errors).forEach(([field, messages]) => {
-          setError(field as keyof FormData, { type: 'server', message: messages[0] });
+          if (FORM_FIELDS.has(field)) {
+            setError(field as keyof FormData, { type: 'server', message: messages[0] });
+          } else {
+            unmapped.push(messages[0]);
+          }
         });
+        // Never swallow an error we have nowhere to render.
+        if (unmapped.length > 0) setServerError(unmapped.join(' · '));
       } else {
         setServerError(
           err instanceof Error ? err.message : 'فشل التسجيل. يرجى المحاولة مجدداً.'
@@ -129,6 +218,8 @@ export function RegisterForm() {
       }
     }
   };
+
+  const isCorporate = accountType === 'CORPORATE';
 
   return (
     <div className="bg-white rounded-card shadow-pebble p-8">
@@ -167,63 +258,110 @@ export function RegisterForm() {
           </div>
         )}
 
-        {/* Hidden accountType field */}
+        {/* Hidden fields the schema reads but the user never types into */}
         <input type="hidden" {...register('accountType')} />
+        <input type="hidden" {...register('countryCode')} />
 
         {/* ── Corporate-only fields ── */}
-        {accountType === 'CORPORATE' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-blue-50 border border-blue-100 rounded-xl">
-            <div>
-              <Label htmlFor="companyName" required>اسم الشركة</Label>
-              <Input
-                id="companyName"
-                autoComplete="organization"
-                placeholder="شركة فرصة للتجارة"
-                error={!!errors.companyName}
-                {...register('companyName')}
-              />
-              <FormError message={errors.companyName?.message} />
+        {isCorporate && (
+          <div className="space-y-4 p-4 bg-blue-50 border border-blue-100 rounded-xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="companyName" required>اسم الشركة</Label>
+                <Input
+                  id="companyName"
+                  autoComplete="organization"
+                  placeholder="شركة فرصة للتجارة"
+                  error={!!errors.companyName}
+                  {...register('companyName')}
+                />
+                <FormError message={errors.companyName?.message} />
+              </div>
+              <div>
+                <Label htmlFor="companyType" required>نوع النشاط</Label>
+                <select
+                  id="companyType"
+                  defaultValue=""
+                  className={cn(
+                    'block w-full px-3.5 py-2.5 rounded-field border bg-input-bg text-sm',
+                    'transition-colors focus:outline-none focus:ring-4 focus:bg-white',
+                    errors.companyType
+                      ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
+                      : 'border-transparent hover:border-gray-300 focus:border-blue-500 focus:ring-blue-100',
+                  )}
+                  {...register('companyType')}
+                >
+                  <option value="" disabled>اختر نوع النشاط</option>
+                  {COMPANY_TYPE_OPTIONS.map((value) => (
+                    <option key={value} value={value}>{COMPANY_TYPE_AR[value]}</option>
+                  ))}
+                </select>
+                <FormError message={errors.companyType?.message} />
+              </div>
             </div>
+
+            {/* Tax number + the exemption escape hatch */}
             <div>
-              <Label htmlFor="taxNumber" required>الرقم الضريبي</Label>
+              <Label htmlFor="taxNumber" required={!taxExempt}>الرقم الضريبي</Label>
               <Input
                 id="taxNumber"
-                placeholder="SY-12345678"
+                placeholder={taxExempt ? '—' : 'SY-12345678'}
+                disabled={taxExempt}
+                aria-disabled={taxExempt}
                 error={!!errors.taxNumber}
+                className={cn(taxExempt && 'bg-gray-100 text-gray-400 cursor-not-allowed')}
                 {...register('taxNumber')}
               />
               <FormError message={errors.taxNumber?.message} />
+
+              <label className="mt-2 flex items-center gap-2 cursor-pointer select-none w-fit">
+                <input
+                  type="checkbox"
+                  checked={taxExempt}
+                  onChange={(e) => toggleExempt(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                />
+                <span className="text-xs text-gray-600">ليس لدي رقم ضريبي / معفى</span>
+              </label>
             </div>
+
+            <p className="flex items-start gap-2 text-xs text-blue-800 bg-blue-100/60 rounded-lg p-2.5">
+              <Clock className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              يُراجع فريقنا حسابات الأعمال قبل تفعيلها. ستتمكن من تصفح المنصة فوراً، وتُفتح أقسام
+              المتجر وإضافة الإعلانات والمحفظة بعد الموافقة.
+            </p>
           </div>
         )}
 
-        {/* ── Name fields ── */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="firstName" required>الاسم الأول</Label>
-            <Input
-              id="firstName"
-              type="text"
-              autoComplete="given-name"
-              placeholder="مثال: أحمد"
-              error={!!errors.firstName}
-              {...register('firstName')}
-            />
-            <FormError message={errors.firstName?.message} />
+        {/* ── Name fields (individual only — the API stores no person name for a business) ── */}
+        {!isCorporate && (
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="firstName" required>الاسم الأول</Label>
+              <Input
+                id="firstName"
+                type="text"
+                autoComplete="given-name"
+                placeholder="مثال: أحمد"
+                error={!!errors.firstName}
+                {...register('firstName')}
+              />
+              <FormError message={errors.firstName?.message} />
+            </div>
+            <div>
+              <Label htmlFor="lastName" required>الاسم الأخير</Label>
+              <Input
+                id="lastName"
+                type="text"
+                autoComplete="family-name"
+                placeholder="مثال: الحسن"
+                error={!!errors.lastName}
+                {...register('lastName')}
+              />
+              <FormError message={errors.lastName?.message} />
+            </div>
           </div>
-          <div>
-            <Label htmlFor="lastName" required>الاسم الأخير</Label>
-            <Input
-              id="lastName"
-              type="text"
-              autoComplete="family-name"
-              placeholder="مثال: الحسن"
-              error={!!errors.lastName}
-              {...register('lastName')}
-            />
-            <FormError message={errors.lastName?.message} />
-          </div>
-        </div>
+        )}
 
         {/* ── Email ── */}
         <div>
@@ -254,6 +392,9 @@ export function RegisterForm() {
               value={selectedCountryCode}
               onChange={(e) => {
                 setSelectedCountryCode(e.target.value);
+                // The composed length is what the API validates — keep the schema's
+                // copy of the code in sync so it re-checks against the new prefix.
+                setValue('countryCode', e.target.value);
                 setValue('phone', localPhone, { shouldValidate: !!localPhone });
               }}
               className="shrink-0 bg-gray-50 border-none outline-none py-2.5 ps-2 pe-1 text-sm text-gray-700 cursor-pointer rounded-s-lg"
@@ -293,7 +434,7 @@ export function RegisterForm() {
               id="reg-password"
               type={showPassword ? 'text' : 'password'}
               autoComplete="new-password"
-              placeholder="8 أحرف كحد أدنى"
+              placeholder="8 أحرف، حرف كبير ورقم"
               error={!!errors.password}
               className="pe-10"
               {...register('password')}
@@ -345,7 +486,7 @@ export function RegisterForm() {
         </p>
 
         <Button type="submit" className="w-full" size="lg" loading={isSubmitting}>
-          إنشاء حساب
+          {isCorporate ? 'إنشاء حساب أعمال' : 'إنشاء حساب'}
         </Button>
       </form>
 

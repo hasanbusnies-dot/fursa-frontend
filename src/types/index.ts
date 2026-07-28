@@ -1,6 +1,14 @@
+/**
+ * The `user.profile` block on the auth responses. For an INDIVIDUAL it is the person
+ * (firstName/lastName); for a CORPORATE user the backend puts the COMPANY there instead
+ * — a business has no person name on the API — so first/last are absent and companyName
+ * is set. Both are optional for that reason: use `displayNameOf(user)` rather than
+ * interpolating the fields directly.
+ */
 export interface UserProfile {
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
+  companyName?: string;
 }
 
 export interface CorporateProfile {

@@ -8,6 +8,7 @@ import {
 import { toast } from 'sonner';
 import {
   agentStoresService,
+  COMPANY_TYPE_AR,
   type CompanyType,
   type RegisterStoreInput,
 } from '@/services/stores.service';
@@ -16,14 +17,15 @@ import { ApiError } from '@/services/api';
 // Zod v4 dropped ZodString.email() — validate with the same regex the consumer login uses.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Company-type options (the dropdown is optional → leading blank choice).
+// Company-type options (the dropdown is optional → leading blank choice). Labels come
+// from the shared COMPANY_TYPE_AR so this form, consumer signup and the admin store
+// detail can never drift apart on what a business type is called.
 const COMPANY_TYPES: { value: CompanyType | ''; label: string }[] = [
-  { value: '',                   label: 'نوع النشاط (اختياري)' },
-  { value: 'REAL_ESTATE_AGENCY', label: 'مكتب عقاري' },
-  { value: 'CAR_SHOWROOM',       label: 'معرض سيارات' },
-  { value: 'STORE',              label: 'متجر' },
-  { value: 'SERVICES',           label: 'خدمات' },
-  { value: 'OTHER',              label: 'أخرى' },
+  { value: '', label: 'نوع النشاط (اختياري)' },
+  ...(Object.keys(COMPANY_TYPE_AR) as CompanyType[]).map((value) => ({
+    value,
+    label: COMPANY_TYPE_AR[value],
+  })),
 ];
 
 const inputCls =

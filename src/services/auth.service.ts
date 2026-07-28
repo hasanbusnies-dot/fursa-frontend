@@ -1,5 +1,6 @@
 import { api } from './api';
 import type { User } from '@/types';
+import type { CompanyType, StoreStatus } from './stores.service';
 
 export interface LoginPayload {
   identifier: string;
@@ -14,15 +15,42 @@ export interface IndividualRegisterPayload {
   phone: string;
 }
 
-export interface CorporateRegisterPayload extends IndividualRegisterPayload {
+/**
+ * POST /auth/register/corporate — mirrors registerCorporateSchema exactly.
+ *
+ * Deliberately does NOT extend IndividualRegisterPayload: the corporate schema has no
+ * firstName/lastName, and zod strips unknown keys silently, so sending them looked like
+ * it worked while the person's name was thrown away. A business is identified by
+ * companyName alone.
+ *
+ * taxNumber and taxExempt are MUTUALLY EXCLUSIVE — the backend 400s on
+ * `taxExempt && taxNumber` ("A tax-exempt business must not supply a tax number"), so an
+ * exempt business must omit the number entirely rather than send an empty string.
+ */
+export interface CorporateRegisterPayload {
+  phone: string;
+  email?: string;
+  password: string;
   companyName: string;
-  taxNumber: string;
+  companyType: CompanyType;
+  taxNumber?: string;
+  taxExempt?: boolean;
+}
+
+/** One-step corporate signup also creates the owner's PENDING store — this block is the
+ *  «قيد المراجعة» signal at the moment of registration. Absent on individual signup. */
+export interface RegisteredStore {
+  id: string;
+  name: string;
+  status: StoreStatus;
+  pendingReview: boolean;
 }
 
 export interface AuthResponse {
   token: string;
   refreshToken: string;
   user: User;
+  store?: RegisteredStore;
 }
 
 // Exact backend envelope:
@@ -35,6 +63,8 @@ type RawAuthResponse = {
       refreshToken?: string;
     };
     user?: User;
+    // Corporate registration only — the PENDING store created in the same transaction.
+    store?: RegisteredStore;
   };
 };
 
@@ -47,7 +77,7 @@ function extractAuth(raw: RawAuthResponse): AuthResponse {
     throw new Error('Invalid server response: missing token or user.');
   }
 
-  return { token, refreshToken, user };
+  return { token, refreshToken, user, store: raw.data?.store };
 }
 
 export const authService = {
