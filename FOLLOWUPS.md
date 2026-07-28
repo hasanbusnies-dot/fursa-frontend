@@ -1,5 +1,23 @@
 # Follow-ups (tracked, not dropped)
 
+## Full-app i18n / multi-language support — POST-LAUNCH PROJECT (logged 2026-07-28)
+The app is Arabic-hardcoded end to end: literal Arabic strings inline in every
+component, `dir="rtl"` + `lang="ar"` on the root layout, RTL-only layout
+assumptions (logical properties everywhere, but also RTL-native behaviours like
+the gallery's scroll-snap direction), Arabic-only enum→label maps
+(`ENUM_AR`, `STATUS_LABELS`, `TECH_SPECS[].label_ar`, …) and Arabic catalog
+copy served by the backend. Real i18n therefore means migrating the whole app
+(string extraction into a message catalog, a locale router/segment, per-locale
+`dir`, plus a backend-side story for catalog/category names) — not a component
+change. That is a separate project, deliberately NOT started before launch.
+
+What was done instead (2026-07-28): the 76 vehicle features in
+`src/components/listings/wizard/schema.ts` gained an `label_ar` display field
+while keeping the English `value` as the stored identifier. That pattern —
+stable English key, Arabic label beside it — is the shape any future i18n
+migration should generalise (`label_ar` → `labels: { ar, en, … }`), so it is a
+step toward i18n rather than something to undo.
+
 ## PWA/TWA pre-splash ↔ our splash alignment — DONE for the image splash 2026-07-22
 Chrome/Android shows its manifest-derived launch screen (background_color +
 icon; not removable for installed PWAs) BEFORE the web app loads and our splash

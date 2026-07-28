@@ -19,7 +19,8 @@ import { offersService } from '@/services/offers.service';
 import { useAuthStore } from '@/store/auth.store';
 import type { Listing, VehicleDetails } from '@/types';
 import {
-  TECH_SPECS, PANEL_LABELS, STATUS_COLORS, STATUS_LABELS,
+  TECH_SPEC_VALUES, TECH_SPEC_CATEGORY_AR, techSpecLabel,
+  PANEL_LABELS, STATUS_COLORS, STATUS_LABELS,
   type DamageStatus,
 } from '@/components/listings/wizard/schema';
 import { CarDamageDiagram } from '@/components/listings/CarDamageDiagram';
@@ -89,13 +90,17 @@ function normalizeDamageReport(
 
 // ── Tech specs grouping ───────────────────────────────────────────────────────
 
+// Keeps only the features this listing actually HAS, bucketed under their
+// section, in catalog order. Values the catalog no longer knows fall into «أخرى»
+// rather than being dropped.
 function groupTechSpecs(flat: string[]): { category: string; items: string[] }[] {
   const groups: { category: string; items: string[] }[] = [];
-  for (const [cat, items] of Object.entries(TECH_SPECS)) {
-    const matched = flat.filter((s) => (items as readonly string[]).includes(s));
+  const owned = new Set(flat);
+  for (const [cat, values] of Object.entries(TECH_SPEC_VALUES)) {
+    const matched = values.filter((v) => owned.has(v));
     if (matched.length) groups.push({ category: cat, items: matched });
   }
-  const allKnown = new Set(Object.values(TECH_SPECS).flat() as string[]);
+  const allKnown = new Set(Object.values(TECH_SPEC_VALUES).flat());
   const other = flat.filter((s) => !allKnown.has(s));
   if (other.length) groups.push({ category: 'أخرى', items: other });
   return groups;
@@ -368,99 +373,11 @@ function DamageMap({ damage }: { damage: Record<string, DamageEntry> }) {
   );
 }
 
-// ── Tech specs translation maps ───────────────────────────────────────────────
-
-const CAT_AR: Record<string, string> = {
-  Safety:     'الأمان والسلامة',
-  Interior:   'التصميم الداخلي',
-  Exterior:   'المظهر الخارجي',
-  Multimedia: 'الوسائط المتعددة',
-};
-
-const SPEC_AR: Record<string, string> = {
-  // Safety
-  'ABS':                          'نظام منع انغلاق المكابح (ABS)',
-  'EBD':                          'توزيع قوة الفرامل (EBD)',
-  'Electronic Stability Control': 'نظام الثبات الإلكتروني (ESC)',
-  'Traction Control':             'نظام مكافحة الانزلاق',
-  'Hill Start Assist':            'مساعد الانطلاق على المنحدرات',
-  'Brake Assist':                 'مساعد الفرملة الطارئة',
-  'Driver Airbag':                'وسادة هوائية للسائق',
-  'Passenger Airbag':             'وسادة هوائية للراكب',
-  'Side Airbags':                 'وسائد هوائية جانبية',
-  'Curtain Airbags':              'وسائد هوائية ستائرية',
-  'Knee Airbag':                  'وسادة هوائية للركبة',
-  'Forward Collision Warning':    'تحذير التصادم الأمامي',
-  'Lane Departure Warning':       'تنبيه الخروج عن المسار',
-  'Lane Keep Assist':             'مساعد الحفاظ على المسار',
-  'Blind Spot Monitor':           'مراقبة النقطة العمياء',
-  'Rear Cross-Traffic Alert':     'تنبيه حركة المرور الخلفية',
-  'Adaptive Cruise Control':      'مثبت السرعة التكيّفي',
-  'Rear Camera':                  'كاميرا خلفية',
-  'Parking Sensors (Front)':      'حساسات ركن أمامية',
-  'Parking Sensors (Rear)':       'حساسات ركن خلفية',
-  '360° Camera':                  'كاميرا 360 درجة',
-  // Interior
-  'Leather Seats':                'مقاعد جلدية',
-  'Heated Seats (Front)':         'مقاعد أمامية مدفأة',
-  'Heated Seats (Rear)':          'مقاعد خلفية مدفأة',
-  'Ventilated Seats':             'مقاعد مهواة',
-  'Massage Seats':                'مقاعد مساج',
-  'Power Driver Seat':            'مقعد السائق الكهربائي',
-  'Power Passenger Seat':         'مقعد الراكب الكهربائي',
-  'Memory Seats':                 'ذاكرة إعدادات المقعد',
-  'Sunroof':                      'فتحة سقف',
-  'Panoramic Roof':               'سقف بانورامي',
-  'Automatic Climate Control':    'مكيف هواء أوتوماتيكي',
-  'Dual-Zone Climate':            'تكييف بمنطقتين مستقلتين',
-  'Tri-Zone Climate':             'تكييف بثلاث مناطق مستقلة',
-  'Navigation System':            'نظام ملاحة (GPS)',
-  'Head-Up Display':              'شاشة عرض أمامية (HUD)',
-  'Digital Dashboard':            'لوحة عدادات رقمية',
-  'Wireless Charging':            'شحن لاسلكي',
-  'USB-A Ports':                  'منافذ USB-A',
-  'USB-C Ports':                  'منافذ USB-C',
-  'Ambient Lighting':             'إضاءة محيطية',
-  // Exterior
-  'Alloy Wheels':                 'عجلات ألمنيوم',
-  '17" Wheels':                   'عجلات 17 بوصة',
-  '18" Wheels':                   'عجلات 18 بوصة',
-  '19" Wheels':                   'عجلات 19 بوصة',
-  '20"+ Wheels':                  'عجلات 20 بوصة وأكثر',
-  'LED Headlights':               'مصابيح أمامية LED',
-  'Matrix LED Headlights':        'مصابيح LED ماتريكس',
-  'LED Taillights':               'مصابيح خلفية LED',
-  'Daytime Running Lights':       'أضواء نهارية (DRL)',
-  'Auto Headlights':              'إضاءة أوتوماتيكية',
-  'Fog Lights':                   'مصابيح ضباب',
-  'Cornering Lights':             'مصابيح التحويل',
-  'Power-Folding Mirrors':        'مرايا قابلة للطي كهربائياً',
-  'Heated Mirrors':               'مرايا مدفأة',
-  'Auto-Dimming Mirrors':         'مرايا ذاتية التعتيم',
-  'Keyless Entry':                'دخول بدون مفتاح',
-  'Keyless Start':                'تشغيل بدون مفتاح',
-  'Power Tailgate':               'باب خلفي كهربائي',
-  'Roof Rails':                   'حوامل سقف',
-  'Tow Hook':                     'خطاف سحب',
-  // Multimedia
-  'AM/FM Radio':                  'راديو AM/FM',
-  'DAB+ Radio':                   'راديو DAB+',
-  'Bluetooth':                    'بلوتوث',
-  'Wi-Fi Hotspot':                'نقطة Wi-Fi',
-  'Apple CarPlay':                'آبل كار بلاي',
-  'Android Auto':                 'أندرويد أوتو',
-  'MirrorLink':                   'MirrorLink',
-  'Premium Sound System':         'نظام صوتي ممتاز',
-  'Subwoofer':                    'مضخم صوت',
-  '8+ Speakers':                  '8 مكبرات صوت وأكثر',
-  'Rear Entertainment Screen':    'شاشة ترفيه خلفية',
-  'Voice Control':                'تحكم صوتي',
-  'Steering Wheel Controls':      'أزرار تحكم بالمقود',
-  'Wireless Phone Charging':      'شحن الهاتف لاسلكياً',
-  'Multiple USB Ports':           'منافذ USB متعددة',
-};
-
 // ── Technical Specs Grid ──────────────────────────────────────────────────────
+// Section headers run full width with the features laid out beneath them in a
+// grid (2 cols mobile → 3 desktop), mirroring the add-listing picker. Arabic
+// labels come from the shared catalog in wizard/schema.ts — display only; the
+// stored values are the English identifiers.
 
 function TechSpecsGrid({ specs }: { specs: string[] }) {
   const groups = groupTechSpecs(specs);
@@ -470,22 +387,25 @@ function TechSpecsGrid({ specs }: { specs: string[] }) {
   }
 
   return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="space-y-5">
       {groups.map(({ category, items }) => (
-        <div key={category}>
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
-            {CAT_AR[category] ?? category}
-          </p>
-          <ul className="space-y-2">
+        <div key={category} className="rounded-xl border border-gray-200 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50/80 border-b border-gray-200">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+              {TECH_SPEC_CATEGORY_AR[category as keyof typeof TECH_SPEC_CATEGORY_AR] ?? category}
+            </p>
+            <span className="text-xs text-gray-400">({items.length})</span>
+          </div>
+          <div className="px-4 py-3 grid grid-cols-2 md:grid-cols-3 gap-y-2.5 gap-x-3">
             {items.map((item) => (
-              <li key={item} className="flex items-center gap-2 text-sm text-gray-700">
-                <span className="w-4 h-4 rounded-full bg-green-100 border border-green-300 flex items-center justify-center shrink-0">
+              <div key={item} className="flex items-start gap-2 text-[13px] sm:text-sm text-gray-700 leading-snug">
+                <span className="mt-0.5 w-4 h-4 rounded-full bg-green-100 border border-green-300 flex items-center justify-center shrink-0">
                   <Check className="w-2.5 h-2.5 text-green-600" strokeWidth={3} />
                 </span>
-                {SPEC_AR[item] ?? item}
-              </li>
+                <span>{techSpecLabel(item)}</span>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       ))}
     </div>

@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { ChevronDown, Check } from 'lucide-react';
-import type { WizardFormData, TechSpecCategory } from './schema';
-import { TECH_SPECS } from './schema';
+import type { WizardFormData, TechSpecCategory, TechSpecDef } from './schema';
+import { TECH_SPECS, TECH_SPEC_VALUES, TECH_SPEC_CATEGORY_AR } from './schema';
 
 interface Props { form: UseFormReturn<WizardFormData, any, WizardFormData> }
 
@@ -15,23 +15,16 @@ const CATEGORY_COLORS: Record<TechSpecCategory, string> = {
   Multimedia: 'text-green-600 bg-green-50 border-green-200',
 };
 
-const CATEGORY_AR: Record<TechSpecCategory, string> = {
-  Safety:     'الأمان والسلامة',
-  Interior:   'التصميم الداخلي',
-  Exterior:   'المظهر الخارجي',
-  Multimedia: 'الوسائط المتعددة',
-};
-
 function AccordionSection({
   category, items, selected, onToggle,
 }: {
   category: TechSpecCategory;
-  items: readonly string[];
+  items: readonly TechSpecDef[];
   selected: string[];
   onToggle: (item: string) => void;
 }) {
   const [open, setOpen] = useState(true);
-  const checkedCount = items.filter((i) => selected.includes(i)).length;
+  const checkedCount = items.filter((i) => selected.includes(i.value)).length;
 
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden">
@@ -43,7 +36,7 @@ function AccordionSection({
       >
         <div className="flex items-center gap-2">
           <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${CATEGORY_COLORS[category]}`}>
-            {CATEGORY_AR[category]}
+            {TECH_SPEC_CATEGORY_AR[category]}
           </span>
           {checkedCount > 0 && (
             <span className="text-xs text-gray-500 font-medium">
@@ -56,19 +49,23 @@ function AccordionSection({
         />
       </button>
 
-      {/* Checkbox grid */}
+      {/* Checkbox grid — 2 columns on mobile, 3 from md up. Arabic labels wrap,
+          so rows align at the top rather than centring on a taller neighbour. */}
       {open && (
-        <div className="px-4 py-3 grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4">
-          {items.map((item) => {
-            const checked = selected.includes(item);
+        <div className="px-4 py-3 grid grid-cols-2 md:grid-cols-3 gap-y-2.5 gap-x-3">
+          {items.map(({ value, label_ar }) => {
+            const checked = selected.includes(value);
             return (
-              <label
-                key={item}
-                className="flex items-center gap-2.5 cursor-pointer group"
+              <button
+                key={value}
+                type="button"
+                role="checkbox"
+                aria-checked={checked}
+                onClick={() => onToggle(value)}
+                className="flex items-start gap-2 text-start cursor-pointer group py-0.5"
               >
                 <span
-                  onClick={() => onToggle(item)}
-                  className={`shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                  className={`shrink-0 mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                     checked
                       ? 'bg-blue-600 border-blue-600'
                       : 'border-gray-300 bg-white group-hover:border-blue-400'
@@ -77,12 +74,13 @@ function AccordionSection({
                   {checked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                 </span>
                 <span
-                  onClick={() => onToggle(item)}
-                  className={`text-sm transition-colors ${checked ? 'text-gray-900 font-medium' : 'text-gray-600'}`}
+                  className={`text-[13px] sm:text-sm leading-snug transition-colors ${
+                    checked ? 'text-gray-900 font-medium' : 'text-gray-600'
+                  }`}
                 >
-                  {item}
+                  {label_ar}
                 </span>
-              </label>
+              </button>
             );
           })}
         </div>
@@ -104,16 +102,15 @@ export function Step4TechSpecs({ form }: Props) {
   }
 
   function selectAll(category: TechSpecCategory) {
-    const items = [...TECH_SPECS[category]];
     const current = getValues('technicalSpecs') ?? [];
-    const merged = Array.from(new Set([...current, ...items]));
+    const merged = Array.from(new Set([...current, ...TECH_SPEC_VALUES[category]]));
     setValue('technicalSpecs', merged);
   }
 
   function clearAll(category: TechSpecCategory) {
-    const items = new Set(TECH_SPECS[category]);
+    const items = new Set(TECH_SPEC_VALUES[category]);
     const current = getValues('technicalSpecs') ?? [];
-    setValue('technicalSpecs', current.filter((s) => !items.has(s as never)));
+    setValue('technicalSpecs', current.filter((s) => !items.has(s)));
   }
 
   const totalSelected = selected.length;

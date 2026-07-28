@@ -64,39 +64,129 @@ export function getDefaultDamageReport(): DamageReportState {
 
 // ── Tech specs ────────────────────────────────────────────────────────────────
 
+/**
+ * A vehicle feature. `value` is the STORED identifier — it is what goes into
+ * `listing.technicalSpecs[]` (a plain `string[]` on the API) and what every
+ * already-saved listing contains. It is an API contract: never rename, never
+ * translate at write time. `label_ar` is DISPLAY ONLY.
+ */
+export type TechSpecDef = { value: string; label_ar: string };
+
 export const TECH_SPECS = {
   Safety: [
-    'ABS', 'EBD', 'Electronic Stability Control', 'Traction Control', 'Hill Start Assist',
-    'Brake Assist', 'Driver Airbag', 'Passenger Airbag', 'Side Airbags',
-    'Curtain Airbags', 'Knee Airbag', 'Forward Collision Warning',
-    'Lane Departure Warning', 'Lane Keep Assist', 'Blind Spot Monitor',
-    'Rear Cross-Traffic Alert', 'Adaptive Cruise Control',
-    'Rear Camera', 'Parking Sensors (Front)', 'Parking Sensors (Rear)', '360° Camera',
+    { value: 'ABS',                          label_ar: 'نظام منع انغلاق المكابح (ABS)' },
+    { value: 'EBD',                          label_ar: 'توزيع قوة الفرملة (EBD)' },
+    { value: 'Electronic Stability Control', label_ar: 'نظام الثبات الإلكتروني (ESC)' },
+    { value: 'Traction Control',             label_ar: 'نظام التحكم بالجر (TCS)' },
+    { value: 'Hill Start Assist',            label_ar: 'مساعد الانطلاق على المرتفعات' },
+    { value: 'Brake Assist',                 label_ar: 'مساعد الفرملة الطارئة' },
+    { value: 'Driver Airbag',                label_ar: 'وسادة هوائية للسائق' },
+    { value: 'Passenger Airbag',             label_ar: 'وسادة هوائية للراكب' },
+    { value: 'Side Airbags',                 label_ar: 'وسائد هوائية جانبية' },
+    { value: 'Curtain Airbags',              label_ar: 'وسائد هوائية ستائرية' },
+    { value: 'Knee Airbag',                  label_ar: 'وسادة هوائية للركبة' },
+    { value: 'Forward Collision Warning',    label_ar: 'تحذير التصادم الأمامي' },
+    { value: 'Lane Departure Warning',       label_ar: 'تحذير مغادرة المسار' },
+    { value: 'Lane Keep Assist',             label_ar: 'مساعد الحفاظ على المسار' },
+    { value: 'Blind Spot Monitor',           label_ar: 'مراقبة النقطة العمياء' },
+    { value: 'Rear Cross-Traffic Alert',     label_ar: 'تنبيه المرور الخلفي المتقاطع' },
+    { value: 'Adaptive Cruise Control',      label_ar: 'مثبت سرعة تكيفي' },
+    { value: 'Rear Camera',                  label_ar: 'كاميرا خلفية' },
+    { value: 'Parking Sensors (Front)',      label_ar: 'حساسات ركن أمامية' },
+    { value: 'Parking Sensors (Rear)',       label_ar: 'حساسات ركن خلفية' },
+    { value: '360° Camera',                  label_ar: 'كاميرا محيطية 360°' },
   ],
   Interior: [
-    'Leather Seats', 'Heated Seats (Front)', 'Heated Seats (Rear)', 'Ventilated Seats',
-    'Massage Seats', 'Power Driver Seat', 'Power Passenger Seat', 'Memory Seats',
-    'Sunroof', 'Panoramic Roof', 'Automatic Climate Control', 'Dual-Zone Climate',
-    'Tri-Zone Climate', 'Navigation System', 'Head-Up Display', 'Digital Dashboard',
-    'Wireless Charging', 'USB-A Ports', 'USB-C Ports', 'Ambient Lighting',
+    { value: 'Leather Seats',                label_ar: 'مقاعد جلد' },
+    { value: 'Heated Seats (Front)',         label_ar: 'مقاعد أمامية مدفأة' },
+    { value: 'Heated Seats (Rear)',          label_ar: 'مقاعد خلفية مدفأة' },
+    { value: 'Ventilated Seats',             label_ar: 'مقاعد مهواة' },
+    { value: 'Massage Seats',                label_ar: 'مقاعد بخاصية المساج' },
+    { value: 'Power Driver Seat',            label_ar: 'مقعد سائق كهربائي' },
+    { value: 'Power Passenger Seat',         label_ar: 'مقعد راكب كهربائي' },
+    { value: 'Memory Seats',                 label_ar: 'ذاكرة وضعيات المقاعد' },
+    { value: 'Sunroof',                      label_ar: 'فتحة سقف' },
+    { value: 'Panoramic Roof',               label_ar: 'فتحة سقف بانورامية' },
+    { value: 'Automatic Climate Control',    label_ar: 'مكيف أوتوماتيكي' },
+    { value: 'Dual-Zone Climate',            label_ar: 'تكييف بمنطقتين' },
+    { value: 'Tri-Zone Climate',             label_ar: 'تكييف بثلاث مناطق' },
+    { value: 'Navigation System',            label_ar: 'نظام ملاحة' },
+    { value: 'Head-Up Display',              label_ar: 'شاشة عرض أمامية (HUD)' },
+    { value: 'Digital Dashboard',            label_ar: 'لوحة عدادات رقمية' },
+    { value: 'Wireless Charging',            label_ar: 'شحن لاسلكي' },
+    { value: 'USB-A Ports',                  label_ar: 'منافذ USB-A' },
+    { value: 'USB-C Ports',                  label_ar: 'منافذ USB-C' },
+    { value: 'Ambient Lighting',             label_ar: 'إضاءة داخلية محيطية' },
   ],
   Exterior: [
-    'Alloy Wheels', '17" Wheels', '18" Wheels', '19" Wheels', '20"+ Wheels',
-    'LED Headlights', 'Matrix LED Headlights', 'LED Taillights',
-    'Daytime Running Lights', 'Auto Headlights', 'Fog Lights', 'Cornering Lights',
-    'Power-Folding Mirrors', 'Heated Mirrors', 'Auto-Dimming Mirrors',
-    'Keyless Entry', 'Keyless Start', 'Power Tailgate', 'Roof Rails', 'Tow Hook',
+    { value: 'Alloy Wheels',                 label_ar: 'جنوط ألمنيوم' },
+    { value: '17" Wheels',                   label_ar: 'جنوط 17 بوصة' },
+    { value: '18" Wheels',                   label_ar: 'جنوط 18 بوصة' },
+    { value: '19" Wheels',                   label_ar: 'جنوط 19 بوصة' },
+    { value: '20"+ Wheels',                  label_ar: 'جنوط 20 بوصة فأكثر' },
+    { value: 'LED Headlights',               label_ar: 'مصابيح أمامية LED' },
+    { value: 'Matrix LED Headlights',        label_ar: 'مصابيح LED ماتريكس' },
+    { value: 'LED Taillights',               label_ar: 'مصابيح خلفية LED' },
+    { value: 'Daytime Running Lights',       label_ar: 'أضواء نهارية (DRL)' },
+    { value: 'Auto Headlights',              label_ar: 'إضاءة أمامية أوتوماتيكية' },
+    { value: 'Fog Lights',                   label_ar: 'مصابيح ضباب' },
+    { value: 'Cornering Lights',             label_ar: 'مصابيح انعطاف' },
+    { value: 'Power-Folding Mirrors',        label_ar: 'مرايا كهربائية قابلة للطي' },
+    { value: 'Heated Mirrors',               label_ar: 'مرايا مدفأة' },
+    { value: 'Auto-Dimming Mirrors',         label_ar: 'مرايا ذاتية التعتيم' },
+    { value: 'Keyless Entry',                label_ar: 'دخول بدون مفتاح' },
+    { value: 'Keyless Start',                label_ar: 'تشغيل بزر (بدون مفتاح)' },
+    { value: 'Power Tailgate',               label_ar: 'باب صندوق كهربائي' },
+    { value: 'Roof Rails',                   label_ar: 'قضبان سقف' },
+    { value: 'Tow Hook',                     label_ar: 'خطاف قطر' },
   ],
   Multimedia: [
-    'AM/FM Radio', 'DAB+ Radio', 'Bluetooth', 'Wi-Fi Hotspot',
-    'Apple CarPlay', 'Android Auto', 'MirrorLink',
-    'Premium Sound System', 'Subwoofer', '8+ Speakers',
-    'Rear Entertainment Screen', 'Voice Control', 'Steering Wheel Controls',
-    'Wireless Phone Charging', 'Multiple USB Ports',
+    { value: 'AM/FM Radio',                  label_ar: 'راديو AM/FM' },
+    { value: 'DAB+ Radio',                   label_ar: 'راديو رقمي DAB+' },
+    { value: 'Bluetooth',                    label_ar: 'بلوتوث' },
+    { value: 'Wi-Fi Hotspot',                label_ar: 'نقطة اتصال Wi-Fi' },
+    { value: 'Apple CarPlay',                label_ar: 'آبل كاربلاي' },
+    { value: 'Android Auto',                 label_ar: 'أندرويد أوتو' },
+    { value: 'MirrorLink',                   label_ar: 'ميرور لينك' },
+    { value: 'Premium Sound System',         label_ar: 'نظام صوتي ممتاز' },
+    { value: 'Subwoofer',                    label_ar: 'مضخم صوت (سبويفر)' },
+    { value: '8+ Speakers',                  label_ar: '8 سماعات فأكثر' },
+    { value: 'Rear Entertainment Screen',    label_ar: 'شاشة ترفيه خلفية' },
+    { value: 'Voice Control',                label_ar: 'تحكم صوتي' },
+    { value: 'Steering Wheel Controls',      label_ar: 'أزرار تحكم على المقود' },
+    { value: 'Wireless Phone Charging',      label_ar: 'شحن هاتف لاسلكي' },
+    { value: 'Multiple USB Ports',           label_ar: 'منافذ USB متعددة' },
   ],
-} as const satisfies Record<string, readonly string[]>;
+} as const satisfies Record<string, readonly TechSpecDef[]>;
 
 export type TechSpecCategory = keyof typeof TECH_SPECS;
+
+/** Arabic headers for the four feature sections — shared by the wizard and the detail page. */
+export const TECH_SPEC_CATEGORY_AR: Record<TechSpecCategory, string> = {
+  Safety:     'الأمان والسلامة',
+  Interior:   'التصميم الداخلي',
+  Exterior:   'المظهر الخارجي',
+  Multimedia: 'الوسائط المتعددة',
+};
+
+/** Stored values per category — what actually goes into `technicalSpecs[]`. */
+export const TECH_SPEC_VALUES: Record<TechSpecCategory, string[]> = Object.fromEntries(
+  (Object.entries(TECH_SPECS) as [TechSpecCategory, readonly TechSpecDef[]][])
+    .map(([cat, defs]) => [cat, defs.map((d) => d.value)]),
+) as Record<TechSpecCategory, string[]>;
+
+const TECH_SPEC_LABELS_AR: Record<string, string> = Object.fromEntries(
+  Object.values(TECH_SPECS).flat().map((d) => [d.value, d.label_ar]),
+);
+
+/**
+ * Display label for a stored feature value. Unknown values (older listings, or
+ * a value the backend grew before we did) fall back to the raw string rather
+ * than disappearing.
+ */
+export function techSpecLabel(value: string): string {
+  return TECH_SPEC_LABELS_AR[value] ?? value;
+}
 
 // ── Location ──────────────────────────────────────────────────────────────────
 

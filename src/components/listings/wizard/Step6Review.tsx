@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { Send, Loader2, MapPin, AlertTriangle, CheckCircle } from 'lucide-react';
 import type { WizardFormData, DamageReportState } from './schema';
-import { SVG_PANELS, STATUS_LABELS } from './schema';
+import { SVG_PANELS, STATUS_LABELS, techSpecLabel } from './schema';
 import type { CatalogState } from './Step0Catalog';
 import type { CatalogFilterDef } from '@/services/catalog.service';
 import { toValidCoords } from '@/lib/map';
@@ -237,7 +237,9 @@ export function Step6Review({ form, catalog, damageReport, photos, isSubmitting,
             ) : (
               <div className="flex flex-wrap gap-1">
                 {d.technicalSpecs!.slice(0, 8).map((spec) => (
-                  <span key={spec} className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full">{spec}</span>
+                  <span key={spec} className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full">
+                    {techSpecLabel(spec)}
+                  </span>
                 ))}
                 {d.technicalSpecs!.length > 8 && (
                   <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">
