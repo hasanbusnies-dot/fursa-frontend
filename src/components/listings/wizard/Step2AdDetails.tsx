@@ -12,6 +12,7 @@ import {
   type LocationValue,
 } from '@/components/listings/LocationCascade';
 import { locationsService } from '@/services/locations.service';
+import { placeholdersFor } from '@/data/listing-placeholders';
 
 // maplibre stays out of the wizard's first load: same lazy boundary as the
 // read-only map on the detail page, and both share one chunk via the base hook.
@@ -19,7 +20,12 @@ const ListingMapPicker = dynamic(() => import('@/components/listings/ListingMapP
   ssr: false,
 });
 
-interface Props { form: UseFormReturn<WizardFormData, any, WizardFormData> }
+interface Props {
+  form: UseFormReturn<WizardFormData, any, WizardFormData>;
+  /** Root catalog slug of the chosen category — selects the example text shown in
+   *  the title/description/price fields. Null before a category is picked ⇒ generic. */
+  rootSlug?: string | null;
+}
 
 const inputCls = (err?: string) =>
   `w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-1 transition-colors ${
@@ -47,8 +53,10 @@ function Field({ label, error, required, children, hint }: {
   );
 }
 
-export function Step2AdDetails({ form }: Props) {
+export function Step2AdDetails({ form, rootSlug }: Props) {
   const { register, setValue, watch, formState: { errors } } = form;
+  // Example text tailored to the category — edit src/data/listing-placeholders.ts.
+  const ph = placeholdersFor(rootSlug);
   const currency      = watch('currency');
   const description   = watch('description') ?? '';
   const acceptsOffers = watch('acceptsOffers') ?? true;
@@ -152,11 +160,11 @@ export function Step2AdDetails({ form }: Props) {
         label="عنوان الإعلان"
         required
         error={errors.title?.message}
-        hint="كن محدداً — مثال: 'تويوتا كامري 2019 موديل 2.5 SE — حالة ممتازة'"
+        hint={ph.titleHint}
       >
         <input
           {...register('title')}
-          placeholder="أدخل عنواناً واضحاً ووصفياً"
+          placeholder={ph.title}
           className={inputCls(errors.title?.message)}
         />
       </Field>
@@ -167,7 +175,7 @@ export function Step2AdDetails({ form }: Props) {
           <textarea
             {...register('description')}
             rows={5}
-            placeholder="صف المركبة بالتفصيل — التاريخ، الإضافات، سبب البيع…"
+            placeholder={ph.description}
             className={`${inputCls(errors.description?.message)} resize-none`}
           />
           <span className={`absolute bottom-2 end-3 text-[10px] ${description.length > 1900 ? 'text-red-400' : 'text-gray-300'}`}>
@@ -228,6 +236,9 @@ export function Step2AdDetails({ form }: Props) {
           <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
             <AlertCircle className="w-3 h-3" />{errors.currency.message}
           </p>
+        )}
+        {ph.priceHint && !errors.price && !errors.currency && (
+          <p className="mt-1 text-xs text-gray-400">{ph.priceHint}</p>
         )}
       </div>
 

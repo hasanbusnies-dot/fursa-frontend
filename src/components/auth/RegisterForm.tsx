@@ -12,25 +12,12 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Label } from '@/components/ui/Label';
 import { FormError } from '@/components/ui/FormError';
+import { PhoneField, DEFAULT_DIAL_CODE } from '@/components/ui/PhoneField';
 import { authService } from '@/services/auth.service';
 import { COMPANY_TYPE_AR, type CompanyType } from '@/services/stores.service';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
-
-const COUNTRY_CODES = [
-  { code: '+963', country: 'سوريا',     flag: '🇸🇾' },
-  { code: '+90',  country: 'تركيا',     flag: '🇹🇷' },
-  { code: '+961', country: 'لبنان',     flag: '🇱🇧' },
-  { code: '+962', country: 'الأردن',    flag: '🇯🇴' },
-  { code: '+964', country: 'العراق',    flag: '🇮🇶' },
-  { code: '+20',  country: 'مصر',       flag: '🇪🇬' },
-  { code: '+966', country: 'السعودية',  flag: '🇸🇦' },
-  { code: '+971', country: 'الإمارات', flag: '🇦🇪' },
-  { code: '+49',  country: 'ألمانيا',   flag: '🇩🇪' },
-  { code: '+46',  country: 'السويد',    flag: '🇸🇪' },
-  { code: '+31',  country: 'هولندا',    flag: '🇳🇱' },
-];
 
 type AccountType = 'INDIVIDUAL' | 'CORPORATE';
 
@@ -122,7 +109,7 @@ export function RegisterForm() {
   const [showPassword,       setShowPassword]       = useState(false);
   const [showConfirm,        setShowConfirm]        = useState(false);
   const [serverError,        setServerError]        = useState<string | null>(null);
-  const [selectedCountryCode, setSelectedCountryCode] = useState('+963');
+  const [selectedCountryCode, setSelectedCountryCode] = useState(DEFAULT_DIAL_CODE);
   const [localPhone,          setLocalPhone]          = useState('');
 
   const {
@@ -135,7 +122,7 @@ export function RegisterForm() {
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { accountType: 'INDIVIDUAL', countryCode: '+963', taxExempt: false },
+    defaultValues: { accountType: 'INDIVIDUAL', countryCode: DEFAULT_DIAL_CODE, taxExempt: false },
   });
 
   const taxExempt = watch('taxExempt');
@@ -380,49 +367,22 @@ export function RegisterForm() {
         {/* ── Phone ── */}
         <div>
           <Label htmlFor="phone" required>رقم الهاتف</Label>
-          <div
-            className={cn(
-              'flex items-center rounded-lg border bg-white transition-colors',
-              'focus-within:ring-2 focus-within:ring-orange-500 focus-within:border-orange-500',
-              errors.phone ? 'border-red-400' : 'border-gray-300'
-            )}
-            dir="ltr"
-          >
-            <select
-              value={selectedCountryCode}
-              onChange={(e) => {
-                setSelectedCountryCode(e.target.value);
-                // The composed length is what the API validates — keep the schema's
-                // copy of the code in sync so it re-checks against the new prefix.
-                setValue('countryCode', e.target.value);
-                setValue('phone', localPhone, { shouldValidate: !!localPhone });
-              }}
-              className="shrink-0 bg-gray-50 border-none outline-none py-2.5 ps-2 pe-1 text-sm text-gray-700 cursor-pointer rounded-s-lg"
-              aria-label="رمز الدولة"
-            >
-              {COUNTRY_CODES.map((item) => (
-                <option key={item.code} value={item.code}>
-                  {item.flag} {item.code}
-                </option>
-              ))}
-            </select>
-            <div className="w-px self-stretch bg-gray-200" />
-            <input
-              id="phone"
-              type="tel"
-              inputMode="numeric"
-              placeholder="9XX XXX XXXX"
-              autoComplete="tel-national"
-              dir="ltr"
-              value={localPhone}
-              onChange={(e) => {
-                const digits = e.target.value.replace(/\D/g, '');
-                setLocalPhone(digits);
-                setValue('phone', digits, { shouldValidate: true });
-              }}
-              className="w-full border-none outline-none py-2.5 px-3 text-sm bg-transparent text-gray-900 placeholder-gray-400"
-            />
-          </div>
+          <PhoneField
+            countryCode={selectedCountryCode}
+            onCountryCodeChange={(code) => {
+              setSelectedCountryCode(code);
+              // The composed length is what the API validates — keep the schema's
+              // copy of the code in sync so it re-checks against the new prefix.
+              setValue('countryCode', code);
+              setValue('phone', localPhone, { shouldValidate: !!localPhone });
+            }}
+            value={localPhone}
+            onValueChange={(digits) => {
+              setLocalPhone(digits);
+              setValue('phone', digits, { shouldValidate: true });
+            }}
+            error={!!errors.phone}
+          />
           <FormError message={errors.phone?.message} />
         </div>
 

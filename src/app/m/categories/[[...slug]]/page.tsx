@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ChevronRight, SearchX } from 'lucide-react';
 import { catalogService, type CatalogNode, type CatalogPathNode } from '@/services/catalog.service';
 import { PROMOTED_SLUGS } from '@/data/curated-categories';
+import { BrandMark } from '@/components/listings/BrandMark';
 import { cn } from '@/lib/utils';
 
 // Mobile category drill-down. Catalog-driven — one level per screen, arbitrary depth,
@@ -145,6 +146,12 @@ export default function MobileCategoryDrillDown() {
                     i < children.length - 1 && 'border-b border-gray-100',
                   )}
                 >
+                  {/* BRAND nodes carry a manufacturer mark — the same source the
+                      add-listing picker and the browse filter use. CATEGORY nodes
+                      ("سيارات للبيع") are not brands and stay text-only. */}
+                  {child.type === 'BRAND' && (
+                    <BrandMark name={child.name} label={child.nameAr} iconUrl={child.icon} />
+                  )}
                   {/* 18px Regular — one deliberate notch under the 20px root list (denser,
                       icon-less surface; 20px would wrap every ≥24-char title). The extreme
                       leaf names wrap either way — leading-snug keeps that tidy. */}

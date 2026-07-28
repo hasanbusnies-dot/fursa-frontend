@@ -151,7 +151,8 @@ export function CreateListingForm({
       key: 'details',
       label: 'تفاصيل الإعلان',
       trigger: ['title', 'description', 'price', 'currency', 'country', 'city'],
-      node: <Step2AdDetails form={form} />,
+      // picked[0] is the ROOT catalog node — it selects the category's example text.
+      node: <Step2AdDetails form={form} rootSlug={catalog.picked[0]?.slug ?? null} />,
     },
     ...(catalog.isVehicle ? [
       { key: 'damage', label: 'تقرير الأضرار',

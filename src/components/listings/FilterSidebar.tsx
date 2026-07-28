@@ -13,6 +13,7 @@ import {
   DRIVETRAIN_OPTIONS, FROM_WHO_OPTIONS, CAR_COLORS, SYRIAN_GOVERNORATES,
 } from '@/components/listings/wizard/schema';
 import { CAR_CATALOG } from '@/data/car-catalog';
+import { BrandMark } from '@/components/listings/BrandMark';
 
 // ── Brand lists ───────────────────────────────────────────────────────────────
 
@@ -2637,14 +2638,17 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                   <li
                     key={brand}
                     className={cn(
-                      'cursor-pointer text-[13px] px-2 py-1 rounded-lg transition-colors hover:text-orange-500',
+                      'flex items-center gap-2 cursor-pointer text-[13px] px-2 py-1 rounded-lg transition-colors hover:text-orange-500',
                       applied.make === brand
                         ? 'text-orange-600 font-semibold bg-orange-50'
                         : 'text-gray-700',
                     )}
                     onClick={() => handleMakeSelect(brand)}
                   >
-                    {brand}
+                    {/* Same marks as the add-listing brand picker — BrandMark keys off
+                        the brand NAME, so these plain strings resolve with no data change. */}
+                    <BrandMark name={brand} size="sm" />
+                    <span className="truncate">{brand}</span>
                   </li>
                 ))}
               </ul>
@@ -2660,14 +2664,17 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
                   <li
                     key={brand}
                     className={cn(
-                      'cursor-pointer text-[13px] px-2 py-1 rounded-lg transition-colors hover:text-orange-500',
+                      'flex items-center gap-2 cursor-pointer text-[13px] px-2 py-1 rounded-lg transition-colors hover:text-orange-500',
                       applied.make === brand
                         ? 'text-orange-600 font-semibold bg-orange-50'
                         : 'text-gray-700',
                     )}
                     onClick={() => handleMakeSelect(brand)}
                   >
-                    {brand}
+                    {/* Same marks as the add-listing brand picker — BrandMark keys off
+                        the brand NAME, so these plain strings resolve with no data change. */}
+                    <BrandMark name={brand} size="sm" />
+                    <span className="truncate">{brand}</span>
                   </li>
                 ))}
               </ul>

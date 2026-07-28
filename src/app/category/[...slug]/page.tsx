@@ -13,6 +13,7 @@ import { categoriesService } from '@/services/categories.service';
 import { catalogService, VEHICLES_ROOT_SLUG, type CatalogNode, type CatalogPathNode } from '@/services/catalog.service';
 import { savedSearchesService } from '@/services/saved-searches.service';
 import { ListingCard } from '@/components/listings/ListingCard';
+import { BrandMark } from '@/components/listings/BrandMark';
 import { useMobileTitle } from '@/components/layout/MobileTopBar';
 import { FavoriteButton } from '@/components/listings/FavoriteButton';
 import { CompareButton } from '@/components/listings/CompareButton';
@@ -350,7 +351,12 @@ function ChildCategoryBox({ title, nodes }: { title: string; nodes: CatalogNode[
             className="flex items-center justify-between gap-2 px-4 py-1.5 text-sm text-gray-700 hover:text-blue-600 hover:bg-blue-100/40 transition-colors"
           >
             <span className="flex items-center gap-2 min-w-0">
-              <span className="w-1 h-1 rounded-full bg-gray-300 shrink-0" />
+              {/* Brand rows get the manufacturer mark instead of the generic bullet. */}
+              {n.type === 'BRAND' ? (
+                <BrandMark name={n.name} label={n.nameAr} iconUrl={n.icon} size="sm" />
+              ) : (
+                <span className="w-1 h-1 rounded-full bg-gray-300 shrink-0" />
+              )}
               <span className="truncate">{n.nameAr}</span>
             </span>
             <span className="text-xs text-gray-400 shrink-0">{n.count.toLocaleString()}</span>
@@ -756,7 +762,12 @@ export default function CategoryPage() {
                     href={`/category/${c.slug}`}
                     className="group flex items-center justify-between gap-3 bg-white rounded-card shadow-pebble px-4 py-3.5 hover:border-blue-300 hover:shadow-sm transition-all"
                   >
-                    <span className="text-sm font-semibold text-gray-800 group-hover:text-blue-600">{c.nameAr}</span>
+                    <span className="flex items-center gap-2.5 min-w-0">
+                      {c.type === 'BRAND' && (
+                        <BrandMark name={c.name} label={c.nameAr} iconUrl={c.icon} />
+                      )}
+                      <span className="text-sm font-semibold text-gray-800 group-hover:text-blue-600 truncate">{c.nameAr}</span>
+                    </span>
                     <span className="flex items-center gap-2 shrink-0">
                       <span className="text-xs text-gray-400">{c.count.toLocaleString()}</span>
                       <ChevronLeft className="w-4 h-4 text-gray-300 group-hover:text-blue-400" />

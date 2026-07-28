@@ -33,41 +33,7 @@ import {
   type CatalogNode,
   type CatalogFilterDef,
 } from '@/services/catalog.service';
-import {
-  siAcura, siAudi, siBmw, siBentley, siCadillac, siChevrolet, siChrysler, siCitroen,
-  siDacia, siFiat, siFord, siHonda, siHyundai, siInfiniti, siJeep, siKia, siLada, siMg,
-  siMaserati, siMazda, siMini, siMitsubishi, siNissan, siOpel, siPeugeot, siPorsche,
-  siProton, siRenault, siSkoda, siSubaru, siSuzuki, siToyota, siVolkswagen, siVolvo,
-} from 'simple-icons';
-import type { SimpleIcon } from 'simple-icons';
-// car-brand-logos (MIT-packaged set) — full-color marks for brands Simple Icons dropped.
-import cblAlfaRomeo from 'car-brand-logos/alfa-romeo-logo.svg';
-import cblByd from 'car-brand-logos/byd-logo.svg';
-import cblBrilliance from 'car-brand-logos/brilliance-logo.png';
-import cblChangan from 'car-brand-logos/changan-logo.png';
-import cblChery from 'car-brand-logos/chery-logo.png';
-import cblDfsk from 'car-brand-logos/dfsk-logo.svg';
-import cblDaewoo from 'car-brand-logos/daewoo-logo.png';
-import cblDaihatsu from 'car-brand-logos/daihatsu-logo.svg';
-import cblDodge from 'car-brand-logos/dodge-logo.png';
-import cblDongfeng from 'car-brand-logos/dongfeng-logo.png';
-import cblGmc from 'car-brand-logos/gmc-logo.png';
-import cblGeely from 'car-brand-logos/geely-logo.svg';
-import cblGenesis from 'car-brand-logos/genesis-logo.svg';
-import cblGreatWall from 'car-brand-logos/great-wall-logo.png';
-import cblIsuzu from 'car-brand-logos/isuzu-logo.svg';
-import cblJac from 'car-brand-logos/jac-logo.png';
-import cblJaguar from 'car-brand-logos/jaguar-logo.svg';
-import cblJetour from 'car-brand-logos/jetour-logo.svg';
-import cblLandRover from 'car-brand-logos/land-rover-logo.svg';
-import cblLexus from 'car-brand-logos/lexus-logo.png';
-import cblLincoln from 'car-brand-logos/lincoln-logo.svg';
-import cblMaybach from 'car-brand-logos/maybach-logo.png';
-import cblMercedesBenz from 'car-brand-logos/mercedes-benz-logo.svg';
-import cblRover from 'car-brand-logos/rover-logo.png';
-import cblSaab from 'car-brand-logos/saab-logo.png';
-import cblSsangYong from 'car-brand-logos/ssangyong-logo.png';
-import cblZotye from 'car-brand-logos/zotye-logo.png';
+import { BrandMark } from '@/components/listings/BrandMark';
 
 export interface CatalogState {
   levels: CatalogNode[][];          // levels[i] = options at depth i
@@ -175,104 +141,6 @@ const ROOT_ICONS: Record<string, LucideIcon> = {
   'video-games':                 Gamepad2,
   'books-and-stationery':        BookOpen,
 };
-
-// ── Brand logos (Simple Icons, CC0) ────────────────────────────────────────────────
-// Normalize a catalog brand `name` (NOT the messy slug) to a logo-map key, accent-insensitive.
-//   "Citroën"/"Citroen" → citroen, "Mercedes-Benz" → mercedesbenz, "MG" → mg
-const normBrand = (s: string) =>
-  s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '');
-
-// Brand name (normalized) → Simple Icons mark. ~34 of the 69 vehicle brands are covered;
-// the rest (Mercedes-Benz, Land Rover, Jaguar, GMC, BYD, …) gracefully use the letter avatar.
-const BRAND_LOGOS: Record<string, SimpleIcon> = {
-  acura: siAcura, audi: siAudi, bmw: siBmw, bentley: siBentley, cadillac: siCadillac,
-  chevrolet: siChevrolet, chrysler: siChrysler, citroen: siCitroen, dacia: siDacia,
-  fiat: siFiat, ford: siFord, honda: siHonda, hyundai: siHyundai, infiniti: siInfiniti,
-  jeep: siJeep, kia: siKia, lada: siLada, mg: siMg, maserati: siMaserati, mazda: siMazda,
-  mini: siMini, mitsubishi: siMitsubishi, nissan: siNissan, opel: siOpel, peugeot: siPeugeot,
-  porsche: siPorsche, proton: siProton, renault: siRenault, skoda: siSkoda, subaru: siSubaru,
-  suzuki: siSuzuki, toyota: siToyota, volkswagen: siVolkswagen, volvo: siVolvo,
-};
-
-// Brand-tinted logo fill: use the logo's own hex, but if it's too light to read on the
-// light circle (e.g. Opel's near-yellow, Renault's gold) fall back to gray-700 so no mark
-// ever vanishes. Relative luminance via the standard 0.299/0.587/0.114 weights.
-function logoFill(hex: string): string {
-  const r = parseInt(hex.slice(0, 2), 16);
-  const g = parseInt(hex.slice(2, 4), 16);
-  const b = parseInt(hex.slice(4, 6), 16);
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.78 ? '#374151' : `#${hex}`;
-}
-
-// Image imports resolve to a StaticImageData object ({ src }) for png and `any` (also a
-// StaticImageData at runtime) for svg — normalize both to a plain URL string.
-type ImgImport = string | { src: string };
-const imgSrc = (m: ImgImport): string => (typeof m === 'string' ? m : m.src);
-
-// Brand name (normalized) → car-brand-logos full-color asset. Fills the gaps Simple Icons
-// dropped (Mercedes-Benz, Land Rover, Lexus, GMC, …). 7 niche brands remain on the avatar.
-const CAR_LOGO_FILES: Record<string, ImgImport> = {
-  alfaromeo: cblAlfaRomeo, byd: cblByd, brilliance: cblBrilliance, changan: cblChangan,
-  chery: cblChery, dfsk: cblDfsk, daewoo: cblDaewoo, daihatsu: cblDaihatsu, dodge: cblDodge,
-  dongfeng: cblDongfeng, gmc: cblGmc, geely: cblGeely, genesis: cblGenesis, greatwall: cblGreatWall,
-  isuzu: cblIsuzu, jac: cblJac, jaguar: cblJaguar, jetour: cblJetour, landrover: cblLandRover,
-  lexus: cblLexus, lincoln: cblLincoln, maybach: cblMaybach, mercedesbenz: cblMercedesBenz,
-  rover: cblRover, saab: cblSaab, ssangyong: cblSsangYong, zotye: cblZotye,
-};
-
-// A logo image inside the standard brand-mark circle (used for node.icon + car-brand-logos).
-function CircleImg({ src, onError }: { src: string; onError: () => void }) {
-  return (
-    <span className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="" className="w-5 h-5 object-contain" onError={onError} />
-    </span>
-  );
-}
-
-// Initial-letter avatar — the universal fallback (also used as-is for MODEL nodes).
-function LetterAvatar({ node }: { node: CatalogNode }) {
-  return (
-    <span className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 text-xs font-bold flex items-center justify-center shrink-0">
-      {(node.name || node.nameAr).trim().charAt(0).toUpperCase()}
-    </span>
-  );
-}
-
-// BRAND mark — render priority:
-//   (a) catalog node.icon URL (future-proof for a DB-populated Category.icon)
-//   (b) Simple Icons mark, brand-tinted (its 34 brands)
-//   (c) car-brand-logos full-color asset (fills the gaps Simple Icons dropped)
-//   (d) initial-letter avatar (7 niche brands neither set covers)
-function BrandMark({ node }: { node: CatalogNode }) {
-  const [iconFailed, setIconFailed] = useState(false);
-  const [cblFailed, setCblFailed] = useState(false);
-  const key = normBrand(node.name);
-  const iconUrl = node.icon && /^https?:\/\//i.test(node.icon) ? node.icon : null;
-
-  if (iconUrl && !iconFailed) {
-    return <CircleImg src={iconUrl} onError={() => setIconFailed(true)} />;
-  }
-
-  const si = BRAND_LOGOS[key];
-  if (si) {
-    return (
-      <span className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-        <svg role="img" viewBox="0 0 24 24" aria-hidden="true" className="w-4 h-4" fill={logoFill(si.hex)}>
-          <path d={si.path} />
-        </svg>
-      </span>
-    );
-  }
-
-  const cbl = CAR_LOGO_FILES[key];
-  if (cbl && !cblFailed) {
-    return <CircleImg src={imgSrc(cbl)} onError={() => setCblFailed(true)} />;
-  }
-
-  return <LetterAvatar node={node} />;
-}
 
 interface Props {
   state: CatalogState;
@@ -580,7 +448,15 @@ function LevelPicker({
                       isSel ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    {o.type === 'BRAND' ? <BrandMark node={o} /> : o.type === 'MODEL' ? <LetterAvatar node={o} /> : null}
+                    {o.type === 'BRAND' || o.type === 'MODEL' ? (
+                      // MODEL nodes have no logo of their own — BrandMark's letter
+                      // avatar is exactly the old LetterAvatar behaviour for them.
+                      <BrandMark
+                        name={o.type === 'BRAND' ? o.name : ''}
+                        label={o.nameAr || o.name}
+                        iconUrl={o.type === 'BRAND' ? o.icon : null}
+                      />
+                    ) : null}
                     <span className="flex-1 truncate">{o.nameAr}</span>
                     {o.count > 0 && (
                       <span className="text-xs text-gray-400 bg-gray-100 rounded-full px-1.5 py-0.5 shrink-0">
