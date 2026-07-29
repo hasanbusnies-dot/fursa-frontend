@@ -28,6 +28,7 @@ import { FavoriteButton } from '@/components/listings/FavoriteButton';
 import { FavoriteSellerButton } from '@/components/listings/FavoriteSellerButton';
 import { CompareButton } from '@/components/listings/CompareButton';
 import { ShareButton } from '@/components/listings/ShareButton';
+import { ReportButton } from '@/components/listings/ReportButton';
 import { isShareable } from '@/lib/share';
 import { recommendationsService } from '@/services/recommendations.service';
 import { useMobileTitle } from '@/components/layout/MobileTopBar';
@@ -1646,7 +1647,9 @@ export default function ListingDetailClient() {
             <p className="text-3xl font-extrabold text-blue-700 leading-none">
               {formatPrice(listing.price, listing.currency)}
             </p>
-            <div className="flex items-center gap-3">
+            {/* flex-wrap: the report button makes this row long enough to overflow the
+                price bar on narrower desktop widths. */}
+            <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-1.5 text-sm text-gray-500">
                 <MapPin className="w-4 h-4 shrink-0" />
                 {listing.city}
@@ -1661,6 +1664,7 @@ export default function ListingDetailClient() {
                   subject={{ title: listing.title, city: listing.city }}
                 />
               )}
+              <ReportButton listingId={listing.id} sellerId={listing.user?.id} />
             </div>
           </div>
 
@@ -1699,8 +1703,10 @@ export default function ListingDetailClient() {
         {/* ══ Mobile (<lg) — sahibinden-style linear order ══ */}
         <div className="lg:hidden space-y-4 pb-32">
 
-          {/* 1 — Favorite + Compare + Follow seller (moved above the gallery) */}
-          <div className="flex items-center gap-3">
+          {/* 1 — Favorite + Compare + Share + Follow seller + Report (above the gallery).
+              flex-wrap so the row cannot overflow a narrow phone once the report button
+              is in it. */}
+          <div className="flex flex-wrap items-center gap-3">
             <FavoriteButton listingId={listing.id} checkOnMount variant="detail" />
             <CompareButton listing={listing} variant="detail" />
             {isShareable(listing.status) && (
@@ -1712,6 +1718,7 @@ export default function ListingDetailClient() {
             {listing.user?.id && authUser?.id !== listing.user.id && (
               <FavoriteSellerButton sellerId={listing.user.id} variant="icon" />
             )}
+            <ReportButton listingId={listing.id} sellerId={listing.user?.id} />
           </div>
 
           {/* 2 — Image gallery (full-bleed, no card) */}
