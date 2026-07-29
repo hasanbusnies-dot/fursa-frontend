@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutList, Megaphone, Zap, Store, Users, BadgeCheck, CalendarClock, Coins, ArrowLeftRight, UserPlus, Calculator } from 'lucide-react';
+import { LayoutList, Megaphone, Zap, Store, Users, Flag, BadgeCheck, CalendarClock, Coins, ArrowLeftRight, UserPlus, Calculator } from 'lucide-react';
 
 const LINKS = [
   { href: '/admin/listings',       label: 'إدارة الإعلانات',         icon: LayoutList     },
@@ -10,6 +10,7 @@ const LINKS = [
   { href: '/admin/dopings',        label: 'إدارة التمييز',           icon: Zap            },
   { href: '/admin/stores',         label: 'اعتماد المتاجر',          icon: Store          },
   { href: '/admin/users',          label: 'المستخدمون',              icon: Users          },
+  { href: '/admin/reports',        label: 'البلاغات',                icon: Flag           },
   { href: '/admin/memberships',    label: 'العضويات',                icon: BadgeCheck     },
   { href: '/admin/renewals',       label: 'التجديدات',               icon: CalendarClock  },
   { href: '/admin/commissions',    label: 'العمولات',                icon: Coins          },
