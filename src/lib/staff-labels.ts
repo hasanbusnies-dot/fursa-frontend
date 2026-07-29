@@ -13,6 +13,37 @@ export const LISTING_STATUS_AR: Record<string, string> = {
   INACTIVE:       'غير نشط',
 };
 
+/** User account moderation status. A soft-deleted account carries status BANNED *and*
+ *  a deletedAt — always let «محذوف» win over the status chip when both are set. */
+export const USER_STATUS_AR: Record<string, string> = {
+  ACTIVE:               'نشط',
+  SUSPENDED:            'موقوف',
+  BANNED:               'محظور',
+  PENDING_VERIFICATION: 'قيد التحقق',
+  DELETED:              'محذوف',
+};
+
+/** Account type. */
+export const USER_TYPE_AR: Record<string, string> = {
+  INDIVIDUAL:  'فرد',
+  CORPORATE:   'شركة',
+  ADMIN:       'مدير',
+  FIELD_AGENT: 'مندوب',
+  ACCOUNTANT:  'محاسب',
+};
+
+/** Field-agent ROLE status — a second switch, independent of the account status. */
+export const AGENT_STATUS_AR: Record<string, string> = {
+  ACTIVE:    'نشط',
+  SUSPENDED: 'موقوف',
+};
+
+/** Wallet state. Frozen blocks spending; the balance itself is never touched. */
+export const WALLET_STATUS_AR: Record<string, string> = {
+  ACTIVE: 'نشطة',
+  FROZEN: 'مجمّدة',
+};
+
 /** Store moderation status. */
 export const STORE_STATUS_AR: Record<string, string> = {
   PENDING:   'قيد الانتظار',
