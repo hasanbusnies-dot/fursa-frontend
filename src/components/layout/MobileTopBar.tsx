@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { create } from 'zustand';
+import { notificationOriginBack } from '@/lib/notifications';
 
 // ── Title store ───────────────────────────────────────────────────────────────
 // Lets dynamic pages (listing detail, category) override the resolved title.
@@ -106,7 +107,9 @@ export function MobileTopBar() {
       <div className="flex items-center gap-2 h-14 px-3">
         <button
           type="button"
-          onClick={() => router.push(parentOf(pathname))}
+          // Resolved on click (not during render): sessionStorage is read here, so
+          // there is nothing storage-dependent in the server/first-client markup.
+          onClick={() => router.push(notificationOriginBack(pathname) ?? parentOf(pathname))}
           aria-label="رجوع"
           className="shrink-0 p-1.5 -ms-1.5 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
         >

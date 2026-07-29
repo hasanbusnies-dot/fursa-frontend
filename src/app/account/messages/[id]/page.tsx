@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { messagesService } from '@/services/messages.service';
 import { getSocket, connectSocket } from '@/lib/socket';
 import { useAuthStore } from '@/store/auth.store';
+import { notificationOriginBack } from '@/lib/notifications';
 import type { ChatRoom, Message } from '@/types';
 
 // A message may be an optimistic placeholder that hasn't been confirmed by the server yet.
@@ -310,6 +311,12 @@ export default function ChatDetailPage() {
     socket.emit('send_message', { conversationId: roomId, content: text });
   }
 
+  // Back target: the messages list normally, but the notifications list when this
+  // conversation was opened from a notification (helper is SSR-safe — it returns
+  // null without sessionStorage, and this page renders nothing until mounted).
+  const backHref =
+    notificationOriginBack(`/account/messages/${roomId}`) ?? '/account/messages';
+
   // ── Guards ────────────────────────────────────────────────────────────────
 
   if (!mounted || !isAuthenticated) return null;
@@ -321,7 +328,7 @@ export default function ChatDetailPage() {
         <AlertCircle className="w-10 h-10 text-gray-300" />
         <p className="text-sm font-medium text-gray-700">{error ?? 'المحادثة غير موجودة.'}</p>
         <Link
-          href="/account/messages"
+          href={backHref}
           className="text-sm font-semibold text-orange-500 hover:text-orange-700 transition-colors"
         >
           ← العودة إلى الرسائل
@@ -359,7 +366,7 @@ export default function ChatDetailPage() {
       <div dir="rtl" className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 bg-white shrink-0">
         {/* Back — ChevronRight is "forward" in LTR but visually correct "back" arrow in RTL */}
         <Link
-          href="/account/messages"
+          href={backHref}
           className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors shrink-0"
           aria-label="عودة"
         >

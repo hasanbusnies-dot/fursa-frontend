@@ -13,6 +13,32 @@ export function notificationHref(n: AppNotification): string {
   return '/account/notifications';
 }
 
+// ── "Came from the notifications list" origin ────────────────────────────────
+// A notification opens a page that lives somewhere else in the tree (a listing,
+// a conversation, the wallet), so the structural back target (MobileTopBar's
+// parentOf → e.g. /account for the wallet) drops the user somewhere they never
+// were. Remember the origin at click time, per tab-session, keyed by the target
+// PATHNAME so the override can never leak onto an unrelated page. sessionStorage
+// rather than a query param: the listing URL is what ShareButton hands out.
+export const NOTIFICATIONS_PATH = '/account/notifications';
+const ORIGIN_KEY = 'forsa-notif-origin';
+
+/** Call on a notification click with the href it navigates to. */
+export function rememberNotificationOrigin(href: string): void {
+  try {
+    sessionStorage.setItem(ORIGIN_KEY, new URL(href, window.location.origin).pathname);
+  } catch { /* storage unavailable — back just falls back to the structural parent */ }
+}
+
+/** The notifications list when `pathname` was opened from it, else null. */
+export function notificationOriginBack(pathname: string): string | null {
+  try {
+    return sessionStorage.getItem(ORIGIN_KEY) === pathname ? NOTIFICATIONS_PATH : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Type → icon + accent color for list rendering. */
 export const NOTIFICATION_ICONS: Record<NotificationType, { Icon: LucideIcon; className: string }> = {
   NEW_MESSAGE:      { Icon: MessageSquare, className: 'text-blue-500' },

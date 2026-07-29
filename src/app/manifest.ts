@@ -10,7 +10,7 @@ import type { MetadataRoute } from 'next';
 // multi-day auto-update) to show up on an already-installed app.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'فرصة — Forsa',
+    name: 'فرصة — fursago',
     short_name: 'فرصة',
     description: 'منصة الإعلانات المبوبة الرائدة في سوريا. بيع، اشترِ، واكتشف الفرص القريبة منك.',
     id: '/',

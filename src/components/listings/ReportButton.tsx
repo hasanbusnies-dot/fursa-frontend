@@ -61,9 +61,9 @@ export function ReportButton({
         title="الإبلاغ عن إعلان مخالف"
         className={cn(
           'flex items-center gap-2 text-sm font-semibold py-2.5 px-5 rounded-xl border transition-all whitespace-nowrap',
-          // Quieter than favourite/compare/share: this sits beside positive actions and
-          // must not compete with them for attention.
-          'bg-gray-50 text-gray-500 border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200',
+          // Red: the founder wants reporting readable as a warning affordance at a
+          // glance (paired with the muted green share button beside it).
+          'bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700 hover:border-red-300',
           className,
         )}
       >

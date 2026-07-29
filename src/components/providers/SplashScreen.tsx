@@ -24,7 +24,7 @@ import { useEffect, useRef, useState } from 'react';
  * never white/black. prefers-reduced-motion: the image is already static —
  * only the fade is disabled (motion-reduce), the splash itself stays.
  */
-const HOLD_MS = 2000; // founder wants exactly 2s (1.5s flashed by, 2.8s felt long)
+const HOLD_MS = 1200; // founder's call: 2s felt slow on re-opens, 1.2s reads as snappy
 const FADE_MS = 400;
 
 export function SplashScreen() {

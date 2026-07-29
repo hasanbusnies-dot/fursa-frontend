@@ -1703,29 +1703,43 @@ export default function ListingDetailClient() {
         {/* ══ Mobile (<lg) — sahibinden-style linear order ══ */}
         <div className="lg:hidden space-y-4 pb-32">
 
-          {/* 1 — Favorite + Compare + Share + Follow seller + Report (above the gallery).
-              flex-wrap so the row cannot overflow a narrow phone once the report button
-              is in it. */}
+          {/* 1 — Favorite + Compare + Follow seller (above the gallery). Share and
+              report moved down to the seller line — see 3. flex-wrap so the row cannot
+              overflow a narrow phone. */}
           <div className="flex flex-wrap items-center gap-3">
             <FavoriteButton listingId={listing.id} checkOnMount variant="detail" />
             <CompareButton listing={listing} variant="detail" />
-            {isShareable(listing.status) && (
-              <ShareButton
-                listingId={listing.id}
-                subject={{ title: listing.title, city: listing.city }}
-              />
-            )}
             {listing.user?.id && authUser?.id !== listing.user.id && (
               <FavoriteSellerButton sellerId={listing.user.id} variant="icon" />
             )}
-            <ReportButton listingId={listing.id} sellerId={listing.user?.id} />
           </div>
 
           {/* 2 — Image gallery (full-bleed, no card) */}
           <ImageGallery images={listing.images ?? []} />
 
-          {/* 3 — Seller name + join date (compact line, sahibinden-style) */}
-          <SellerBox listing={listing} variant="line" />
+          {/* 3 — Seller name + join date (compact line, sahibinden-style), with
+              share + report filling the empty space at its END (= the LEFT side in
+              RTL). Compact sizing is passed in: the shared buttons are sized for the
+              desktop price bar, and twMerge lets these win. */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <SellerBox listing={listing} variant="line" />
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {isShareable(listing.status) && (
+                <ShareButton
+                  listingId={listing.id}
+                  subject={{ title: listing.title, city: listing.city }}
+                  className="gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] [&_svg]:w-3.5 [&_svg]:h-3.5"
+                />
+              )}
+              <ReportButton
+                listingId={listing.id}
+                sellerId={listing.user?.id}
+                className="gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] [&_svg]:w-3.5 [&_svg]:h-3.5"
+              />
+            </div>
+          </div>
 
           {/* 4 — Title + price + location + date */}
           <div>

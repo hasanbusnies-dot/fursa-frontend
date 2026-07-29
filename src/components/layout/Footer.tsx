@@ -48,7 +48,7 @@ export function Footer() {
           {/* Brand column */}
           <div className="text-right">
             <Link href="/" className="text-2xl font-black text-white tracking-tight">
-              Forsa
+              fursago
             </Link>
             <p className="mt-3 text-sm leading-relaxed">
               منصة الإعلانات المبوبة الرائدة في سوريا. بيع، اشترِ، واكتشف الفرص القريبة منك.
@@ -79,7 +79,7 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-10 pt-6 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-          <span>Forsa. جميع الحقوق محفوظة {new Date().getFullYear()} ©</span>
+          <span>fursago. جميع الحقوق محفوظة {new Date().getFullYear()} ©</span>
           <span className="text-gray-600">صُنع بحب ❤ من أجل سوريا</span>
         </div>
       </div>

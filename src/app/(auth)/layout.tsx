@@ -25,7 +25,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {/* Logo */}
         <Link href="/" className="relative flex items-baseline gap-2 w-fit">
           <span className="text-2xl font-black tracking-tight">فرصة</span>
-          <span className="text-blue-300 text-sm font-medium">Forsa</span>
+          <span className="text-blue-300 text-sm font-medium">fursago</span>
         </Link>
 
         {/* Hero text */}

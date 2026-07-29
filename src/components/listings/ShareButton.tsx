@@ -123,8 +123,10 @@ export function ShareButton({
         aria-expanded={native ? undefined : open}
         aria-label="مشاركة الإعلان"
         className={cn(
-          'flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-5 py-2.5',
-          'text-sm font-semibold text-gray-600 transition-all hover:bg-gray-100',
+          // Soft/muted green — a positive action that still sits quietly beside the
+          // red report button.
+          'flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-2.5',
+          'text-sm font-semibold text-emerald-700 transition-all hover:bg-emerald-100 hover:border-emerald-300',
           className,
         )}
       >

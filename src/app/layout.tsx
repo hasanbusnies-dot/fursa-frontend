@@ -50,10 +50,10 @@ export const metadata: Metadata = {
    */
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Forsa | Syria's Classifieds Platform",
-    template: '%s | Forsa',
+    default: "fursago | Syria's Classifieds Platform",
+    template: '%s | fursago',
   },
-  description: "Buy, sell, and find opportunities on Forsa — Syria's leading classifieds platform.",
+  description: "Buy, sell, and find opportunities on fursago — Syria's leading classifieds platform.",
   // PNG favicons complement src/app/favicon.ico (multi-size .ico generated from
   // the same public/forsa-logo-*.png set); modern browsers prefer the PNGs.
   icons: {
