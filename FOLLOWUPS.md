@@ -1,5 +1,22 @@
 # Follow-ups (tracked, not dropped)
 
+## TWA: real SHA-256 fingerprint into assetlinks.json — BLOCKS Play verification (logged 2026-07-29)
+`public/.well-known/assetlinks.json` ships with two values that MUST be settled
+at Play Console upload time:
+- `sha256_cert_fingerprints[0]` is the literal placeholder
+  `REPLACE_WITH_SHA256_FINGERPRINT_FROM_PLAY_CONSOLE_APP_INTEGRITY`. Take the
+  real value from **Play Console → Setup → App integrity → App signing key
+  certificate** (the PLAY APP SIGNING key — *not* the local upload/keystore
+  cert; using the upload cert is the classic cause of a TWA launching with the
+  browser URL bar still visible).
+- `package_name` is `app.fursago.twa` — chosen as a sensible default. It is
+  permanent once published, so change it here BEFORE the first upload if the
+  founder wants something else, and keep it identical to the Bubblewrap config.
+
+Verify after deploy: `https://www.fursago.com/.well-known/assetlinks.json`
+returns 200 as `application/json` with NO redirect (the apex 301s to www — the
+TWA must be built against the www host that serves this file directly).
+
 ## Full-app i18n / multi-language support — POST-LAUNCH PROJECT (logged 2026-07-28)
 The app is Arabic-hardcoded end to end: literal Arabic strings inline in every
 component, `dir="rtl"` + `lang="ar"` on the root layout, RTL-only layout

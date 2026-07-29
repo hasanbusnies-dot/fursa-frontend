@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useAuthStore } from '@/store/auth.store';
 import { useNotificationsStore } from '@/store/notifications.store';
 import { connectSocket, disconnectSocket } from '@/lib/socket';
-import { ensurePushSubscription, registerServiceWorker } from '@/lib/push';
+import { ensurePushSubscription } from '@/lib/push';
 import { notificationHref } from '@/lib/notifications';
 import { notificationsService, type AppNotification } from '@/services/notifications.service';
 
@@ -35,11 +35,12 @@ export function SocketManager() {
       .then((n) => useNotificationsStore.getState().setUnread(n))
       .catch(() => {});
 
-    // Idempotent SW registration (push; later also PWA T1 caching). Registering does
-    // NOT prompt for anything — permission is only requested from user gestures.
-    // ensurePushSubscription then silently heals granted-but-unsubscribed sessions
-    // (and re-asserts the backend row for live ones); it too never prompts.
-    void registerServiceWorker().then(() => ensurePushSubscription());
+    // PUSH only — the service worker itself is registered for every visitor by
+    // ServiceWorkerRegistrar in the root layout (offline shell needs it whether or
+    // not anyone is logged in). ensurePushSubscription silently heals
+    // granted-but-unsubscribed sessions (and re-asserts the backend row for live
+    // ones), self-registering if it somehow runs first; it never prompts.
+    void ensurePushSubscription();
 
     const socket = connectSocket();
     const onNotification = (n: AppNotification) => {

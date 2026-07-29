@@ -1,6 +1,7 @@
 'use client';
 
 import { api } from '@/services/api';
+import { registerServiceWorker } from '@/lib/sw';
 
 // ── Web-push client (Phase D) ───────────────────────────────────────────────────
 // Registration is idempotent; subscribe/unsubscribe keep the browser subscription and
@@ -55,15 +56,10 @@ function isIosSafariNotInstalled(): boolean {
   return iOS && !installed;
 }
 
-/** Idempotent — safe to call on every auth. */
-export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
-  if (!isPushSupported()) return null;
-  try {
-    return await navigator.serviceWorker.register('/sw.js');
-  } catch {
-    return null;
-  }
-}
+// registerServiceWorker moved to lib/sw.ts: the SW is now registered for every
+// visitor (offline shell), not just push-capable authenticated ones. The calls
+// below keep it as a self-heal for the case where a subscribe runs before the
+// root-layout registrar has finished.
 
 export async function getPushState(): Promise<PushState> {
   if (!isPushSupported()) return isIosSafariNotInstalled() ? 'ios-install-needed' : 'unsupported';

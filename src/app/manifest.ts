@@ -15,6 +15,10 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'منصة الإعلانات المبوبة الرائدة في سوريا. بيع، اشترِ، واكتشف الفرص القريبة منك.',
     id: '/',
     start_url: '/',
+    // Explicit even though '/' is what Bubblewrap would infer from start_url:
+    // the TWA build reads scope to decide which URLs stay INSIDE the app rather
+    // than opening a browser tab, so it should not be left to a default.
+    scope: '/',
     display: 'standalone',
     dir: 'rtl',
     lang: 'ar',
