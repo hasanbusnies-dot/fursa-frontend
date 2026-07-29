@@ -24,6 +24,8 @@ import { ComparePopover } from '@/components/layout/ComparePopover';
 import ProjectsLandingPage from '@/components/real-estate/ProjectsLandingPage';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
+import { isConnectionError } from '@/lib/net-error';
+import { ConnectionError } from '@/components/ui/ConnectionError';
 import type { Category, Listing } from '@/types';
 
 // ── Table layout ──────────────────────────────────────────────────────────────
@@ -398,7 +400,10 @@ export default function CategoryPage() {
   // The last URL segment is the catalog node slug. getPath gives the breadcrumb
   // chain (and the categoryId for listing queries); getChildren gives the nodes
   // to drill into. No children ⇒ leaf ⇒ show listings.
-  const [catalogStatus, setCatalogStatus] = useState<'loading' | 'notfound' | 'branch' | 'leaf'>('loading');
+  // 'connection' is deliberately separate from 'notfound': an unreachable
+  // backend must not claim the category was deleted (see lib/net-error.ts).
+  const [catalogStatus, setCatalogStatus] = useState<'loading' | 'notfound' | 'connection' | 'branch' | 'leaf'>('loading');
+  const [catalogRetryKey, setCatalogRetryKey] = useState(0);
   const [catalogPath,   setCatalogPath]   = useState<CatalogPathNode[]>([]);
   const [childNodes,    setChildNodes]    = useState<CatalogNode[]>([]);
 
@@ -465,12 +470,12 @@ export default function CategoryPage() {
       });
       setCatalogStatus(kids.length ? 'branch' : 'leaf');
       setSlugResolved(true);
-    }).catch(() => {
-      if (!cancelled) setCatalogStatus('notfound');
+    }).catch((err) => {
+      if (!cancelled) setCatalogStatus(isConnectionError(err) ? 'connection' : 'notfound');
     });
 
     return () => { cancelled = true; };
-  }, [lastSlug]);
+  }, [lastSlug, catalogRetryKey]);
 
   // ── Off-plan-projects: seed city/district from the URL into the filters ───────
   // The landing's search + city tiles link back here with ?city=…&district=…; sync those
@@ -729,6 +734,14 @@ export default function CategoryPage() {
                 <div key={i} className="h-[52px] rounded-xl border border-gray-200 bg-white animate-pulse" />
               ))}
             </div>
+          )}
+
+          {/* ── Backend unreachable (offline / 5xx) — NOT a missing category ── */}
+          {catalogStatus === 'connection' && (
+            <ConnectionError
+              onRetry={() => { setCatalogStatus('loading'); setCatalogRetryKey((k) => k + 1); }}
+              description="تعذّر تحميل الفئة. تحقّق من اتصالك بالإنترنت ثم حاول مرة أخرى."
+            />
           )}
 
           {/* ── Unknown slug ── */}

@@ -20,6 +20,8 @@ import { FilterSidebar, EMPTY_FILTERS, hasActiveFilters } from '@/components/lis
 import type { FilterValues } from '@/components/listings/FilterSidebar';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
+import { isConnectionError } from '@/lib/net-error';
+import { ConnectionError } from '@/components/ui/ConnectionError';
 import type { Category, Listing } from '@/types';
 import { RecommendationsPopover } from '@/components/layout/RecommendationsPopover';
 import { ComparePopover } from '@/components/layout/ComparePopover';
@@ -583,6 +585,10 @@ function ListingsContent() {
   const [total,    setTotal]    = useState(0);
   const [meta,     setMeta]     = useState<{ page: number; totalPages: number; total: number } | null>(null);
   const [loading,  setLoading]  = useState(true);
+  // A network failure must not render as «لا توجد إعلانات» — that reads as "we
+  // searched and there is nothing", when in fact we never reached the server.
+  const [connectionFailed, setConnectionFailed] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
   // Set while navigating away to a single ad-number match, so the loading UI
   // isn't torn down for a frame before the route changes.
   const redirectingRef = useRef(false);
@@ -590,6 +596,7 @@ function ListingsContent() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setConnectionFailed(false);
     redirectingRef.current = false;
     const f = applied;
     listingsService.getListings({
@@ -639,13 +646,14 @@ function ListingsContent() {
       if (cancelled) return;
       console.error('[ListingsPage] fetch error:', err);
       setListings([]); setTotal(0); setMeta(null);
+      setConnectionFailed(isConnectionError(err));
     }).finally(() => {
       // While redirecting, stay in the loading state — clearing it would flash
       // an empty "no results" list for a frame before the route changes.
       if (!cancelled && !redirectingRef.current) setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [applied, page, searchQuery, sortBy, sellerIdParam]);
+  }, [applied, page, searchQuery, sortBy, sellerIdParam, retryKey]);
 
   // ── Derive category name for result header ──────────────────────────────────
   const categoryName = useMemo(() => {
@@ -1080,6 +1088,13 @@ function ListingsContent() {
                   </div>
                 </>
               )
+            ) : connectionFailed ? (
+              // Reached only when the request never got an answer — a real empty
+              // result set falls through to the «لا توجد إعلانات» state below.
+              <ConnectionError
+                onRetry={() => setRetryKey((k) => k + 1)}
+                description="تعذّر تحميل الإعلانات. تحقّق من اتصالك بالإنترنت ثم حاول مرة أخرى."
+              />
             ) : displayListings.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-28 text-gray-400 gap-3">
                 <SearchX className="w-10 h-10" />

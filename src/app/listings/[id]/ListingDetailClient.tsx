@@ -30,6 +30,8 @@ import { CompareButton } from '@/components/listings/CompareButton';
 import { ShareButton } from '@/components/listings/ShareButton';
 import { ReportButton } from '@/components/listings/ReportButton';
 import { isShareable } from '@/lib/share';
+import { isConnectionError } from '@/lib/net-error';
+import { ConnectionError } from '@/components/ui/ConnectionError';
 import { recommendationsService } from '@/services/recommendations.service';
 import { useMobileTitle } from '@/components/layout/MobileTopBar';
 import {
@@ -1564,7 +1566,12 @@ export default function ListingDetailClient() {
 
   const [listing,  setListing]  = useState<Listing | null>(null);
   const [loading,  setLoading]  = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  // A failed load is one of two very different things, and they must not share a
+  // screen: 'notfound' = the backend answered "this listing is gone";
+  // 'connection' = we never got an answer (offline / 5xx). See lib/net-error.ts.
+  const [loadError, setLoadError] = useState<null | 'notfound' | 'connection'>(null);
+  // Bumped by the retry button to re-run the fetch effect.
+  const [retryKey, setRetryKey] = useState(0);
   // Catalog filter defs for the listing's category — used to LABEL + ORDER the attribute
   // spec table for non-vehicle listings. Fetched once here and threaded into both the
   // desktop and mobile spec tables.
@@ -1585,6 +1592,8 @@ export default function ListingDetailClient() {
   }, [listing]);
 
   useEffect(() => {
+    setLoading(true);
+    setLoadError(null);
     listingsService
       .getListingById(id)
       .then((data) => {
@@ -1594,15 +1603,25 @@ export default function ListingDetailClient() {
       })
       .catch((err) => {
         console.error('[ListingDetail] fetch error:', err);
-        setNotFound(true);
+        setLoadError(isConnectionError(err) ? 'connection' : 'notfound');
       })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, retryKey]);
 
   useMobileTitle(listing?.title);
 
-  if (loading)              return <ListingSkeleton />;
-  if (notFound || !listing) return <ListingNotFound />;
+  if (loading) return <ListingSkeleton />;
+  if (loadError === 'connection') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <ConnectionError
+          onRetry={() => setRetryKey((k) => k + 1)}
+          description="تعذّر تحميل الإعلان. تحقّق من اتصالك بالإنترنت ثم حاول مرة أخرى."
+        />
+      </div>
+    );
+  }
+  if (loadError || !listing) return <ListingNotFound />;
 
   // Single seed for Q&A so both the desktop and mobile trees mount QASection
   // without triggering a duplicate fetch (the effect early-returns when
