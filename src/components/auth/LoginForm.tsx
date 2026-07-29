@@ -15,6 +15,8 @@ import { FormError } from '@/components/ui/FormError';
 import { authService } from '@/services/auth.service';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
+import { AccountBlockedNotice } from '@/components/auth/AccountBlockedNotice';
+import { isAccountBlockCode, type AccountBlock } from '@/lib/account-block';
 
 // Zod v4 removed `.email()` from ZodString — use .refine() with a regex instead.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -38,6 +40,9 @@ export function LoginForm() {
   const { setAuth } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError]   = useState<string | null>(null);
+  // A blocked account replaces the whole form: it is not a field error the user can
+  // correct by retyping, and the backend's English message must never reach them.
+  const [block, setBlock] = useState<AccountBlock | null>(null);
 
   const {
     register,
@@ -61,6 +66,13 @@ export function LoginForm() {
           : '/';
       router.push(safeRedirect);
     } catch (err) {
+      // Checked first: an ACCOUNT_* code outranks every other error shape. Only these
+      // codes reach the notice — a wrong password or a validation failure still falls
+      // through to the normal inline errors below.
+      if (err instanceof ApiError && isAccountBlockCode(err.code)) {
+        setBlock({ code: err.code, reason: err.reason ?? null });
+        return;
+      }
       if (err instanceof ApiError && err.errors && Object.keys(err.errors).length > 0) {
         Object.entries(err.errors).forEach(([field, messages]) => {
           const formField = (FIELD_MAP[field] ?? field) as keyof FormData;
@@ -73,6 +85,16 @@ export function LoginForm() {
       }
     }
   };
+
+  if (block) {
+    return (
+      <AccountBlockedNotice
+        code={block.code}
+        reason={block.reason}
+        onBack={() => setBlock(null)}
+      />
+    );
+  }
 
   return (
     <div className="bg-white rounded-card shadow-pebble p-8">

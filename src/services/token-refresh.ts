@@ -1,6 +1,7 @@
 'use client';
 
 import { authStoreFor, AUTH_STORAGE_KEYS, type AuthRealm } from '@/store/auth.store';
+import { isAccountBlockCode, type AccountBlockCode } from '@/lib/account-block';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
 
@@ -13,6 +14,12 @@ export class RefreshError extends Error {
   constructor(
     readonly definitive: boolean,
     message: string,
+    // Set only when /auth/refresh refused because the ACCOUNT is blocked, carrying the
+    // backend's code + the moderating admin's reason. Lets api.ts show the Arabic
+    // explanation instead of a silent bounce to /login, for the case where the original
+    // request 401'd on ordinary token expiry and the block surfaced only at refresh.
+    readonly blockCode?: AccountBlockCode,
+    readonly blockReason?: string | null,
   ) {
     super(message);
     this.name = 'RefreshError';
@@ -124,7 +131,18 @@ async function doRefresh(realm: AuthRealm): Promise<string> {
   }
 
   if (res.status === 401) throw new RefreshError(true, 'Refresh token rejected');
-  if (res.status === 403) throw new RefreshError(true, 'Account banned or suspended');
+  if (res.status === 403) {
+    // Read the block descriptor off the body so the reason survives to the UI. A 403 here
+    // is always an account block (describeAccountBlock is the only thing that raises one
+    // on this route), but parse defensively and fall back to the plain definitive error.
+    const body = (await res.json().catch(() => null)) as
+      | { code?: string; reason?: string | null }
+      | null;
+    if (isAccountBlockCode(body?.code)) {
+      throw new RefreshError(true, 'Account blocked', body.code, body.reason ?? null);
+    }
+    throw new RefreshError(true, 'Account banned or suspended');
+  }
   if (!res.ok) throw new RefreshError(false, `Refresh failed: HTTP ${res.status}`);
 
   const json = (await res.json().catch(() => null)) as

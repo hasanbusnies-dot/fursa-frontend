@@ -1,5 +1,11 @@
 import { refreshAccessToken, RefreshError } from './token-refresh';
 import { AUTH_STORAGE_KEYS, realmFromPathname, type AuthRealm } from '@/store/auth.store';
+import {
+  ACCOUNT_BLOCKED_PATH,
+  isAccountBlockCode,
+  stashAccountBlock,
+  type AccountBlockCode,
+} from '@/lib/account-block';
 
 export class ApiError extends Error {
   constructor(
@@ -9,10 +15,24 @@ export class ApiError extends Error {
     // valid; lets callers branch exactly (e.g. status === 503) instead of matching
     // on the message string.
     public readonly status?: number,
+    // Machine-readable discriminator from the backend (errorMiddleware emits it only for
+    // errors that set one) — e.g. ACCOUNT_SUSPENDED vs a plain expired-token 401.
+    public readonly code?: string,
+    // User-facing explanation that accompanies `code`; currently the moderating admin's
+    // status_reason. Null means "no reason recorded"; undefined means "not sent".
+    public readonly reason?: string | null,
   ) {
     super(message);
     this.name = 'ApiError';
   }
+}
+
+// Shape of the JSON body the backend's errorMiddleware returns.
+interface ErrorBody {
+  message?: string;
+  errors?: Record<string, string[]>;
+  code?: string;
+  reason?: string | null;
 }
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
@@ -69,11 +89,10 @@ const LOGIN_PATHS: Record<AuthRealm, string> = {
   accounting: '/accounting/login',
 };
 
-// Wipes THIS realm's local auth state and hard-navigates to its login portal.
-// Called ONLY on a definitive session death: /auth/refresh rejected the refresh token,
-// or a just-refreshed access token was rejected again (account-level rejection).
-// Safe to call from SSR context — the guard prevents browser-only APIs from running.
-function clearAuthAndRedirect(realm: AuthRealm): void {
+// Wipes THIS realm's local auth state WITHOUT navigating. Split out of
+// clearAuthAndRedirect so the account-blocked path can end the session and then send the
+// user somewhere other than the login portal.
+function clearLocalAuth(realm: AuthRealm): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.removeItem(AUTH_STORAGE_KEYS[realm]);
@@ -81,11 +100,37 @@ function clearAuthAndRedirect(realm: AuthRealm): void {
   } catch { /* private-browsing environments may throw */ }
   // Expire the session cookie (user realm only — staff realms have none)
   if (realm === 'user') document.cookie = 'forsa-token=; path=/; max-age=0; SameSite=Lax';
+}
+
+// Wipes THIS realm's local auth state and hard-navigates to its login portal.
+// Called ONLY on a definitive session death: /auth/refresh rejected the refresh token,
+// or a just-refreshed access token was rejected again (account-level rejection).
+// Safe to call from SSR context — the guard prevents browser-only APIs from running.
+function clearAuthAndRedirect(realm: AuthRealm): void {
+  if (typeof window === 'undefined') return;
+  clearLocalAuth(realm);
   // Never hard-navigate to the page we're already on: a stray call that dies with this
   // realm ON the realm's login page would otherwise reload → refire → reload, forever
   // (the /admin/login loop from the Header's unread poll). Clearing state is enough.
   if (window.location.pathname !== LOGIN_PATHS[realm]) {
     window.location.href = LOGIN_PATHS[realm];
+  }
+}
+
+// A blocked ACCOUNT (suspended / banned / soft-deleted) killed this request. Ends the
+// local session and sends the user to the Arabic explanation screen carrying the admin's
+// reason — instead of the old behaviour, which bounced them to /login with no reason at
+// all, or surfaced the backend's English string.
+//
+// Deliberately does NOT run for /auth/* : a blocked LOGIN is rendered inline by the login
+// form (redirecting away from a page the user just submitted would lose the context), and
+// redirecting on /auth/refresh would fight the caller that is about to handle it.
+function handleAccountBlock(realm: AuthRealm, code: AccountBlockCode, reason: string | null): void {
+  if (typeof window === 'undefined') return;
+  stashAccountBlock({ code, reason });
+  clearLocalAuth(realm);
+  if (window.location.pathname !== ACCOUNT_BLOCKED_PATH) {
+    window.location.href = ACCOUNT_BLOCKED_PATH;
   }
 }
 
@@ -115,11 +160,23 @@ async function request<T>(
   });
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({})) as {
-      message?: string;
-      errors?: Record<string, string[]>;
-    };
+    const body = await res.json().catch(() => ({})) as ErrorBody;
     const message = body.message ?? `HTTP ${res.status}`;
+
+    // ── Account blocked ───────────────────────────────────────────────────────────
+    // Checked BEFORE the 401 refresh-retry below, and on any status, because the backend
+    // reports the same block with different statuses: 403 from /auth/login and
+    // /auth/refresh, 401 from the per-request requireAuth gate (the mid-session freeze).
+    // Falling through to the 401 branch would burn a refresh that is guaranteed to fail,
+    // and the user would end up at /login having been told nothing.
+    if (isAccountBlockCode(body.code)) {
+      const reason = body.reason ?? null;
+      // /auth/* is left to its caller: the login form renders this inline, and the refresh
+      // path has its own handling.
+      if (!isAuthEndpoint(endpoint)) handleAccountBlock(realm, body.code, reason);
+      throw new ApiError(message, body.errors, res.status, body.code, reason);
+    }
+
     // Status 401 ONLY — never message text. An endpoint returning auth failures as a
     // non-401 is a backend bug to fix there, not to pattern-match here.
     if (res.status === 401) {
@@ -139,6 +196,12 @@ async function request<T>(
             // Fail only THIS request; the next action retries naturally.
             throw new ApiError(message, body.errors, res.status);
           }
+          // The original request 401'd on ordinary expiry, but the refresh revealed the
+          // account is blocked — route to the explanation, not to a bare login page.
+          if (err instanceof RefreshError && err.blockCode) {
+            handleAccountBlock(realm, err.blockCode, err.blockReason ?? null);
+            throw new ApiError(err.message, undefined, 403, err.blockCode, err.blockReason ?? null);
+          }
           clearAuthAndRedirect(realm);
           throw new ApiError('Session expired. Please log in again.', undefined, 401);
         }
@@ -148,7 +211,9 @@ async function request<T>(
       clearAuthAndRedirect(realm);
       throw new ApiError('Session expired. Please log in again.', undefined, 401);
     }
-    throw new ApiError(message, body.errors, res.status);
+    // Non-block codes (e.g. CANNOT_MODERATE_ADMIN) ride along too, so callers can branch
+    // on `code` instead of matching message text.
+    throw new ApiError(message, body.errors, res.status, body.code, body.reason);
   }
 
   // 204 No Content (and any other empty response) has no body to parse.
