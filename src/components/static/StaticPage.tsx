@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { AlertTriangle, PencilLine } from 'lucide-react';
+import { PencilLine } from 'lucide-react';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Shared shell for the static info pages (/about, /contact, /safety, /privacy,
@@ -67,25 +67,11 @@ export function List({ items }: { items: React.ReactNode[] }) {
   );
 }
 
-/**
- * Amber banner for the two legal documents. These are DRAFTS written from what
- * the app actually does — they are not legal advice and have not been reviewed by
- * a lawyer. Remove this banner only once a qualified review has happened.
- */
-export function DraftNotice() {
-  return (
-    <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 flex items-start gap-3">
-      <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-      <div className="text-xs sm:text-sm text-amber-900 leading-relaxed">
-        <p className="font-bold mb-1">مسوّدة قيد المراجعة</p>
-        <p>
-          هذه الوثيقة مسوّدة أولية كُتبت استناداً إلى الممارسات الفعلية للمنصة، وهي بانتظار
-          المراجعة القانونية قبل اعتمادها نهائياً. قد تتغير بنودها.
-        </p>
-      </div>
-    </div>
-  );
-}
+// DraftNotice («مسوّدة قيد المراجعة») was removed once /privacy and /terms passed legal
+// review. Deliberately not kept "just in case": a dead banner component that stamps a
+// live legal document as an unreviewed draft is the kind of thing that gets re-added by
+// accident. Both documents are published commitments now — if either ever needs a
+// provisional state again, write it for that occasion.
 
 /**
  * Inline marker for content only the founder can supply (real contact details,

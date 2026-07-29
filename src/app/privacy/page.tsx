@@ -1,20 +1,20 @@
 import type { Metadata } from 'next';
-import { StaticPage, Section, List, DraftNotice, Placeholder } from '@/components/static/StaticPage';
+import { StaticPage, Section, List } from '@/components/static/StaticPage';
 
 export const metadata: Metadata = {
   title: 'سياسة الخصوصية',
   description: 'كيف تجمع منصة فرصة بياناتك وتستخدمها وتحميها.',
 };
 
-// ⚠️ DRAFT — NOT LEGAL ADVICE.
+// LIVE POLICY — the draft banner was removed once the founder confirmed legal review.
 // Written from what the app demonstrably does today: individual + corporate
 // accounts, corporate signup creating a PENDING store reviewed by an admin,
 // listings with images, governorate/district/neighbourhood + an OPTIONAL map pin,
 // a wallet topped up by manual Sham-Cash transfer with an uploaded receipt,
 // image storage on Supabase, a field-agent network, and web-push subscriptions.
 //
-// Needs a qualified legal review before the DraftNotice banner is removed.
-// If a practice below stops being true, update BOTH this page and the code.
+// This is now a published commitment to users, not a sketch: if a practice below
+// stops being true, update BOTH this page and the code in the same change.
 
 export default function PrivacyPage() {
   return (
@@ -23,8 +23,6 @@ export default function PrivacyPage() {
       intro="توضّح هذه السياسة ما نجمعه من بيانات، ولماذا، وكيف نتعامل معه."
       updated="تموز 2026"
     >
-      <DraftNotice />
-
       <Section title="1. مقدمة">
         <p>
           تشرح هذه السياسة كيفية جمع منصة «فرصة» لمعلوماتك الشخصية واستخدامها ومشاركتها
@@ -132,11 +130,10 @@ export default function PrivacyPage() {
 
       <Section title="8. مدة الاحتفاظ بالبيانات">
         <p>
-          نحتفظ ببياناتك ما دام حسابك نشطاً. بعد حذف الحساب قد نحتفظ ببعض السجلات للمدة
-          اللازمة للوفاء بالتزاماتنا القانونية والمحاسبية أو لحلّ النزاعات ومنع الاحتيال.
-        </p>
-        <p>
-          <Placeholder>يملأ المؤسس/المحامي: مدة الاحتفاظ المحددة بعد حذف الحساب</Placeholder>
+          نحتفظ ببياناتك ما دام حسابك نشطاً. بعد حذف الحساب، نُخفي ملفك الشخصي، لكننا
+          ملزمون قانونياً بالاحتفاظ بالسجلات المحاسبية لمدة (10) سنوات، وبسجلات الدخول
+          والأمان لمدة تتراوح بين سنة وثلاث سنوات، وذلك للوفاء بالتزاماتنا القانونية
+          والمحاسبية، ولإتاحتها للجهات المختصة عند الطلب، ولحلّ النزاعات ومنع الاحتيال.
         </p>
       </Section>
 

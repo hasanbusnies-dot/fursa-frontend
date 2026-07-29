@@ -1,14 +1,17 @@
 import type { Metadata } from 'next';
-import { StaticPage, Section, List, Placeholder } from '@/components/static/StaticPage';
+import { StaticPage, Section, List } from '@/components/static/StaticPage';
 
 export const metadata: Metadata = {
   title: 'من نحن',
   description: 'تعرّف على فرصة — منصة الإعلانات المبوبة في سوريا.',
 };
 
-// FOUNDER: the sections marked with <Placeholder> need your real details —
-// the founding story, the mission wording, and the numbers. Everything else is
-// factual about how the platform works today and can stay as-is.
+// Story and mission are the founder's own wording (pending their final polish); the
+// rest is factual about how the platform works today. No placeholders remain.
+//
+// «فرصة بالأرقام» deliberately carries NO counts: published figures date the moment
+// they are written and nothing here reads them from the API, so a hardcoded number
+// would quietly become a false claim. Coverage is the durable statement.
 
 export default function AboutPage() {
   return (
@@ -30,14 +33,41 @@ export default function AboutPage() {
 
       <Section title="قصتنا">
         <p>
-          <Placeholder>يملأ المؤسس: قصة التأسيس — متى بدأت الفكرة، ولماذا، وما المشكلة التي لاحظتموها في السوق السوري</Placeholder>
+          بدأت فكرة «فرصة» من ملاحظة بسيطة: في سوريا، يملك الناس الكثير مما يريدون بيعه،
+          ويبحث كثيرون عن سلع وخدمات قريبة منهم بأسعار مناسبة — لكن لم تكن هناك منصة
+          سورية موثوقة تجمع الطرفين في مكان واحد. كان البيع والشراء يعتمد على مجموعات
+          متفرّقة يصعب فيها الوصول إلى المشتري الجاد أو الوثوق بالبائع.
+        </p>
+        <p>
+          انطلقنا لنبني منصة عربية بسيطة، مصمّمة للسوق السوري تحديداً: تعمل على الهاتف
+          والحاسب، تربط البائع بالمشتري حسب المنطقة، وتضيف طبقة من الثقة عبر توثيق
+          المتاجر وشبكة مندوبين ميدانيين. هدفنا أن يجد كل سوري ما يبحث عنه — أو من يبيع
+          له — بأقل جهد وأعلى أمان.
         </p>
       </Section>
 
       <Section title="رسالتنا">
         <p>
-          <Placeholder>يملأ المؤسس: صياغة الرسالة والقيم بالتفصيل</Placeholder>
+          رسالتنا أن نجعل البيع والشراء في سوريا أسهل وأأمن وأقرب. نؤمن أن السوق المحلي
+          يستحق منصة تحترم وقت مستخدميها وتحمي ثقتهم.
         </p>
+        <p>نلتزم بثلاث قيم:</p>
+        <List
+          items={[
+            <>
+              <strong>الثقة:</strong> نراجع حسابات الأعمال قبل تفعيلها، ونمنح المتاجر
+              الموثّقة شارة يراها المشتري.
+            </>,
+            <>
+              <strong>القرب:</strong> نربط الناس بما هو قريب منهم جغرافياً، حتى تكون
+              الصفقة أسهل وأسرع.
+            </>,
+            <>
+              <strong>البساطة:</strong> واجهة عربية واضحة، بأقل عدد من الخطوات للوصول
+              إلى ما تريد.
+            </>,
+          ]}
+        />
       </Section>
 
       <Section title="ما الذي يميّزنا">
@@ -63,9 +93,10 @@ export default function AboutPage() {
         />
       </Section>
 
-      <Section title="فرصة بالأرقام">
+      <Section title="تغطيتنا">
         <p>
-          <Placeholder>يملأ المؤسس: عدد الإعلانات، المستخدمين، المتاجر، المحافظات المغطاة</Placeholder>
+          تغطي فرصة جميع المحافظات السورية — يمكنك النشر والبحث في أي محافظة أو منطقة أو
+          حي داخل سوريا.
         </p>
       </Section>
 

@@ -1,20 +1,21 @@
 import type { Metadata } from 'next';
-import { StaticPage, Section, List, DraftNotice, Placeholder } from '@/components/static/StaticPage';
+import { StaticPage, Section, List } from '@/components/static/StaticPage';
 
 export const metadata: Metadata = {
   title: 'شروط الخدمة',
   description: 'شروط وأحكام استخدام منصة فرصة.',
 };
 
-// ⚠️ DRAFT — NOT LEGAL ADVICE.
+// LIVE TERMS — the draft banner was removed once the founder confirmed legal review.
 // Written from what the app demonstrably does today: individual + corporate
 // accounts, corporate signup filing a PENDING store application that an admin
 // approves or rejects with a reason, seller surfaces (listings/wallet/boosts)
 // gated until approval, listing moderation, a manually topped-up wallet funding
 // store memberships and boosts, and a field-agent network.
 //
-// Needs a qualified legal review before the DraftNotice banner is removed.
-// Governing-law and dispute clauses in particular are placeholders.
+// The refund, liability and jurisdiction clauses are the founder's lawyer-supplied
+// text — do not reword them for style. These are binding on users now: if a practice
+// below stops being true, update BOTH this page and the code in the same change.
 
 export default function TermsPage() {
   return (
@@ -23,8 +24,6 @@ export default function TermsPage() {
       intro="الشروط التي تحكم استخدامك لمنصة فرصة. يُرجى قراءتها قبل استخدام المنصة."
       updated="تموز 2026"
     >
-      <DraftNotice />
-
       <Section title="1. قبول الشروط">
         <p>
           باستخدامك منصة «فرصة» — تصفّحاً أو تسجيلاً أو نشراً للإعلانات — فإنك توافق على
@@ -105,8 +104,24 @@ export default function TermsPage() {
             'يُمنع استخدام المحفظة لأي غرض خارج خدمات المنصة.',
           ]}
         />
+        <p className="font-bold text-gray-900 pt-1">سياسة الاسترداد:</p>
         <p>
-          <Placeholder>يملأ المؤسس/المحامي: سياسة الاسترداد التفصيلية وحالاتها</Placeholder>
+          الأصل أن المبالغ المدفوعة لشحن المحفظة أو تفعيل الاشتراكات وخدمات التعزيز غير
+          قابلة للاسترداد بعد تفعيل الخدمة. يُستثنى من ذلك الحالات التالية:
+        </p>
+        <ol className="space-y-1.5 ps-5 list-decimal marker:text-gray-400">
+          <li>
+            حدوث خطأ تقني من قِبل المنصة أدى إلى خصم الرصيد دون تفعيل الخدمة المطلوبة.
+          </li>
+          <li>
+            عدم تمكن المنصة من تقديم الخدمة المُشترك بها لأسباب خارجة عن إرادة المستخدم
+            ولمدة تتجاوز 48 ساعة متواصلة.
+          </li>
+        </ol>
+        <p>
+          في هذه الحالات، يتم تعويض المستخدم بإعادة الرصيد إلى محفظته داخل المنصة فقط، ولا
+          يتم استرداد المبالغ نقداً أو عبر الحوالات المالية. يجب على المستخدم تقديم طلب
+          الاسترداد لخدمة العملاء خلال مدة أقصاها (7) أيام من تاريخ حدوث المشكلة.
         </p>
       </Section>
 
@@ -125,8 +140,23 @@ export default function TermsPage() {
           أي خسائر مباشرة أو غير مباشرة تنشأ عن استخدام المنصة أو عن صفقة بين مستخدمين،
           بما في ذلك الأضرار الناجمة عن محتوى إعلان أو سلوك مستخدم آخر أو انقطاع الخدمة.
         </p>
+        <p className="font-bold text-gray-900 pt-1">حدود المسؤولية والتعويض:</p>
         <p>
-          <Placeholder>يراجعه المحامي: صياغة حدود المسؤولية والتعويض بما يتوافق مع القانون السوري</Placeholder>
+          بموجب أحكام القانون المدني السوري وقانون مكافحة الجريمة المعلوماتية النافذ، تعمل
+          منصة «فرصة» كمزود خدمة وسيط لعرض الإعلانات فقط. ولا تتحمل المنصة، أو أي من
+          مالكيها أو مديريها، أي مسؤولية قانونية، جنائية أو مدنية، عن:
+        </p>
+        <List
+          items={[
+            'أي أضرار مباشرة أو غير مباشرة، أو خسائر مالية تنتج عن الاعتماد على الإعلانات المنشورة.',
+            'أي عمليات احتيال، أو غبن، أو خلافات تقع بين البائع والمشتري.',
+            'جودة السلع، أو دقة وصحة المعلومات التي يدرجها المستخدمون.',
+          ]}
+        />
+        <p>
+          يقتصر دورنا ومسؤوليتنا على إزالة المحتوى المخالف فور علمنا اليقيني به أو بناءً
+          على أمر قضائي مختص. يوافق المستخدم بموجب هذه الشروط على إعفاء المنصة إعفاءً
+          تاماً من أي مطالبات بالتعويض تنشأ عن تعاملاته مع مستخدمين آخرين.
         </p>
       </Section>
 
@@ -149,9 +179,16 @@ export default function TermsPage() {
         <p>
           تخضع هذه الشروط للقوانين النافذة في الجمهورية العربية السورية.
         </p>
+        <p className="font-bold text-gray-900 pt-1">الجهة القضائية المختصة وآلية حل النزاعات:</p>
         <p>
-          <Placeholder>يملأ المؤسس/المحامي: الجهة القضائية المختصة وآلية حل النزاعات</Placeholder>
+          في حال نشوء أي نزاع أو خلاف يتعلق باستخدام منصة «فرصة» أو بتفسير هذه الشروط:
         </p>
+        <List
+          items={[
+            'يلتزم الأطراف أولاً بمحاولة حل النزاع ودياً عبر التواصل المباشر مع إدارة المنصة خلال مدة (30) يوماً من تاريخ الإشعار بالنزاع.',
+            'في حال تعذر الحل الودي، تتفق الأطراف على أن محاكم مدينة (دمشق) في الجمهورية العربية السورية هي الجهة القضائية الحصرية والمختصة مكانياً ونوعياً للنظر في أي دعوى قضائية أو نزاع ناشئ عن هذا العقد أو عن استخدام المنصة.',
+          ]}
+        />
       </Section>
 
       <Section title="13. تعديل الشروط">
