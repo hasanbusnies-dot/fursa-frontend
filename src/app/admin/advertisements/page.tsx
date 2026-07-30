@@ -384,8 +384,6 @@ function EditModal({
           }
         : { ...form, companyName: form.companyName.trim(), targetUrl: form.targetUrl.trim() };
 
-    console.log('FRONTEND_SENDING_PAYLOAD (edit):', payload);
-
     setSaving(true);
     try {
       const updated = await advertisementsService.update(ad.id, payload as CreateAdPayload);
@@ -578,8 +576,6 @@ export default function AdminAdvertisementsPage() {
             isActive:        form.isActive,
           }
         : { ...form, companyName: form.companyName.trim(), targetUrl: form.targetUrl.trim() };
-
-    console.log('FRONTEND_SENDING_PAYLOAD:', payload);
 
     setCreating(true);
     try {

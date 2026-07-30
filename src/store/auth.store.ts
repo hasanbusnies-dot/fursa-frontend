@@ -35,16 +35,37 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
 
 // The forsa-token cookie belongs to the USER realm only (api.ts getToken's primary
-// source + the proxy guard). Staff realms are localStorage-only — nothing server-side
-// reads a staff cookie.
+// source). Staff realms are localStorage-only — nothing server-side reads a staff
+// cookie.
+//
+// ATTRIBUTES:
+// • Secure — added ONLY on an https origin. Production is https-only, so the cookie
+//   is always Secure there and can never ride a plaintext request. On http it is
+//   omitted deliberately: a Secure cookie set over http is silently REJECTED by the
+//   browser, which would break the LAN-IP origin a phone uses to reach the dev
+//   server (getToken would fall back to the localStorage copy, quietly). An attacker
+//   cannot choose the production protocol, so the conditional costs nothing.
+// • SameSite=Lax, not Strict — Strict withholds the cookie on top-level cross-site
+//   navigations, so arriving from a shared WhatsApp/Telegram link would read as
+//   logged out to anything server-side.
+// • NOT httpOnly, by design — api.ts reads it from JS as getToken's primary source.
+//   The refresh token living in localStorage is the real exposure here; it is a
+//   structural change, tracked in FOLLOWUPS.md as a post-launch item.
+function cookieAttributes(): string {
+  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+  return `; path=/; SameSite=Lax${secure}`;
+}
+
 function setTokenCookie(token: string) {
   if (typeof document === 'undefined') return;
-  document.cookie = `forsa-token=${token}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
+  document.cookie = `forsa-token=${token}; max-age=${COOKIE_MAX_AGE}${cookieAttributes()}`;
 }
 
 function clearTokenCookie() {
   if (typeof document === 'undefined') return;
-  document.cookie = 'forsa-token=; path=/; max-age=0; SameSite=Lax';
+  // Same name + path (and attributes, for consistency) — otherwise the browser
+  // treats it as a different cookie and the old one survives.
+  document.cookie = `forsa-token=; max-age=0${cookieAttributes()}`;
 }
 
 interface AuthStore {

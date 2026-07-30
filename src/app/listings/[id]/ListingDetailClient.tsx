@@ -1596,11 +1596,10 @@ export default function ListingDetailClient() {
     setLoadError(null);
     listingsService
       .getListingById(id)
-      .then((data) => {
-        console.log('[ListingDetail] full listing JSON:', JSON.stringify(data, null, 2));
-        console.log('[ListingDetail] vehicleDetails:', data?.vehicleDetails);
-        setListing(data);
-      })
+      // NEVER log the payload here. A listing carries phoneNumber, user.phone,
+      // the seller's individual/corporate profile and exact lat/lng — dumping it
+      // to the console printed a seller's PII on every page view, in production.
+      .then((data) => setListing(data))
       .catch((err) => {
         console.error('[ListingDetail] fetch error:', err);
         setLoadError(isConnectionError(err) ? 'connection' : 'notfound');

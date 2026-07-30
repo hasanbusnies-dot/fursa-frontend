@@ -175,8 +175,9 @@ export const listingsService = {
     if (params?.sellerId)    qs.set('sellerId',     params.sellerId);
     const query = qs.toString() ? `?${qs}` : '';
 
+    // Raw responses are deliberately NOT logged anywhere in this service: listing
+    // payloads carry seller PII (phone, profile) and precise coordinates.
     const raw = await api.get<ApiResponse<ListingsEnvelope>>(`/listings${query}`);
-    console.log('[listingsService] GET /listings raw response:', raw);
 
     const data = raw.data;
 
@@ -191,7 +192,6 @@ export const listingsService = {
 
   getListingById: async (id: string): Promise<Listing> => {
     const res = await api.get<ApiResponse<Listing>>(`/listings/${id}`);
-    console.log('[listingsService] GET /listings/:id raw response:', res);
     return res.data;
   },
 
@@ -202,7 +202,6 @@ export const listingsService = {
 
   getPendingListings: async (): Promise<Listing[]> => {
     const raw = await api.get<ApiResponse<ListingsEnvelope>>('/admin/listings');
-    console.log('[listingsService] GET /admin/listings raw response:', raw);
     const data = raw.data;
     if (Array.isArray(data)) return data;
     if (data && 'listings' in data && Array.isArray(data.listings)) return data.listings;

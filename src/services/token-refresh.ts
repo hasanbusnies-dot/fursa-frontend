@@ -152,7 +152,14 @@ async function doRefresh(realm: AuthRealm): Promise<string> {
   const newRefresh = json?.data?.refreshToken;
   if (!accessToken || !newRefresh) {
     // Our contract bug, not a dead session — surface loudly, never log out over it.
-    console.error('[auth] malformed /auth/refresh response:', json);
+    // The BODY is deliberately never logged: a partial response (access token
+    // present, refresh missing) reaches this branch, so printing it would put a
+    // live token in the console. The two flags below say which half was missing,
+    // which is all the diagnosis actually needs.
+    console.error(
+      '[auth] malformed /auth/refresh response (body withheld — may contain tokens):',
+      { hasAccessToken: !!accessToken, hasRefreshToken: !!newRefresh },
+    );
     throw new RefreshError(false, 'Malformed refresh response');
   }
 

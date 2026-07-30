@@ -1,5 +1,36 @@
 # Follow-ups (tracked, not dropped)
 
+## Refresh token in localStorage — POST-LAUNCH STRUCTURAL ITEM (logged 2026-07-29)
+`auth.store.ts` persists `user`, `token` AND `refreshToken` to localStorage via
+zustand `persist`, for all four realms (`forsa-auth`, `forsa-{admin,agent,
+accounting}-auth`). The `forsa-token` cookie is deliberately NOT httpOnly because
+`api.ts` getToken reads it from JS. Consequence: any XSS on the origin exfiltrates
+a LONG-LIVED refresh token, not just a short access token.
+
+Done at launch (cheap half): the cookie now carries `Secure` on https origins
+(omitted on http so the LAN-IP dev origin keeps working) and stays `SameSite=Lax`
+(Strict would withhold it when arriving from a shared WhatsApp/Telegram link).
+
+The real fix is a backend contract change, NOT a frontend tweak: move the refresh
+token into an httpOnly+Secure cookie set by the API, have `/auth/refresh` read it
+from the cookie instead of the request body, and drop `refreshToken` from the
+persisted store (keeping the access token in memory only). That touches login,
+refresh, logout and all four realms — schedule it as its own project.
+
+## No server-side route gating exists at all (logged 2026-07-29)
+`src/proxy.ts` was DELETED: its only surviving matcher was `/dashboard/:path*`, a
+route that has never existed (commit a9c519c moved the real `/listings/create`
+guard client-side to fix a redirect loop, leaving the file vestigial). Removing
+just the matcher was not an option — with no matcher Next runs the proxy on every
+route, which would have redirected every anonymous visitor to /login.
+
+So every guard in this app is now client-side, and the ONLY real authorization
+boundary is the backend API (staff routers require auth server-side — confirmed).
+Staff portal pages serve a 200 shell unauthenticated, which leaks no data. If
+server-side gating is ever wanted, add a fresh `src/proxy.ts` with an EXPLICIT
+matcher listing real routes, and remember the role lives in localStorage where a
+proxy cannot see it — only the `forsa-token` cookie is visible there.
+
 ## TWA: real SHA-256 fingerprint into assetlinks.json — BLOCKS Play verification (logged 2026-07-29)
 `public/.well-known/assetlinks.json` ships with two values that MUST be settled
 at Play Console upload time:

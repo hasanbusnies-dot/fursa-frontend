@@ -33,7 +33,5 @@ export function resolveMediaUrl(url: string): string {
     process.env.NEXT_PUBLIC_BACKEND_URL ??
     (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1').replace(/\/api(\/.*)?$/, '');
   const cleanPath = url.startsWith('/') ? url : `/${url}`;
-  const final = `${backendBase}${cleanPath}`;
-  console.log('DEBUG_AD_URL:', final);
-  return final;
+  return `${backendBase}${cleanPath}`;
 }
