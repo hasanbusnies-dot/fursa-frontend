@@ -46,7 +46,7 @@ function unwrap(json: unknown): Record<string, unknown> {
 /** Throw an ApiError carrying the server message + status (errors are generic 401). */
 async function throwApiError(res: Response): Promise<never> {
   const body = (await res.json().catch(() => ({}))) as { message?: string };
-  throw new ApiError(body.message ?? 'Giriş bilgileri hatalı.', undefined, res.status);
+  throw new ApiError(body.message ?? 'بيانات الدخول غير صحيحة.', undefined, res.status);
 }
 
 /** Extract { user, token, refreshToken } from the normal login/first-set payload,

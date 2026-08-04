@@ -55,14 +55,14 @@ function ListingNotFound() {
         <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
           <ImageOff className="w-7 h-7 text-gray-400" />
         </div>
-        <h1 className="text-lg font-bold text-gray-900 mb-2">İlan Bulunamadı</h1>
-        <p className="text-sm text-gray-500 mb-6">Bu ilan mevcut değil veya erişim yetkiniz yok.</p>
+        <h1 className="text-lg font-bold text-gray-900 mb-2">الإعلان غير موجود</h1>
+        <p className="text-sm text-gray-500 mb-6">قد يكون هذا الإعلان محذوفاً أو لا تملك صلاحية تعديله.</p>
         <Link
           href="/account/listings"
           className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
-          İlanlarıma Dön
+          العودة إلى إعلاناتي
         </Link>
       </div>
     </div>
@@ -167,7 +167,7 @@ export default function EditListingPage() {
       setSaved(true);
       router.push('/account/listings');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Güncelleme başarısız oldu.';
+      const msg = err instanceof Error ? err.message : 'تعذّر حفظ التغييرات — حاول مجدداً.';
       setSaveError(msg);
     } finally {
       setSaving(false);
@@ -193,7 +193,7 @@ export default function EditListingPage() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold text-gray-900">İlanı Düzenle</h1>
+            <h1 className="text-xl font-bold text-gray-900">تعديل الإعلان</h1>
             <p className="text-sm text-gray-500 truncate">{listing.title}</p>
           </div>
         </div>
@@ -217,7 +217,7 @@ export default function EditListingPage() {
           {/* Title */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-              İlan Başlığı <span className="text-red-400">*</span>
+              عنوان الإعلان <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
@@ -232,7 +232,7 @@ export default function EditListingPage() {
           {/* Description */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-              Açıklama
+              الوصف
             </label>
             <textarea
               value={description}
@@ -246,7 +246,7 @@ export default function EditListingPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                Fiyat <span className="text-red-400">*</span>
+                السعر <span className="text-red-400">*</span>
               </label>
               <input
                 type="number"
@@ -356,7 +356,7 @@ export default function EditListingPage() {
               href="/account/listings"
               className="flex-1 flex items-center justify-center py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              İptal
+              إلغاء
             </Link>
             <button
               type="submit"
@@ -364,11 +364,11 @@ export default function EditListingPage() {
               className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50 text-white text-sm font-semibold transition-colors"
             >
               {saving ? (
-                <><Loader2 className="w-4 h-4 animate-spin" />Kaydediliyor…</>
+                <><Loader2 className="w-4 h-4 animate-spin" />جارٍ الحفظ…</>
               ) : saved ? (
-                <><Save className="w-4 h-4" />Kaydedildi</>
+                <><Save className="w-4 h-4" />تم الحفظ</>
               ) : (
-                <><Save className="w-4 h-4" />Değişiklikleri Kaydet</>
+                <><Save className="w-4 h-4" />حفظ التغييرات</>
               )}
             </button>
           </div>
