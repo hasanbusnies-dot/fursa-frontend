@@ -1,5 +1,6 @@
 import { refreshAccessToken, RefreshError } from './token-refresh';
-import { AUTH_STORAGE_KEYS, realmFromPathname, type AuthRealm } from '@/store/auth.store';
+import { AUTH_STORAGE_KEYS, authStoreFor, realmFromPathname, type AuthRealm } from '@/store/auth.store';
+import { requiresAuth } from '@/lib/auth-routes';
 import {
   ACCOUNT_BLOCKED_PATH,
   isAccountBlockCode,
@@ -92,6 +93,15 @@ const LOGIN_PATHS: Record<AuthRealm, string> = {
 // Wipes THIS realm's local auth state WITHOUT navigating. Split out of
 // clearAuthAndRedirect so the account-blocked path can end the session and then send the
 // user somewhere other than the login portal.
+//
+// Resets the IN-MEMORY store too, not just persisted storage. That used to be
+// redundant — every caller hard-navigated immediately after, and the reload rebuilt
+// the store from (now empty) storage. It stopped being redundant once a dead session
+// on a PUBLIC page began clearing without navigating: the store would still say
+// `isAuthenticated`, so the header would keep rendering the user as logged in and the
+// root layout's pollers would re-fire every 10s, 401, and burn a refresh each time.
+// Setting state directly rather than calling logout() deliberately skips the
+// POST /auth/logout revoke — the refresh token is already dead, that is why we are here.
 function clearLocalAuth(realm: AuthRealm): void {
   if (typeof window === 'undefined') return;
   try {
@@ -100,19 +110,39 @@ function clearLocalAuth(realm: AuthRealm): void {
   } catch { /* private-browsing environments may throw */ }
   // Expire the session cookie (user realm only — staff realms have none)
   if (realm === 'user') document.cookie = 'forsa-token=; path=/; max-age=0; SameSite=Lax';
+  authStoreFor(realm).setState({
+    user: null,
+    token: null,
+    refreshToken: null,
+    isAuthenticated: false,
+  });
 }
 
-// Wipes THIS realm's local auth state and hard-navigates to its login portal.
-// Called ONLY on a definitive session death: /auth/refresh rejected the refresh token,
-// or a just-refreshed access token was rejected again (account-level rejection).
+// Ends THIS realm's session, and navigates to its login portal ONLY from a route that
+// actually needs one. Called on a definitive session death: /auth/refresh rejected the
+// refresh token, or a just-refreshed access token was rejected again.
+//
+// The route check is the fix for "opening the app lands on /login". `isAuthenticated`
+// outlives the refresh token in localStorage, so a returning visitor opens the app with
+// a dead-but-live-looking session; SocketManager (root layout, EVERY page) immediately
+// calls /notifications/unread-count, which 401s, and the refresh 401s definitively. This
+// function then ran on the HOMEPAGE and threw the visitor onto the login screen. Browsing
+// a classifieds site is public — a dead session on a public page just means "you are
+// logged out now", so clear it and let them carry on. Only /account, /messages and the
+// listing create/edit routes are worth interrupting for (see lib/auth-routes.ts).
+//
 // Safe to call from SSR context — the guard prevents browser-only APIs from running.
 function clearAuthAndRedirect(realm: AuthRealm): void {
   if (typeof window === 'undefined') return;
   clearLocalAuth(realm);
+
+  const path = window.location.pathname;
+  // Public route: the session is gone, the UI flips to logged-out, browsing continues.
+  if (!requiresAuth(path, realm)) return;
   // Never hard-navigate to the page we're already on: a stray call that dies with this
   // realm ON the realm's login page would otherwise reload → refire → reload, forever
   // (the /admin/login loop from the Header's unread poll). Clearing state is enough.
-  if (window.location.pathname !== LOGIN_PATHS[realm]) {
+  if (path !== LOGIN_PATHS[realm]) {
     window.location.href = LOGIN_PATHS[realm];
   }
 }
