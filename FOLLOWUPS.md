@@ -288,32 +288,40 @@ field. Remaining gaps:
   the listing select); then the edit cascade can open pre-filled and this opt-in dance
   goes away. Until then, note the safety property it relies on: omitting `regionSlug`
   from a PATCH leaves `regionId`/`city`/`governorate`/`neighborhood` untouched.
+  **The frontend half is now done** — `locationsService.resolveCascade` + the cascade's
+  prefill effect rebuild the rendered ladder from a bare slug (R5), and the wizard's
+  back-navigation already exercises that path. The moment the read payload carries
+  `regionSlug`, the edit page can pass it straight through.
 - **The wizard's `district` field is now written by nothing.** The cascade sets
   `regionSlug` + `city` + (for «أخرى») `neighborhood`; `district` stayed in the zod schema
   and `CreateListingPayload` because the browse filters still send a `district` query
   param and older listings still carry the column. Retire it with the `city`/`governorate`
   cleanup above, not before — verify the browse filter first (§2).
-- **Aleppo city neighborhoods hang under the جبل سمعان district, not the governorate.**
-  So an Aleppo *city* seller has to pick a district whose name is a rural-sounding
-  administrative unit before their حي appears. The governorate-scoped search box covers
-  it (typing the neighborhood name finds it regardless of district), but if 3a-2 is ever
-  re-seeded, attaching city neighborhoods directly to the GOVERNORATE would let
-  `getGovernorateShape` return `mode: 'places'` for Aleppo too — the code already handles
-  that branch, it just has no data taking it today.
-- **`SearchableCombobox` caps the rendered list at 60 rows** (`MAX_RENDERED`) and tells
-  the seller to keep typing. al-Hasakah's largest district holds 487 places, and a real
-  virtualiser was not worth pulling in for one control. Revisit if the combobox gets
-  reused somewhere the tail matters more.
+- ~~**Aleppo city neighborhoods hang under the جبل سمعان district.**~~ RESOLVED by Phase 4
+  (R5): the backend's grouped discovery view surfaces them as «أحياء المدينة» on the
+  governorate's own rung, so باب المقام is 2 steps from حلب. `getGovernorateShape` is gone
+  — `getStep` + the backend's groups replaced it.
+- **`SearchableCombobox` caps each GROUP at 60 rows** (`MAX_PER_GROUP`) and tells the
+  seller to keep typing. The cap moved from per-list to per-group in R5 and that is
+  load-bearing, not cosmetic: حلب's grouped rung is 128 «أحياء المدينة» + 8 «المناطق», and
+  a flat cap spent its whole budget on the first group and dropped the second entirely —
+  منبج, the only way into the rural half of the governorate, became invisible until the
+  seller typed its name. A group can now be truncated but never erased. A real virtualiser
+  still isn't worth pulling in for one control; the biggest rung is 184 rows (مركز حلب).
 - **The hybrid threshold switches search STRATEGY, not whether the fetch happens.**
-  `PLACE_FETCH_ALL_MAX = 150` decides client-filter vs server-search, but the catalog API
-  exposes `hasChildren` (boolean) and no CHILD COUNT, so a list's size is only knowable
-  after it has been downloaded — al-Hasakah's 487 places are fetched once (cached for the
-  session) even though typing then goes to the server. Adding `childCount: r._count.children`
-  to `shape()` in the backend's `locations.controller.ts` would make the threshold
-  preventive and let large districts skip the download entirely. One line, backend-side.
-- **`دمشق` (the city itself, `placeType: 'city'`) sorts under «القرى والبلدات».** The
-  group split is `neighbourhood`/`quarter`/`suburb`/`borough` → «الأحياء», everything else
-  → «القرى والبلدات», which follows the agreed labels literally but reads oddly for the
-  one row that is a city inside its own governorate. Harmless today (it is 1 of 113 in
-  Damascus); if it bothers anyone, either rename the lower group or special-case
+  `PLACE_FETCH_ALL_MAX = 150` decides client-filter vs server-search. `childCount` now
+  rides on the payload (the backend added it in Phase 4), so a preventive variant that
+  skips the download is finally possible — but the 4-level tree cut the largest rung from
+  487 rows to 184, so there is nothing left worth preventing. Revisit only if a future
+  reseed reintroduces a big flat list.
+- **`دمشق` (the city itself, `placeType: 'city'`) sorts under «القرى والبلدات».** Scope
+  narrowed in R5: the urban/rural split now applies ONLY to plain (backend-ungrouped)
+  rungs, since the governorate rung takes its groups from the backend. Still reads oddly
+  where it does apply; if it bothers anyone, either rename the lower group or special-case
   `level === 'PLACE' && placeType === 'city'` into the upper one.
+- **Prefill lands on the SHORTEST ladder, which can differ from the path the seller
+  originally clicked.** `resolveCascade` re-descends with the same loader interactive use
+  runs and stops at the first rung that contains the target, so a Damascus neighborhood
+  reached by hand as دمشق → المزة → الجلاء (3 controls) reopens as دمشق → الجلاء (2), since
+  «أحياء المدينة» carries it directly. Same `regionSlug`, same map centre, fewer controls —
+  deliberate, but worth knowing before someone files it as a prefill bug.

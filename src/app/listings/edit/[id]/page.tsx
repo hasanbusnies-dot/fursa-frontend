@@ -11,7 +11,7 @@ import {
   toValidCoords,
   formatAddressLine,
   MAP_GOVERNORATE_ZOOM,
-  MAP_PLACE_ZOOM,
+  zoomForRegionLevel,
   type Coords,
 } from '@/lib/map';
 import {
@@ -328,8 +328,13 @@ export default function EditListingPage() {
               onChange={setPin}
               governorate={listing.governorate ?? listing.city}
               center={location.center}
+              // Follows the level the centre actually came from — a
+              // NULL-coordinate neighborhood resolves to its ناحية, and framing
+              // that at street zoom would overstate what we know.
               centerZoom={
-                location.regionSlug && !location.isOther ? MAP_PLACE_ZOOM : MAP_GOVERNORATE_ZOOM
+                location.isOther
+                  ? MAP_GOVERNORATE_ZOOM
+                  : zoomForRegionLevel(location.centerLevel)
               }
               allowClear={false}
               hint="انقر أو اسحب لتصحيح موقع إعلانك على الخريطة."

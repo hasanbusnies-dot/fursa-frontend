@@ -67,6 +67,33 @@ export const MAP_DISTRICT_ZOOM = 12;
  */
 export const MAP_PLACE_ZOOM = 14;
 
+/**
+ * Zoom for a ناحية (subdistrict) — the 4th level's middle rung. Between a
+ * district and a named place: a ناحية is a cluster of villages, so this frames
+ * the cluster without implying any one of them.
+ */
+export const MAP_SUBDISTRICT_ZOOM = 13;
+
+/**
+ * Zoom for a centre that came from level X of the location catalog.
+ *
+ * The level matters because it is often NOT the level the seller picked: the
+ * catalog's Tier-3 rows carry NULL coordinates, so choosing باب المقام centres
+ * the map on its ناحية instead. Zooming to MAP_PLACE_ZOOM there would frame a
+ * whole-ناحية guess as if it were that neighborhood's streets. The cascade
+ * reports which level the coordinate actually came from; this maps it honestly.
+ */
+export function zoomForRegionLevel(
+  level: 'GOVERNORATE' | 'DISTRICT' | 'SUBDISTRICT' | 'PLACE' | null | undefined,
+): number {
+  switch (level) {
+    case 'PLACE':       return MAP_PLACE_ZOOM;
+    case 'SUBDISTRICT': return MAP_SUBDISTRICT_ZOOM;
+    case 'DISTRICT':    return MAP_DISTRICT_ZOOM;
+    default:            return MAP_GOVERNORATE_ZOOM;
+  }
+}
+
 /** Brand orange-500 — the marker colour, matching the CTA palette. */
 export const MAP_MARKER_COLOR = '#f97316';
 

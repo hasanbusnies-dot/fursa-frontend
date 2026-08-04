@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { AlertCircle, DollarSign } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import type { WizardFormData } from './schema';
-import { toValidCoords, MAP_GOVERNORATE_ZOOM, MAP_PLACE_ZOOM, type Coords } from '@/lib/map';
+import { toValidCoords, MAP_GOVERNORATE_ZOOM, zoomForRegionLevel, type Coords } from '@/lib/map';
 import {
   LocationCascade,
   EMPTY_LOCATION,
@@ -99,16 +99,19 @@ export function Step2AdDetails({ form, rootSlug }: Props) {
       // regionSlug === the governorate itself ⇒ this was an «أخرى» pick, and the
       // seller's text is sitting in `neighborhood`.
       const isOther = !!gov && gov.slug === regionSlug;
+      // Walks up to the nearest ancestor WITH a coordinate — the stored region
+      // may be one of the catalog's NULL-coordinate rows, and a null centre here
+      // would drop the map back to the country view on every back-navigation.
+      const centre = await locationsService.resolveCenter(region);
+      if (!alive) return;
       setLocation({
         regionSlug,
         isOther,
         freeText: isOther ? (form.getValues('neighborhood') ?? '') : '',
         governorateSlug: gov?.slug ?? null,
         governorateName: gov?.nameAr ?? governorate ?? null,
-        center:
-          region && region.lat != null && region.lng != null
-            ? { lat: region.lat, lng: region.lng }
-            : null,
+        center: centre?.center ?? null,
+        centerLevel: centre?.level ?? null,
       });
       setRehydrated(true);
     })();
@@ -136,10 +139,13 @@ export function Step2AdDetails({ form, rootSlug }: Props) {
     [setValue],
   );
 
-  // Governorate → district → place, each narrowing the camera.
-  const mapZoom = location.regionSlug && !location.isOther
-    ? MAP_PLACE_ZOOM
-    : MAP_GOVERNORATE_ZOOM;
+  // Each rung narrows the camera. The zoom follows the level the CENTRE came
+  // from, not the level picked: a NULL-coordinate neighborhood centres on its
+  // ناحية, and framing that at street zoom would overstate what we know.
+  // «أخرى» stays at governorate zoom — there is no catalog place behind it.
+  const mapZoom = location.isOther
+    ? MAP_GOVERNORATE_ZOOM
+    : zoomForRegionLevel(location.centerLevel);
 
   const setPin = (next: Coords | null) => {
     // Cleared pins go back to undefined, never 0 — a real 0,0 would be a

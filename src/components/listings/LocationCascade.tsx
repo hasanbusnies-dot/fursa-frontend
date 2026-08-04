@@ -1,42 +1,57 @@
 'use client';
 
 /**
- * Governorate → [district] → place cascade, with ADAPTIVE depth.
+ * Location cascade — governorate → منطقة → ناحية → حي/قرية, with ADAPTIVE depth.
  *
- * The catalog tree is deliberately non-uniform, so the number of steps a seller
- * sees depends on the governorate they picked:
+ * WHY IT IS BUILT AS A LADDER, NOT FOUR FIELDS
+ * The tree is 4 levels deep but the number of rungs a seller SEES varies by
+ * branch, because the backend collapses whatever would be a dead choice:
  *
- *   دمشق  — one district holding all 11 places  → 2 steps. The district select
- *           would be a dead single-option control, so it is skipped and its
- *           places are flattened in invisibly.
- *   حلب   — 8 districts, 2,092 places           → 3 steps. Here the district IS
- *           the thing that makes the list navigable.
+ *   حلب → باب المقام            2 steps — the governorate's own «أحياء المدينة»
+ *                                group reaches city neighborhoods directly.
+ *   حلب → منبج → ناحية → قرية   4 steps — out here every rung is a real fork.
+ *   دمشق → حي                   2 steps — دمشق has ONE district, so that rung is
+ *                                auto-descended and never rendered.
  *
- * `locationsService.getGovernorateShape` makes that call off `hasChildren`,
- * which already rides on the `?parent=` payload — so it costs no extra request.
+ * Hardcoding four fields would have to special-case each of those. Instead the
+ * component holds an ARRAY of rungs and asks `locationsService.getStep` for the
+ * next one: the loader applies the skip rule and the backend supplies the
+ * grouping, so depth follows the data. A future 5th level, or a new group, needs
+ * no change here.
  *
- * WHAT IT EMITS (`onChange`): the deepest region the seller settled on, as the
- * `regionSlug` the backend's `resolveLocation` expects — a PLACE slug normally,
- * or the GOVERNORATE slug when they picked «أخرى» and typed a name themselves
- * (Model B). The backend derives city/governorate/neighborhood from that slug and
- * overwrites whatever text we send, so this component never has to keep the
- * denormalized columns in sync.
+ * THE ONE INVARIANT: never finalize on a `selectable: false` node. A DISTRICT or
+ * SUBDISTRICT is drill-through scaffolding — picking one sets `regionSlug` to
+ * null and opens the next rung, which is what makes the create-listing 400 on a
+ * bare ناحية structurally impossible rather than merely unlikely.
  *
- * It also emits `center` — the coordinate the map should fly to. That narrows as
- * the seller descends (governorate → district → place); it is a VIEW hint only
- * and never becomes a pin. See `ListingMapPicker`.
+ * WHAT IT EMITS (`onChange`): the deepest SELECTABLE region the seller settled
+ * on, as the `regionSlug` the backend's `resolveLocation` expects — a PLACE slug
+ * normally, or the GOVERNORATE slug when they picked «أخرى» and typed a name
+ * themselves (Model B). The backend derives city/governorate/neighborhood from
+ * that slug and overwrites whatever text we send.
+ *
+ * It also emits `center` + `centerLevel` — where the map should look and how
+ * tightly to frame it. Many catalog rows carry NULL coordinates (باب المقام is
+ * one), so the centre falls back to the nearest ancestor that has one and
+ * reports THAT level, so the map never frames a ناحية centroid as a street
+ * address. It is a VIEW hint only and never becomes a pin. See ListingMapPicker.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import {
   locationsService,
+  isSelectable,
+  hasChildren,
   placeGroup,
   placeSearchMode,
   placeTypeLabel,
+  stepItems,
   PLACE_GROUP_LABELS,
+  REGION_LEVEL_LABELS,
   type Region,
-  type GovernorateShape,
+  type RegionLevel,
+  type RegionStep,
 } from '@/services/locations.service';
 import { SearchableCombobox, type ComboboxGroup, type ComboboxOption } from '@/components/ui/SearchableCombobox';
 import type { Coords } from '@/lib/map';
@@ -46,7 +61,8 @@ import type { Coords } from '@/lib/map';
 export const OTHER_VALUE = '__other__';
 
 export interface LocationValue {
-  /** Deepest region picked — PLACE slug, or the GOVERNORATE slug for «أخرى». */
+  /** Deepest SELECTABLE region picked — a PLACE slug, or the GOVERNORATE slug
+   *  for «أخرى». Null while the seller is parked on a drill-through node. */
   regionSlug: string | null;
   /** Free text, only when «أخرى» is active. Rides in `neighborhood` on submit. */
   freeText: string;
@@ -58,6 +74,8 @@ export interface LocationValue {
   governorateName: string | null;
   /** Where the map should look. Narrows as the seller descends. */
   center: Coords | null;
+  /** Level the centre actually came from — the honest zoom hint. */
+  centerLevel: RegionLevel | null;
 }
 
 export const EMPTY_LOCATION: LocationValue = {
@@ -67,25 +85,88 @@ export const EMPTY_LOCATION: LocationValue = {
   governorateSlug: null,
   governorateName: null,
   center: null,
+  centerLevel: null,
 };
 
+/** Urban-before-rural, used only for a plain (backend-ungrouped) rung of places. */
 const PLACE_GROUPS: ComboboxGroup[] = [
   { key: 'urban', label: PLACE_GROUP_LABELS.urban },
   { key: 'rural', label: PLACE_GROUP_LABELS.rural },
 ];
 
-function coordsOf(r: Pick<Region, 'lat' | 'lng'> | null | undefined): Coords | null {
-  if (!r || r.lat == null || r.lng == null) return null;
-  return { lat: r.lat, lng: r.lng };
+type Centre = { center: Coords | null; level: RegionLevel | null };
+
+const NO_CENTRE: Centre = { center: null, level: null };
+
+function centreOf(r: Region | null | undefined): Centre {
+  if (!r || r.lat == null || r.lng == null) return NO_CENTRE;
+  return { center: { lat: r.lat, lng: r.lng }, level: r.level };
 }
 
-function toOption(r: Region): ComboboxOption {
-  return {
-    value: r.slug,
-    label: r.nameAr,
-    hint: placeTypeLabel(r.placeType),
-    group: placeGroup(r),
-  };
+/**
+ * Centre → the two LocationValue fields, keeping them in lockstep. A centre and
+ * a level that disagree would frame a ناحية centroid at street zoom, so they are
+ * only ever written together — and a resolve that found nothing leaves BOTH
+ * fields alone rather than blanking the map.
+ */
+function applyCentre(c: Centre, prev: LocationValue): Pick<LocationValue, 'center' | 'centerLevel'> {
+  if (!c.center) return { center: prev.center, centerLevel: prev.centerLevel };
+  return { center: c.center, centerLevel: c.level };
+}
+
+/** A rendered rung plus the state that belongs to it. */
+interface Rung {
+  step: RegionStep;
+  selected: string | null;
+  /**
+   * Best centre known when this rung opened — the fallback for a pick whose own
+   * coordinate is NULL. Already folds in any auto-skipped node, which is often
+   * the only ancestor with a coordinate (دمشق's hidden district has one).
+   */
+  inherited: Centre;
+}
+
+/** Deepest auto-skipped node that carries a coordinate, if any. */
+function skippedCentre(step: RegionStep, fallback: Centre): Centre {
+  for (let i = step.skipped.length - 1; i >= 0; i--) {
+    const c = centreOf(step.skipped[i]);
+    if (c.center) return c;
+  }
+  return fallback;
+}
+
+/**
+ * Turn a resolved ladder (prefill / search landing) into rungs, threading the
+ * centre chain forward exactly as an interactive descent would.
+ */
+function buildRungs(
+  steps: { step: RegionStep; selected: string }[],
+  govCentre: Centre,
+): Rung[] {
+  let inherited = govCentre;
+  return steps.map(({ step, selected }) => {
+    const withSkips = skippedCentre(step, inherited);
+    const rung: Rung = { step, selected, inherited: withSkips };
+    const node = stepItems(step).find((i) => i.slug === selected) ?? null;
+    const own = centreOf(node);
+    inherited = own.center ? own : withSkips;
+    return rung;
+  });
+}
+
+/**
+ * Field label for a rung. Levels are read off the rows themselves: a rung of
+ * SUBDISTRICTs is «الناحية», a rung of PLACEs is «الحي / القرية». The grouped
+ * governorate view mixes both (neighborhoods AND districts in one control), so
+ * it gets a label that honestly covers the choice on offer.
+ */
+function rungLabel(step: RegionStep): string {
+  const levels = new Set(stepItems(step).map((i) => i.level));
+  if (levels.size === 1) {
+    const [only] = [...levels];
+    return REGION_LEVEL_LABELS[only];
+  }
+  return 'الحي أو المنطقة';
 }
 
 const labelCls = 'block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5';
@@ -124,20 +205,30 @@ export function LocationCascade({
   disabled?: boolean;
 }) {
   const [governorates, setGovernorates] = useState<Region[]>([]);
-  const [shape, setShape] = useState<GovernorateShape | null>(null);
-  const [districtSlug, setDistrictSlug] = useState<string | null>(null);
-  const [districtPlaces, setDistrictPlaces] = useState<Region[]>([]);
-  const [loadingShape, setLoadingShape] = useState(false);
-  const [loadingPlaces, setLoadingPlaces] = useState(false);
+  const [rungs, setRungs] = useState<Rung[]>([]);
+  const [loadingRung, setLoadingRung] = useState(false);
 
-  // Server-side search results, scoped to the governorate. The cascade alone
-  // can't reach a place whose district the seller doesn't know, and al-Hasakah's
-  // largest district holds 487 rows — so typing queries the whole governorate.
+  // Governorate-scoped server search, wired only on rungs too large to scan.
   const [searchHits, setSearchHits] = useState<Region[] | null>(null);
   const [searching, setSearching] = useState(false);
 
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+
+  // Latest value, readable from async callbacks that would otherwise close over
+  // a stale one (the centre refinement below lands after a round trip).
+  const valueRef = useRef(value);
+  valueRef.current = value;
+
+  /** Guards the async centre refinement so a stale resolve can't move the map
+   *  after the seller has already picked somewhere else. */
+  const centreSeq = useRef(0);
+
+  /**
+   * Guards every async ladder mutation. A seller who picks حلب then دمشق before
+   * the first fetch lands must not have حلب's rungs arrive on top of دمشق's.
+   */
+  const ladderSeq = useRef(0);
 
   // ── Governorates (once) ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -148,127 +239,203 @@ export function LocationCascade({
     return () => { alive = false; };
   }, []);
 
-  // ── Governorate → shape ─────────────────────────────────────────────────────
-  // Keyed on the slug so a re-render can't refetch, and guarded by `alive` so a
-  // fast second pick can't have its result overwritten by the slower first.
   const govSlug = value.governorateSlug;
+  const governorate = useMemo(
+    () => governorates.find((g) => g.slug === govSlug) ?? null,
+    [governorates, govSlug],
+  );
 
-  useEffect(() => {
-    if (!govSlug) {
-      setShape(null);
-      setDistrictSlug(null);
-      setDistrictPlaces([]);
+  /** Append the rung below `parentSlug`, discarding anything deeper. */
+  const openRung = useCallback(async (parentSlug: string, depth: number, inherited: Centre) => {
+    const token = ++ladderSeq.current;
+    setLoadingRung(true);
+    const step = await locationsService.getStep(parentSlug);
+    if (token !== ladderSeq.current) return;
+    setLoadingRung(false);
+
+    // An empty rung means the branch dead-ends: render nothing and let «أخرى»
+    // on the rung above carry the seller.
+    if (!step.total) {
+      setRungs((prev) => prev.slice(0, depth));
       return;
     }
-    let alive = true;
-    setLoadingShape(true);
-    locationsService
-      .getGovernorateShape(govSlug)
-      .then((s) => { if (alive) setShape(s); })
-      .finally(() => { if (alive) setLoadingShape(false); });
-    return () => { alive = false; };
-  }, [govSlug]);
+    setRungs((prev) => [
+      ...prev.slice(0, depth),
+      { step, selected: null, inherited: skippedCentre(step, inherited) },
+    ]);
+  }, []);
 
-  // ── District → places ───────────────────────────────────────────────────────
+  // ── Prefill ─────────────────────────────────────────────────────────────────
+  /**
+   * Rebuild the ladder for a `regionSlug` that arrived from outside — the edit
+   * page, or the wizard remounting on back-navigation. `resolveCascade` descends
+   * with the same loader interactive use runs, so the rebuilt ladder is exactly
+   * the one the seller would have built by hand (2 rungs for باب المقام, not the
+   * 3 its raw path would suggest).
+   *
+   * Runs only when the ladder is empty but a region is already set. Waits for
+   * the governorate list so the centre chain starts from a real coordinate
+   * instead of nothing.
+   */
+  const needsPrefill =
+    !!value.regionSlug && !value.isOther && rungs.length === 0 && governorates.length > 0;
+  const prefilling = useRef(false);
+
   useEffect(() => {
-    if (!districtSlug) {
-      setDistrictPlaces([]);
-      return;
-    }
-    let alive = true;
-    setLoadingPlaces(true);
-    locationsService
-      .getChildren(districtSlug)
-      .then((rows) => { if (alive) setDistrictPlaces(rows.filter((r) => r.level === 'PLACE')); })
-      .finally(() => { if (alive) setLoadingPlaces(false); });
-    return () => { alive = false; };
-  }, [districtSlug]);
+    if (!needsPrefill || prefilling.current) return;
+    const slug = value.regionSlug!;
+    prefilling.current = true;
+    const token = ++ladderSeq.current;
+    setLoadingRung(true);
+
+    (async () => {
+      const { steps } = await locationsService.resolveCascade(slug);
+      if (token !== ladderSeq.current) { prefilling.current = false; return; }
+      setRungs(buildRungs(steps, centreOf(governorate)));
+      setLoadingRung(false);
+      prefilling.current = false;
+    })();
+  }, [needsPrefill, value.regionSlug, governorate]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
   const pickGovernorate = (slug: string | null) => {
+    ladderSeq.current++; // strand any in-flight rung from the previous governorate
+    centreSeq.current++; // …and any centre resolve still chasing the old branch
     const gov = governorates.find((g) => g.slug === slug) ?? null;
-    setDistrictSlug(null);
-    setDistrictPlaces([]);
+    setRungs([]);
     setSearchHits(null);
+    setLoadingRung(false);
     // Changing governorate invalidates the place: keeping it would leave a
     // listing whose region belongs to a different governorate than the one shown.
     onChangeRef.current({
       ...EMPTY_LOCATION,
       governorateSlug: gov?.slug ?? null,
       governorateName: gov?.nameAr ?? null,
-      center: coordsOf(gov),
+      ...applyCentre(centreOf(gov), EMPTY_LOCATION),
     });
+    if (gov) void openRung(gov.slug, 0, centreOf(gov));
   };
 
-  const pickDistrict = (slug: string | null) => {
-    setDistrictSlug(slug);
+  /** Land on a region that did NOT come from the visible ladder (a search hit). */
+  const jumpTo = useCallback(async (hit: Region) => {
+    const token = ++ladderSeq.current;
+    centreSeq.current++;
     setSearchHits(null);
-    const d = shape?.districts.find((x) => x.slug === slug) ?? null;
-    // Descending a level clears the place but keeps the governorate, and moves
-    // the camera to the district so the next list opens somewhere relevant.
+    setLoadingRung(true);
+
+    const [{ steps }, resolved] = await Promise.all([
+      locationsService.resolveCascade(hit.slug),
+      locationsService.resolveCenter(hit),
+    ]);
+    if (token !== ladderSeq.current) return;
+    setLoadingRung(false);
+    setRungs(buildRungs(steps, centreOf(governorate)));
+
     onChangeRef.current({
       ...value,
-      regionSlug: null,
+      regionSlug: isSelectable(hit) ? hit.slug : null,
       isOther: false,
       freeText: '',
-      center: coordsOf(d) ?? value.center,
+      ...applyCentre({ center: resolved?.center ?? null, level: resolved?.level ?? null }, value),
+    });
+  }, [governorate, value]);
+
+  /** «أخرى» → Model B: the FK points at the GOVERNORATE so the listing stays
+   *  findable by governorate, and the seller's text lives in `neighborhood`. */
+  const applyOther = () => {
+    centreSeq.current++;
+    onChangeRef.current({
+      ...value,
+      regionSlug: value.governorateSlug,
+      isOther: true,
+      freeText: '',
+      // Back out to the whole-governorate view: «أخرى» means the exact place
+      // isn't in the catalog, so a narrower frame would be a claim we can't back.
+      ...applyCentre(centreOf(governorate), value),
     });
   };
 
-  /** The list the combobox browses, before any typing. */
-  const localPlaces = useMemo(() => {
-    if (shape?.mode === 'places') return shape.places;
-    return [...(shape?.places ?? []), ...districtPlaces];
-  }, [shape, districtPlaces]);
+  const pickAt = (depth: number, slug: string | null) => {
+    const rung = rungs[depth];
+    if (!rung) return;
 
-  /**
-   * HYBRID: small lists filter in the browser (instant, no network); large ones
-   * hand typing to the server, whose SQL ranking surfaces the intended row far
-   * better than substring matching across 400+ names. See PLACE_FETCH_ALL_MAX.
-   */
-  const searchMode = placeSearchMode(localPlaces.length);
-
-  const placePool = useMemo(
-    () => searchHits ?? localPlaces,
-    [searchHits, localPlaces],
-  );
-
-  const pickPlace = (slug: string | null) => {
     if (slug === OTHER_VALUE) {
-      // Model B: the FK points at the GOVERNORATE so the listing stays findable
-      // by governorate, and the seller's text lives in `neighborhood`.
-      const gov = governorates.find((g) => g.slug === value.governorateSlug) ?? null;
-      onChangeRef.current({
-        ...value,
-        regionSlug: value.governorateSlug,
-        isOther: true,
-        freeText: '',
-        center: coordsOf(gov) ?? value.center,
-      });
+      ladderSeq.current++;
+      setRungs((prev) => prev.slice(0, depth + 1).map((r, i) =>
+        i === depth ? { ...r, selected: OTHER_VALUE } : r,
+      ));
+      applyOther();
       return;
     }
+
     if (!slug) {
+      ladderSeq.current++;
+      setRungs((prev) => prev.slice(0, depth + 1).map((r, i) =>
+        i === depth ? { ...r, selected: null } : r,
+      ));
       onChangeRef.current({ ...value, regionSlug: null, isOther: false, freeText: '' });
       return;
     }
-    const place = placePool.find((p) => p.slug === slug) ?? null;
+
+    // A search hit can name a row outside this rung — rebuild around it instead.
+    const node = stepItems(rung.step).find((i) => i.slug === slug) ?? null;
+    if (!node) {
+      const hit = searchHits?.find((h) => h.slug === slug);
+      if (hit) void jumpTo(hit);
+      return;
+    }
+
+    ladderSeq.current++;
+    setSearchHits(null);
+    setRungs((prev) => prev.slice(0, depth + 1).map((r, i) =>
+      i === depth ? { ...r, selected: slug } : r,
+    ));
+
+    const own = centreOf(node);
+    const centre = own.center ? own : rung.inherited;
+    const centreToken = ++centreSeq.current;
+
     onChangeRef.current({
       ...value,
-      regionSlug: slug,
+      // THE INVARIANT: a drill-through node is never a final answer.
+      regionSlug: isSelectable(node) ? node.slug : null,
       isOther: false,
       freeText: '',
-      center: coordsOf(place) ?? value.center,
+      ...applyCentre(centre, value),
     });
+
+    /**
+     * NULL-coordinate row (the catalog's Tier-3 tail — باب المقام is one). The
+     * ladder's own fallback is the best coordinate we walked PAST, which for a
+     * pick out of the grouped «أحياء المدينة» list is the whole governorate —
+     * the group flattens the ancestry, so the seller never descended through the
+     * ناحية that actually knows where this neighborhood is. Ask the tree for it.
+     *
+     * Fired after the synchronous emit above, so the map moves immediately to
+     * the rough centre and then tightens, rather than sitting still until the
+     * round trip lands.
+     */
+    if (!own.center) {
+      void locationsService.resolveCenter(node).then((res) => {
+        if (!res || centreToken !== centreSeq.current) return;
+        const prev = valueRef.current;
+        onChangeRef.current({
+          ...prev,
+          ...applyCentre({ center: res.center, level: res.level }, prev),
+        });
+      });
+    }
+
+    if (hasChildren(node)) void openRung(node.slug, depth + 1, centre);
   };
 
-  // Debounced governorate-scoped search. A stale response must never replace a
-  // newer one, so each run carries a token checked before it commits.
+  // ── Governorate-scoped search ───────────────────────────────────────────────
+  // A stale response must never replace a newer one, so each run carries a token
+  // checked before it commits.
   const searchSeq = useRef(0);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Clear any pending keystroke on unmount so a fired timer can't setState on a
-  // component that's gone.
   useEffect(() => () => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
   }, []);
@@ -291,9 +458,9 @@ export function LocationCascade({
           .search(q, value.governorateSlug ?? undefined)
           .then((hits) => {
             if (token !== searchSeq.current) return;
-            // DISTRICT rows are not selectable (the backend rejects them —
-            // `SELECTABLE` in listing.location.ts), so offering one is a dead end.
-            setSearchHits(hits.filter((h) => h.level === 'PLACE'));
+            // The endpoint returns DISTRICT/SUBDISTRICT rows too; offering one
+            // as a result would be a dead end the seller can't finalize.
+            setSearchHits(hits.filter(isSelectable));
           })
           .finally(() => {
             if (token === searchSeq.current) setSearching(false);
@@ -310,22 +477,8 @@ export function LocationCascade({
     [governorates],
   );
 
-  const districtOptions: ComboboxOption[] = useMemo(
-    () => (shape?.districts ?? []).map((d) => ({ value: d.slug, label: d.nameAr })),
-    [shape],
-  );
-
-  const placeOptions: ComboboxOption[] = useMemo(() => {
-    const rows = placePool.map(toOption);
-    // «أخرى» is ungrouped, so the combobox renders it above every group header.
-    return [{ value: OTHER_VALUE, label: 'أخرى — أدخل الاسم يدوياً' }, ...rows];
-  }, [placePool]);
-
-  const showDistrictStep = shape?.mode === 'districts';
-  const placeDisabled =
-    disabled || !value.governorateSlug || (showDistrictStep && !districtSlug && !searchHits);
-
-  const placeValue = value.isOther ? OTHER_VALUE : value.regionSlug;
+  /** The deepest rung is the only one that offers «أخرى» and server search. */
+  const lastDepth = rungs.length - 1;
 
   return (
     <div className="space-y-4">
@@ -343,56 +496,103 @@ export function LocationCascade({
           />
         </FieldShell>
 
-        {showDistrictStep && (
-          <FieldShell
-            label="المنطقة"
-            hint="اختر المنطقة لعرض القرى والبلدات التابعة لها."
-          >
+        {rungs.map((rung, depth) => {
+          const isLast = depth === lastDepth;
+          const showHits = isLast && !!searchHits;
+          const rows = showHits ? searchHits! : stepItems(rung.step);
+
+          // Groups come from the BACKEND for the governorate rung («أحياء
+          // المدينة» then «المناطق»). A plain rung falls back to the urban/rural
+          // split, and search hits — which span the whole governorate — use it
+          // too since their backend grouping doesn't apply.
+          const backendGroups = rung.step.groups.filter((g) => g.key && g.labelAr);
+          const useBackendGroups = !showHits && backendGroups.length > 0;
+
+          const options: ComboboxOption[] = rows.map((r) => ({
+            value: r.slug,
+            label: r.nameAr,
+            hint: placeTypeLabel(r.placeType),
+            group: useBackendGroups
+              ? rung.step.groups.find((g) => g.items.some((i) => i.slug === r.slug))?.key
+              : placeGroup(r),
+          }));
+
+          const groups: ComboboxGroup[] = useBackendGroups
+            ? backendGroups.map((g) => ({ key: g.key, label: g.labelAr }))
+            : PLACE_GROUPS;
+
+          // «أخرى» is ungrouped, so the combobox renders it above every header.
+          const withOther: ComboboxOption[] = isLast
+            ? [{ value: OTHER_VALUE, label: 'أخرى — أدخل الاسم يدوياً' }, ...options]
+            : options;
+
+          const mode = placeSearchMode(rung.step.total);
+          const serverSearch = isLast && mode === 'server';
+
+          return (
+            <FieldShell
+              key={`${rung.step.requestedSlug}-${depth}`}
+              label={rungLabel(rung.step)}
+              hint={
+                !isLast
+                  ? undefined
+                  : serverSearch
+                    ? 'القائمة كبيرة — اكتب اسم حيّك أو قريتك للبحث في كامل المحافظة.'
+                    : 'اكتب للبحث ضمن القائمة، أو اختر «أخرى» إن لم تجد مكانك.'
+              }
+            >
+              <SearchableCombobox
+                value={rung.selected}
+                onChange={(slug) => pickAt(depth, slug)}
+                options={withOther}
+                groups={groups}
+                placeholder={loadingRung && isLast ? 'جارٍ التحميل…' : 'اختر…'}
+                searchPlaceholder={
+                  serverSearch ? 'اكتب للبحث في كامل المحافظة…' : 'اكتب للبحث…'
+                }
+                emptyText={searching ? 'جارٍ البحث…' : 'لا توجد نتائج — جرّب «أخرى»'}
+                // Only large rungs reach for the network. Below the threshold the
+                // fetched rows are already in memory, so a request would be
+                // strictly slower AND worse (the combobox's Arabic folding beats
+                // ILIKE on «المزه» → «المزة»).
+                onSearchChange={serverSearch ? runSearch : undefined}
+                loading={isLast && (searching || loadingRung)}
+                loadingText="جارٍ البحث…"
+                disabled={disabled}
+              />
+            </FieldShell>
+          );
+        })}
+
+        {/* A governorate whose branch yields no rung at all (a fetch that failed,
+            or a province the catalog hasn't filled in). Without this the seller
+            would have a governorate and no way to say anything more precise —
+            «أخرى» is the escape hatch that keeps the wizard finishable. */}
+        {!!govSlug && rungs.length === 0 && !loadingRung && (
+          <FieldShell label="الحي / القرية" hint="لا تتوفر تفاصيل أدق لهذه المحافظة — أدخل الاسم يدوياً.">
             <SearchableCombobox
-              value={districtSlug}
-              onChange={pickDistrict}
-              options={districtOptions}
-              placeholder="اختر المنطقة"
-              searchPlaceholder="ابحث عن منطقة…"
-              searchable={districtOptions.length > 8}
-              disabled={disabled || loadingShape}
+              value={value.isOther ? OTHER_VALUE : null}
+              onChange={(v) => {
+                if (v === OTHER_VALUE) applyOther();
+                else onChangeRef.current({ ...value, regionSlug: null, isOther: false, freeText: '' });
+              }}
+              options={[{ value: OTHER_VALUE, label: 'أخرى — أدخل الاسم يدوياً' }]}
+              placeholder="اختر…"
+              searchable={false}
+              disabled={disabled}
             />
           </FieldShell>
         )}
-
-        <FieldShell
-          label={showDistrictStep ? 'القرية / البلدة' : 'الحي / المنطقة'}
-          hint={
-            placeDisabled && !disabled
-              ? showDistrictStep
-                ? 'اختر المنطقة أولاً.'
-                : 'اختر المحافظة أولاً.'
-              : searchMode === 'server'
-                ? 'القائمة كبيرة — اكتب اسم حيّك أو قريتك للبحث في كامل المحافظة.'
-                : 'اكتب للبحث ضمن القائمة، أو اختر «أخرى» إن لم تجد مكانك.'
-          }
-        >
-          <SearchableCombobox
-            value={placeValue}
-            onChange={pickPlace}
-            options={placeOptions}
-            groups={PLACE_GROUPS}
-            placeholder={loadingShape || loadingPlaces ? 'جارٍ التحميل…' : 'اختر الحي أو القرية'}
-            searchPlaceholder={
-              searchMode === 'server' ? 'اكتب للبحث في كامل المحافظة…' : 'اكتب للبحث…'
-            }
-            emptyText={searching ? 'جارٍ البحث…' : 'لا توجد نتائج — جرّب «أخرى»'}
-            // Only large lists reach for the network. Below the threshold the
-            // fetched array is already in memory, so a request would be strictly
-            // slower AND worse (the combobox's Arabic folding beats ILIKE on
-            // «المزه» → «المزة»).
-            onSearchChange={searchMode === 'server' ? runSearch : undefined}
-            loading={searching || loadingPlaces}
-            loadingText="جارٍ البحث…"
-            disabled={placeDisabled}
-          />
-        </FieldShell>
       </div>
+
+      {/* Parked on a drill-through node: the seller has chosen a منطقة/ناحية but
+          nothing that can carry the listing yet. Say so rather than letting the
+          form look complete. */}
+      {!!value.governorateSlug && !value.regionSlug && rungs.length > 0 && !loadingRung && (
+        <p className="text-xs text-gray-400">
+          تابع الاختيار حتى تصل إلى الحي أو القرية، أو اختر «أخرى» لإدخال الاسم يدوياً.
+        </p>
+      )}
 
       {/* «أخرى» → free text. The FK still points at the governorate, so the ad
           stays findable even though the exact place isn't in the catalog. */}
@@ -412,7 +612,7 @@ export function LocationCascade({
         </FieldShell>
       )}
 
-      {loadingShape && (
+      {loadingRung && (
         <p className="flex items-center gap-1.5 text-xs text-gray-400">
           <Loader2 className="h-3 w-3 animate-spin" />
           جارٍ تحميل المناطق…

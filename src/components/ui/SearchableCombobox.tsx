@@ -72,12 +72,19 @@ function matches(haystack: string, needle: string): boolean {
 }
 
 /**
- * Rendering every option is fine at 11 (Damascus) and ruinous at 487
- * (al-Hasakah's largest district). Rather than pull in a virtualiser for one
- * list, cap the DOM and tell the seller to keep typing — which is the behaviour
- * that actually helps at that size.
+ * Rendering every option is fine at 11 rows and ruinous at 184 (مركز حلب).
+ * Rather than pull in a virtualiser for one list, cap the DOM and tell the
+ * seller to keep typing — which is the behaviour that actually helps at that
+ * size.
+ *
+ * THE CAP IS PER GROUP, NOT PER LIST, and that is load-bearing. حلب's grouped
+ * view is 128 «أحياء المدينة» followed by 8 «المناطق»; a single flat cap spends
+ * its whole budget on the first group and drops the second entirely, so منبج —
+ * the only way into the rural half of the governorate — would be invisible until
+ * the seller happened to type its name. Every group now keeps its own budget and
+ * its own "و N أخرى" footer, so a group can be truncated but never erased.
  */
-const MAX_RENDERED = 60;
+const MAX_PER_GROUP = 60;
 
 export function SearchableCombobox({
   value,
@@ -138,21 +145,42 @@ export function SearchableCombobox({
     return options.filter((o) => matches(o.label, query) || matches(o.hint ?? '', query));
   }, [options, query]);
 
-  // Flat, group-ordered list — the order the arrow keys walk. Ungrouped options
-  // (the pinned «أخرى») lead, then each declared group in its declared order,
-  // which is what pins «الأحياء» above «القرى».
-  const ordered = useMemo(() => {
-    const out: ComboboxOption[] = [];
-    out.push(...filtered.filter((o) => !o.group));
-    for (const g of groups) out.push(...filtered.filter((o) => o.group === g.key));
-    // Anything whose group isn't declared would otherwise vanish silently.
+  /**
+   * Sections in render order: ungrouped first (the pinned «أخرى»), then each
+   * declared group in its declared order — which is what pins «أحياء المدينة»
+   * above «المناطق» — then any group the caller forgot to declare, which would
+   * otherwise vanish silently.
+   */
+  const sections = useMemo(() => {
     const known = new Set(groups.map((g) => g.key));
-    out.push(...filtered.filter((o) => o.group && !known.has(o.group)));
-    return out;
+    const undeclared = [...new Set(
+      filtered.map((o) => o.group).filter((k): k is string => !!k && !known.has(k)),
+    )];
+
+    return [
+      { key: '__ungrouped', label: null as string | null, rows: filtered.filter((o) => !o.group) },
+      ...groups.map((g) => ({
+        key: g.key,
+        label: g.label as string | null,
+        rows: filtered.filter((o) => o.group === g.key),
+      })),
+      ...undeclared.map((k) => ({
+        key: k,
+        label: null as string | null,
+        rows: filtered.filter((o) => o.group === k),
+      })),
+    ]
+      .filter((s) => s.rows.length > 0)
+      .map((s) => ({
+        ...s,
+        shown: s.rows.slice(0, MAX_PER_GROUP),
+        hidden: Math.max(0, s.rows.length - MAX_PER_GROUP),
+      }));
   }, [filtered, groups]);
 
-  const visible = ordered.slice(0, MAX_RENDERED);
-  const hiddenCount = ordered.length - visible.length;
+  // The flat list the arrow keys walk — exactly what is rendered, in render
+  // order, so `data-idx` and `aria-activedescendant` stay aligned.
+  const visible = useMemo(() => sections.flatMap((s) => s.shown), [sections]);
 
   // Reset the highlight whenever the visible set changes out from under it.
   useEffect(() => {
@@ -314,15 +342,11 @@ export function SearchableCombobox({
             )}
 
             {/* Ungrouped first (the pinned «أخرى»), then each group under its header. */}
-            {[null, ...groups.map((g) => g.key)].map((groupKey) => {
-              const rows = visible.filter((o) =>
-                groupKey === null ? !o.group : o.group === groupKey,
-              );
-              if (!rows.length) return null;
-              const header = groupKey ? groups.find((g) => g.key === groupKey)?.label : null;
+            {sections.map((section) => {
+              const header = section.label;
 
               return (
-                <li key={groupKey ?? '__ungrouped'} role="presentation">
+                <li key={section.key} role="presentation">
                   {header && (
                     <div
                       role="presentation"
@@ -332,7 +356,7 @@ export function SearchableCombobox({
                     </div>
                   )}
                   <ul role="group" aria-label={header ?? undefined}>
-                    {rows.map((o) => {
+                    {section.shown.map((o) => {
                       cursor += 1;
                       const idx = cursor;
                       const isActive = idx === active;
@@ -361,15 +385,14 @@ export function SearchableCombobox({
                       );
                     })}
                   </ul>
+                  {section.hidden > 0 && (
+                    <div className="px-3 py-2 text-center text-[11px] text-gray-400">
+                      و{section.hidden} نتيجة أخرى — تابع الكتابة لتضييق البحث
+                    </div>
+                  )}
                 </li>
               );
             })}
-
-            {hiddenCount > 0 && (
-              <li className="px-3 py-2 text-center text-[11px] text-gray-400">
-                و{hiddenCount} نتيجة أخرى — تابع الكتابة لتضييق البحث
-              </li>
-            )}
 
             {loading && (
               <li className="px-3 py-2 text-center text-[11px] text-gray-400">{loadingText}</li>
