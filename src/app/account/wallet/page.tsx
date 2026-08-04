@@ -4,14 +4,12 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Wallet, Plus, X, ArrowDownLeft, ArrowUpRight, ArrowLeft, ChevronLeft, ChevronRight,
-  Loader2, Lock, RefreshCw, AlertTriangle, QrCode, ExternalLink, Copy, Check, Inbox, Clock,
+  Wallet, Plus, ArrowDownLeft, ArrowUpRight, ArrowLeft, ChevronLeft, ChevronRight,
+  Lock, RefreshCw, AlertTriangle, Inbox,
 } from 'lucide-react';
-import { toast } from 'sonner';
 import { useAuthStore } from '@/store/auth.store';
 import { useStoreGate } from '@/store/store-gate.store';
 import { StoreGateBlock } from '@/components/account/StoreGateNotice';
-import { ApiError } from '@/services/api';
 import {
   walletService,
   type Wallet as WalletData,
@@ -46,8 +44,6 @@ const TYPE_FILTERS: Array<{ value: WalletTxType | 'ALL'; label: string }> = [
   { value: 'ADJUSTMENT',      label: 'تعديل' },
 ];
 
-const AMOUNT_RE = /^\d+(\.\d{1,2})?$/;
-
 function formatDateTime(s: string): string {
   return new Date(s).toLocaleString('ar-SY', {
     year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -55,214 +51,6 @@ function formatDateTime(s: string): string {
 }
 
 const typeLabel = (t: string) => TYPE_LABELS[t] ?? t; // raw fallback for unknown types
-
-// ── Online top-up modal ─────────────────────────────────────────────────────────
-
-type ClientShape =
-  | { kind: 'redirect'; url: string }
-  | { kind: 'qr'; qr: string; code?: string; deepLink?: string }
-  | { kind: 'code'; code: string }
-  | { kind: 'generic'; payload: Record<string, unknown> };
-
-function detectClientData(d: Record<string, unknown>): ClientShape {
-  const url = (d.url ?? d.redirectUrl ?? d.paymentUrl) as string | undefined;
-  if (d.kind === 'redirect' || url) return { kind: 'redirect', url: String(url) };
-  const qr = (d.qr ?? d.qrData ?? d.qrCode) as string | undefined;
-  if (d.kind === 'qr' || qr) {
-    return { kind: 'qr', qr: String(qr ?? ''), code: d.code as string | undefined, deepLink: d.deepLink as string | undefined };
-  }
-  if (d.code) return { kind: 'code', code: String(d.code) };
-  return { kind: 'generic', payload: d };
-}
-
-function ClientDataView({ data }: { data: Record<string, unknown> }) {
-  const [copied, setCopied] = useState(false);
-  const shape = detectClientData(data);
-
-  const copy = (text: string) => {
-    navigator.clipboard?.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    }).catch(() => toast.error('تعذّر النسخ.'));
-  };
-
-  if (shape.kind === 'redirect') {
-    return (
-      <a
-        href={shape.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-l from-orange-500 to-pink-500 text-white text-sm font-bold hover:opacity-95 transition-opacity"
-      >
-        تابع إلى صفحة الدفع
-        <ExternalLink className="w-4 h-4" />
-      </a>
-    );
-  }
-
-  if (shape.kind === 'qr') {
-    return (
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-40 h-40 rounded-2xl bg-gray-50 border border-gray-200 flex flex-col items-center justify-center gap-2 text-center p-3">
-          <QrCode className="w-12 h-12 text-gray-400" />
-          <span className="text-[10px] text-gray-400 break-all line-clamp-2">{shape.qr}</span>
-        </div>
-        <p className="text-xs text-gray-500">امسح الرمز عبر تطبيق محفظتك لإتمام الدفع.</p>
-        {shape.code && (
-          <button
-            onClick={() => copy(shape.code!)}
-            className="flex items-center gap-2 text-sm font-mono font-bold text-gray-800 bg-gray-100 px-4 py-2 rounded-xl hover:bg-gray-200 transition-colors"
-          >
-            {shape.code}
-            {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-400" />}
-          </button>
-        )}
-        {shape.deepLink && (
-          <a href={shape.deepLink} className="text-sm font-semibold text-orange-600 hover:text-orange-700">
-            فتح في التطبيق
-          </a>
-        )}
-      </div>
-    );
-  }
-
-  if (shape.kind === 'code') {
-    return (
-      <div className="flex flex-col items-center gap-2">
-        <p className="text-xs text-gray-500">أدخل هذا الرمز في تطبيق الدفع:</p>
-        <button
-          onClick={() => copy(shape.code)}
-          className="flex items-center gap-2 text-base font-mono font-bold text-gray-800 bg-gray-100 px-4 py-2.5 rounded-xl hover:bg-gray-200 transition-colors"
-        >
-          {shape.code}
-          {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-400" />}
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="text-center text-sm text-gray-500">
-      <p className="mb-2">تم إنشاء طلب الدفع. اتبع التعليمات لإتمام العملية.</p>
-      <pre className="text-[10px] text-gray-400 bg-gray-50 rounded-xl p-3 overflow-auto text-start" dir="ltr">
-        {JSON.stringify(shape.payload, null, 2)}
-      </pre>
-    </div>
-  );
-}
-
-function TopupModal({ onClose }: { onClose: () => void }) {
-  const [amount, setAmount]       = useState('');
-  const [currency, setCurrency]   = useState<WalletCurrency>('SYP');
-  const [submitting, setSubmitting] = useState(false);
-  const [unavailable, setUnavailable] = useState(false); // 503 — calm, not an error
-  const [clientData, setClientData]   = useState<Record<string, unknown> | null>(null);
-
-  const valid = AMOUNT_RE.test(amount) && Number(amount) > 0;
-
-  const submit = async () => {
-    if (!valid) return;
-    setSubmitting(true);
-    setUnavailable(false);
-    try {
-      const res = await walletService.createOnlineTopup({ amount, currency });
-      setClientData(res.clientData);
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 503) {
-        setUnavailable(true);
-      } else {
-        toast.error(err instanceof ApiError ? err.message : 'تعذّر بدء عملية الشحن.');
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div
-        className="bg-white rounded-t-3xl sm:rounded-2xl shadow-xl w-full sm:max-w-md p-6 max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-bold text-gray-900">شحن المحفظة</h3>
-          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {clientData ? (
-          <div className="space-y-4">
-            <ClientDataView data={clientData} />
-            <button onClick={onClose} className="w-full py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
-              إغلاق
-            </button>
-          </div>
-        ) : unavailable ? (
-          <div className="text-center py-6">
-            <div className="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center mx-auto mb-3">
-              <Clock className="w-7 h-7 text-orange-400" />
-            </div>
-            <p className="text-sm font-semibold text-gray-700">شحن إلكتروني غير متاح حالياً، سيتوفر قريباً.</p>
-            <p className="text-xs text-gray-400 mt-1">يمكنك شحن محفظتك نقداً عبر أحد مندوبينا في هذه الأثناء.</p>
-            <button onClick={onClose} className="mt-5 w-full py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
-              حسناً
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Currency toggle */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5">العملة</label>
-              <div className="grid grid-cols-2 gap-2">
-                {(['SYP', 'USD'] as WalletCurrency[]).map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setCurrency(c)}
-                    className={cn(
-                      'py-2.5 rounded-xl text-sm font-bold border transition-colors',
-                      currency === c
-                        ? 'bg-orange-50 border-orange-300 text-orange-600'
-                        : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50',
-                    )}
-                  >
-                    {c === 'SYP' ? 'ليرة سورية' : 'دولار'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Amount */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5">المبلغ</label>
-              <input
-                inputMode="decimal"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, ''))}
-                placeholder="0.00"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-lg font-bold text-gray-900 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 text-start"
-                dir="ltr"
-              />
-              {amount !== '' && !valid && (
-                <p className="text-xs text-red-500 mt-1.5">أدخل مبلغاً صحيحاً (حتى منزلتين عشريتين).</p>
-              )}
-            </div>
-
-            <button
-              onClick={submit}
-              disabled={!valid || submitting}
-              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-l from-orange-500 to-pink-500 text-white text-sm font-bold hover:opacity-95 transition-opacity disabled:opacity-50"
-            >
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              {submitting ? 'جارٍ المعالجة…' : 'متابعة الدفع'}
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 // ── Skeletons ───────────────────────────────────────────────────────────────────
 

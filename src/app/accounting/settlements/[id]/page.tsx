@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
-  ChevronLeft, Loader2, AlertTriangle, Inbox, UserRound, CalendarDays,
+  ChevronLeft, AlertTriangle, Inbox, UserRound, CalendarDays,
   Banknote, ReceiptText, ArrowRight, Phone,
 } from 'lucide-react';
 import {

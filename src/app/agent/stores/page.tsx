@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  Store, PlusCircle, Loader2, AlertTriangle, UserRound, CalendarDays, Phone, ChevronLeft,
+  Store, PlusCircle, AlertTriangle, UserRound, CalendarDays, Phone, ChevronLeft,
 } from 'lucide-react';
 import {
   agentStoresService,

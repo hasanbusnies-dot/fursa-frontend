@@ -30,9 +30,8 @@ function userLabel(u: AdminTransferRow['user']): string {
 // ── Reject modal ──────────────────────────────────────────────────────────────────
 
 function RejectModal({
-  row, onClose, onConfirm,
+  onClose, onConfirm,
 }: {
-  row: AdminTransferRow;
   onClose: () => void;
   onConfirm: (reason: string) => Promise<void>;
 }) {
@@ -267,7 +266,6 @@ export default function AdminTransfersPage() {
     <div className="min-h-screen bg-gray-100">
       {rejecting && (
         <RejectModal
-          row={rejecting}
           onClose={() => setRejecting(null)}
           onConfirm={(reason) => reject(rejecting, reason)}
         />

@@ -8,7 +8,6 @@ import {
   type CommissionConfig,
 } from '@/services/admin-commissions.service';
 import { ApiError } from '@/services/api';
-import { cn } from '@/lib/utils';
 import { UI_AR } from '@/lib/staff-labels';
 
 const MONEY_RE = /^\d+(\.\d{1,2})?$/;

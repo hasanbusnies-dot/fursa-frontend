@@ -11,7 +11,6 @@ import { toast } from 'sonner';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { useAdminAuthStore } from '@/store/auth.store';
 import { staffService, type CreateStaffResult, type StaffRole } from '@/services/staff.service';
-import { UI_AR } from '@/lib/staff-labels';
 
 // ── Validation (mirrors the backend rules) ──────────────────────────────────────────
 const PHONE_RE = /^\+?[0-9]+$/;

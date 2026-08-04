@@ -17,7 +17,6 @@ import {
 import type { PageMeta } from '@/services/stores.service';
 import { ApiError } from '@/services/api';
 import { formatMoney } from '@/lib/money';
-import { cn } from '@/lib/utils';
 import { UI_AR, expenseCategoryLabel } from '@/lib/staff-labels';
 
 const MONEY_RE = /^\d+(\.\d{1,2})?$/;

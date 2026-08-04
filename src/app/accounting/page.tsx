@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   TrendingUp, Wallet, ArrowDownToLine, HandCoins, ShieldCheck, ShieldAlert,
-  AlertTriangle, Loader2,
+  AlertTriangle,
 } from 'lucide-react';
 import { PeriodPicker } from '@/components/accounting/PeriodPicker';
 import {

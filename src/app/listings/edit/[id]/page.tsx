@@ -34,7 +34,7 @@ function EditSkeleton() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 animate-pulse">
         <div className="h-6 w-40 bg-gray-200 rounded mb-8" />
         <div className="bg-white rounded-card shadow-pebble p-6 space-y-5">
-          {[80, 60, 100, 40].map((w, i) => (
+          {[80, 60, 100, 40].map((_, i) => (
             <div key={i}>
               <div className="h-3 bg-gray-200 rounded w-24 mb-2" />
               <div className={`h-10 bg-gray-200 rounded-xl w-full`} style={{ height: i === 2 ? 96 : 40 }} />

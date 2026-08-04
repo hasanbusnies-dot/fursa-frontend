@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Users, ChevronRight, AlertTriangle, Phone, Mail, CalendarDays, BadgeCheck,
+  Users, ChevronRight, AlertTriangle, BadgeCheck,
   ShieldX, Ban, Store, Wallet, LayoutList, UserCog, History, Loader2, Trash2,
   CheckCircle2, Clock, ShieldAlert,
 } from 'lucide-react';

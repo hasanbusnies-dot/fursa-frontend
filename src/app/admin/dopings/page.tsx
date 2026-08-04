@@ -45,10 +45,6 @@ const BADGE_BG: Record<string, string> = {
   REFRESH:         'bg-green-100 text-green-800',
 };
 
-function formatDate(d: string) {
-  return new Date(d).toLocaleDateString('ar', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-
 // The exact validation the backend applies (setPackagePriceSchema) — mirror it so a
 // rejected value never leaves the modal.
 const PRICE_RE = /^\d+(\.\d{1,2})?$/;

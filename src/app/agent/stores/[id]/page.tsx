@@ -1,10 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Store, ChevronRight, Loader2, AlertTriangle, UserRound, Phone, MapPin,
+  Store, ChevronRight, AlertTriangle, UserRound, Phone, MapPin,
   CalendarDays, CalendarClock, BadgeCheck, ShieldX, PlusCircle, ReceiptText,
 } from 'lucide-react';
 import {
@@ -49,7 +49,6 @@ const METHOD_LABEL: Record<string, string> = {
 export default function AgentStoreDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
-  const router = useRouter();
 
   const [store, setStore]     = useState<StoreDetail | null>(null);
   const [loading, setLoading] = useState(true);

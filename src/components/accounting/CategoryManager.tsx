@@ -8,7 +8,6 @@ import {
   type ExpenseCategory,
 } from '@/services/accounting.service';
 import { ApiError } from '@/services/api';
-import { cn } from '@/lib/utils';
 
 /** Expense-category manager: list, add custom, retire (isActive), delete (with the
  *  409 guard for system/in-use categories). Calls onChanged so the parent reloads. */
