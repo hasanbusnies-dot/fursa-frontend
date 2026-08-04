@@ -36,9 +36,6 @@ import {
 
 type SubmitPhase = 'idle' | 'uploading' | 'creating';
 
-// Backward-compat re-export so existing DetailsStep.tsx import doesn't break
-export type ListingFormData = WizardFormData;
-
 // A wizard step. `trigger` lists the RHF fields validated before advancing; `customNav`
 // marks the review step which renders its own submit button.
 interface StepDef {
