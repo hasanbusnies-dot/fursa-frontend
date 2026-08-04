@@ -103,27 +103,32 @@ function SkeletonRow() {
 export default function SavedSearchesPage() {
   const router          = useRouter();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const mounted         = useAuthStore((s) => !!s.user || s.isAuthenticated !== undefined);
 
+  const [mounted,  setMounted]    = useState(false);
   const [searches, setSearches]   = useState<SavedSearch[]>([]);
   const [loading,  setLoading]    = useState(true);
   const [deleting, setDeleting]   = useState<string | null>(null);
   const [toDelete, setToDelete]   = useState<SavedSearch | null>(null);
 
-  // Auth gate — wait for hydration before redirecting
+  useEffect(() => { setMounted(true); }, []);
+
+  // Auth gate — WAIT FOR HYDRATION before redirecting. The auth store persists to
+  // localStorage, so `isAuthenticated` is false on the server render and on the
+  // first client render, and only becomes true once zustand rehydrates. Redirecting
+  // on that first false threw logged-IN users to /login on every hard refresh.
+  // Same pattern as the sibling account pages.
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace('/login');
-    }
-  }, [isAuthenticated, router]);
+    if (!mounted) return;
+    if (!isAuthenticated) { router.replace('/login'); return; }
+  }, [mounted, isAuthenticated, router]);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!mounted || !isAuthenticated) return;
     savedSearchesService.getAll()
       .then(setSearches)
       .catch(() => toast.error('تعذّر تحميل عمليات البحث المحفوظة.'))
       .finally(() => setLoading(false));
-  }, [isAuthenticated]);
+  }, [mounted, isAuthenticated]);
 
   const handleDelete = async (search: SavedSearch) => {
     setDeleting(search.id);
@@ -139,7 +144,7 @@ export default function SavedSearchesPage() {
     }
   };
 
-  if (!isAuthenticated) return null;
+  if (!mounted || !isAuthenticated) return null;
 
   return (
     <>
