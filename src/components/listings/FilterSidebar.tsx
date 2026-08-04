@@ -1627,11 +1627,51 @@ function brandsFor(cat: Category | undefined): readonly string[] {
 
 // ── Primitive building blocks ─────────────────────────────────────────────────
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+/**
+ * Collapsible wrapper for the two lists at the TOP of the sidebar — the category
+ * tree and the brand list.
+ *
+ * Both are long (CAR_BRANDS alone runs to ~60 rows) and both rendered fully
+ * expanded, so every filter below them started a long scroll away. They now open
+ * on demand. This is separate from `Accordion` below because that one is styled
+ * for the filter stack — it draws a top border and sits flush in a series —
+ * whereas these are headline sections above it.
+ *
+ * `defaultOpen` is false at both call sites; it stays a prop so a caller with an
+ * active selection could opt into opening (see the note at the category call).
+ */
+function CollapsibleList({
+  title, defaultOpen = false, accent = false, children,
+}: {
+  title: string; defaultOpen?: boolean; accent?: boolean; children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
-      {children}
-    </p>
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="w-full flex items-center justify-between gap-2 py-1.5 text-start transition-colors group"
+      >
+        <span
+          className={cn(
+            accent
+              ? 'font-bold text-base text-orange-500'
+              : 'text-[10px] font-bold text-gray-400 uppercase tracking-widest group-hover:text-gray-600',
+          )}
+        >
+          {title}
+        </span>
+        <ChevronDown
+          className={cn(
+            'w-3.5 h-3.5 text-gray-400 transition-transform shrink-0',
+            open && 'rotate-180',
+          )}
+        />
+      </button>
+      {open && <div className="mt-1">{children}</div>}
+    </div>
   );
 }
 
@@ -2588,96 +2628,83 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
 
         {/* Category section */}
         <div className="px-3 pt-4 pb-2">
-          <SectionLabel>الفئة</SectionLabel>
 
           {catView.kind === 'full-tree' && (
-            <ul className="space-y-0.5">
-              <li>
-                <button
-                  type="button"
-                  onClick={() => { set('categoryId', ''); set('make', ''); set('model', ''); }}
-                  className="w-full text-left text-[13px] px-3 py-1.5 rounded-lg bg-orange-50 text-orange-600 font-semibold"
-                >
-                  جميع الإعلانات
-                </button>
-              </li>
-              {categories.map((cat) => (
-                <CategoryNode
-                  key={cat.id}
-                  cat={cat}
-                  depth={0}
-                  selectedId={draft.categoryId}
-                  onSelect={(id) => { set('categoryId', id); set('make', ''); set('model', ''); }}
-                />
-              ))}
-            </ul>
-          )}
-
-          {catView.kind === 'scoped-tree' && (
-            <>
-              {backToAll}
-              {catView.root.id && (
-                <ul className="space-y-0.5">
+            // Collapsed by default: the full tree pushed every other filter off
+            // screen. The active category still shows as a chip on the results
+            // page, so collapsing hides no state.
+            <CollapsibleList title="الفئة">
+              <ul className="space-y-0.5">
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => { set('categoryId', ''); set('make', ''); set('model', ''); }}
+                    className="w-full text-left text-[13px] px-3 py-1.5 rounded-lg bg-orange-50 text-orange-600 font-semibold"
+                  >
+                    جميع الإعلانات
+                  </button>
+                </li>
+                {categories.map((cat) => (
                   <CategoryNode
-                    cat={catView.root}
+                    key={cat.id}
+                    cat={cat}
                     depth={0}
                     selectedId={draft.categoryId}
                     onSelect={(id) => { set('categoryId', id); set('make', ''); set('model', ''); }}
                   />
-                </ul>
+                ))}
+              </ul>
+            </CollapsibleList>
+          )}
+
+          {catView.kind === 'scoped-tree' && (
+            <>
+              {/* «العودة لجميع الفئات» stays outside the collapsible — it is the way
+                  back out, so it must never be hidden behind a closed section. */}
+              {backToAll}
+              {catView.root.id && (
+                <CollapsibleList title="الفئة">
+                  <ul className="space-y-0.5">
+                    <CategoryNode
+                      cat={catView.root}
+                      depth={0}
+                      selectedId={draft.categoryId}
+                      onSelect={(id) => { set('categoryId', id); set('make', ''); set('model', ''); }}
+                    />
+                  </ul>
+                </CollapsibleList>
               )}
             </>
           )}
 
-          {catView.kind === 'brand-list' && !isParamotor && !isHelicopter && !isAirplane && !isGlider && (
+          {(catView.kind === 'brand-list' || catView.kind === 'brand-selected')
+            && !isParamotor && !isHelicopter && !isAirplane && !isGlider && (
             <div className="mb-6">
               {backToAll}
-              <h3 className="font-bold text-lg mb-4 text-orange-500">{catView.catName}</h3>
-              <ul className="space-y-2 max-h-96 overflow-y-auto pr-1">
-                {catView.brands.map((brand) => (
-                  <li
-                    key={brand}
-                    className={cn(
-                      'flex items-center gap-2 cursor-pointer text-[13px] px-2 py-1 rounded-lg transition-colors hover:text-orange-500',
-                      applied.make === brand
-                        ? 'text-orange-600 font-semibold bg-orange-50'
-                        : 'text-gray-700',
-                    )}
-                    onClick={() => handleMakeSelect(brand)}
-                  >
-                    {/* Same marks as the add-listing brand picker — BrandMark keys off
-                        the brand NAME, so these plain strings resolve with no data change. */}
-                    <BrandMark name={brand} size="sm" />
-                    <span className="truncate">{brand}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {catView.kind === 'brand-selected' && !isParamotor && !isHelicopter && !isAirplane && !isGlider && (
-            <div className="mb-6">
-              {backToAll}
-              <h3 className="font-bold text-lg mb-4 text-orange-500">{catView.catName}</h3>
-              <ul className="space-y-2 max-h-96 overflow-y-auto pr-1">
-                {catView.brands.map((brand) => (
-                  <li
-                    key={brand}
-                    className={cn(
-                      'flex items-center gap-2 cursor-pointer text-[13px] px-2 py-1 rounded-lg transition-colors hover:text-orange-500',
-                      applied.make === brand
-                        ? 'text-orange-600 font-semibold bg-orange-50'
-                        : 'text-gray-700',
-                    )}
-                    onClick={() => handleMakeSelect(brand)}
-                  >
-                    {/* Same marks as the add-listing brand picker — BrandMark keys off
-                        the brand NAME, so these plain strings resolve with no data change. */}
-                    <BrandMark name={brand} size="sm" />
-                    <span className="truncate">{brand}</span>
-                  </li>
-                ))}
-              </ul>
+              {/* Collapsed by default — the brand lists are the longest thing in the
+                  sidebar (CAR_BRANDS alone is ~60 rows), and they pushed the actual
+                  filters below the fold. The heading doubles as the toggle. */}
+              <CollapsibleList title={catView.catName} accent>
+                <ul className="space-y-2 max-h-96 overflow-y-auto pr-1">
+                  {catView.brands.map((brand) => (
+                    <li
+                      key={brand}
+                      className={cn(
+                        'flex items-center gap-2 cursor-pointer text-[13px] px-2 py-1 rounded-lg transition-colors hover:text-orange-500',
+                        applied.make === brand
+                          ? 'text-orange-600 font-semibold bg-orange-50'
+                          : 'text-gray-700',
+                      )}
+                      onClick={() => handleMakeSelect(brand)}
+                    >
+                      {/* Same marks as the add-listing brand picker — BrandMark keys off
+                          the brand NAME, so these plain strings resolve with no data change. */}
+                      <BrandMark name={brand} size="sm" />
+                      <span className="truncate">{brand}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CollapsibleList>
             </div>
           )}
         </div>

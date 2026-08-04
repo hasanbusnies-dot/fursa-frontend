@@ -10,6 +10,43 @@ function formatPrice(price: number, currency: 'SYP' | 'USD') {
   return currency === 'USD' ? `$${n}` : `${n} ل.س`;
 }
 
+/**
+ * Compact vehicle spec line: «2018 · 85,000 كم · أوتوماتيك».
+ *
+ * The data comes from `vehicleDetails`, which the LIST payload already includes
+ * (it is null for non-vehicles) — so this needs no backend change. The top-level
+ * `year`/`mileage` fields are a WRITE-side shape: CreateListingPayload sends them
+ * flat and the backend files them under vehicleDetails, so reads come back null
+ * at the top level. Both are checked anyway, matching ComparePopover's idiom, so
+ * the card keeps working if a payload ever carries the flat form.
+ *
+ * Returns null when there is nothing worth showing, so non-vehicle cards render
+ * exactly as before rather than gaining an empty row.
+ */
+function vehicleSpecs(listing: Listing): string | null {
+  const vd = listing.vehicleDetails;
+  const year = vd?.year ?? listing.year;
+  const km = vd?.mileage ?? listing.mileage;
+  const gearbox = vd?.transmission;
+
+  const parts: string[] = [];
+  if (year) parts.push(String(year));
+  // Thousands separators make six-digit odometers readable at a glance.
+  if (typeof km === 'number') parts.push(`${new Intl.NumberFormat('en-US').format(km)} كم`);
+  if (gearbox) parts.push(TRANSMISSION_AR[gearbox] ?? gearbox);
+
+  return parts.length ? parts.join(' · ') : null;
+}
+
+/** Gearbox enum → Arabic. Unknown values fall through to the raw string rather
+ *  than being dropped, so a new backend enum degrades to English, not silence. */
+const TRANSMISSION_AR: Record<string, string> = {
+  MANUAL: 'يدوي',
+  AUTOMATIC: 'أوتوماتيك',
+  SEMI_AUTOMATIC: 'نصف أوتوماتيك',
+  CVT: 'CVT',
+};
+
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60_000);
@@ -123,6 +160,8 @@ export function ListingCard({
     !!listing.categoryShowcaseUntil &&
     new Date(listing.categoryShowcaseUntil).getTime() > now;
 
+  const specs = vehicleSpecs(listing);
+
   // Shared title/price/meta markup — reused by both the overlay and side layouts
   // so the overlay (default) DOM stays byte-identical.
   const infoContent = (
@@ -133,6 +172,9 @@ export function ListingCard({
       )}>
         {listing.title}
       </p>
+      {specs && (
+        <p className="text-[11px] text-gray-500 truncate leading-tight">{specs}</p>
+      )}
       <p className="text-base font-bold text-blue-600">
         {formatPrice(listing.price, listing.currency)}
       </p>

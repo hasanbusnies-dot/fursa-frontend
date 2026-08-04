@@ -15,7 +15,7 @@ export function MobileCategoryList() {
       <div className="bg-white rounded-card shadow-pebble overflow-hidden">
 
         {/* Quick links row */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 overflow-x-auto scrollbar-none">
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 overflow-x-auto no-scrollbar">
           <Link
             href="/listings?showcase=urgent_showcase"
             className="flex items-center gap-1.5 shrink-0 text-sm font-medium text-red-600 hover:text-red-700"

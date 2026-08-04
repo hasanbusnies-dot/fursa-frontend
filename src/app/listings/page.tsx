@@ -136,6 +136,15 @@ const ENUM_LABEL: Record<string, string> = {
 };
 const lbl = (v: string) => ENUM_LABEL[v] ?? v;
 
+/** Quick-links sub-header entries that are desktop-only (أبحاثي المحفوظة). */
+const QUICK_LINK_CLS =
+  'group hidden md:flex items-center gap-2 px-5 py-3.5 text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-orange-500 transition-all whitespace-nowrap';
+
+/** Same look, but visible at EVERY width — used by المفضلة so it stays beside قارن
+ *  on phones too. Padding tightens on small screens to keep the pair on one line. */
+const QUICK_LINK_PAIR_CLS =
+  'group flex items-center gap-2 px-3 md:px-5 py-3.5 text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-orange-500 transition-all whitespace-nowrap';
+
 interface ChipProps { label: string; onRemove: () => void; }
 function Chip({ label, onRemove }: ChipProps) {
   return (
@@ -776,24 +785,35 @@ function ListingsContent() {
     {/* ── Quick-links sub-header ── */}
     <nav className="w-full bg-white border-b border-gray-200 shadow-sm overflow-visible">
       <div className="w-full px-4 sm:px-6 lg:px-8 overflow-visible">
+        {/* المفضلة and قارن are deliberately glued together — both are "things I've
+            set aside", so they read as one pair.
+
+            The Favorites link is NOT `hidden md:flex` like the others: it used to be,
+            which meant that below 768px it vanished while ComparePopover (which has no
+            breakpoint) stayed — so قارن appeared to stand alone next to حفظ البحث and
+            the two were never actually adjacent on a phone. Keeping this one visible at
+            every width is what makes the pairing real rather than desktop-only; its
+            label shortens on small screens so the pair still fits. */}
         <div className="flex items-center">
-          {([
-            { href: '/account/favorites',      Icon: Star,     label: 'إعلاناتي المفضلة',  iconCls: 'text-orange-400' },
-            { href: '/account/saved-searches', Icon: Bookmark, label: 'أبحاثي المحفوظة', iconCls: 'text-orange-400' },
-          ] as const).map(({ href, Icon, label, iconCls }) => (
-            <Link
-              key={href}
-              href={href}
-              className="group hidden md:flex items-center gap-2 px-5 py-3.5 text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-orange-500 transition-all whitespace-nowrap"
-            >
-              <Icon className={`w-4 h-4 ${iconCls} transition-colors`} />
-              {label}
-            </Link>
-          ))}
+          <Link
+            href="/account/favorites"
+            className={QUICK_LINK_PAIR_CLS}
+          >
+            <Star className="w-4 h-4 text-orange-400 transition-colors" />
+            <span className="hidden sm:inline">إعلاناتي المفضلة</span>
+            <span className="sm:hidden">المفضلة</span>
+          </Link>
+          <ComparePopover />
+          <Link
+            href="/account/saved-searches"
+            className={QUICK_LINK_CLS}
+          >
+            <Bookmark className="w-4 h-4 text-orange-400 transition-colors" />
+            أبحاثي المحفوظة
+          </Link>
           <span className="hidden md:contents">
             <RecommendationsPopover />
           </span>
-          <ComparePopover />
         </div>
       </div>
     </nav>
@@ -814,17 +834,10 @@ function ListingsContent() {
           )}
         </nav>
 
-        {/* Mobile header */}
-        <div className="flex items-center justify-between mb-4 lg:hidden">
+        {/* Mobile header — the فلاتر button used to live here; it now sits beside
+            حفظ البحث in the result header below. */}
+        <div className="flex items-center justify-between mb-3 lg:hidden">
           <h1 className="text-xl font-bold text-gray-900">الإعلانات</h1>
-          <button
-            onClick={() => setSidebarOpen((o) => !o)}
-            className="flex items-center gap-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl px-4 py-2 hover:bg-gray-100 transition-colors"
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-            فلاتر
-            {isActive && <span className="w-2 h-2 bg-orange-500 rounded-full inline-block" />}
-          </button>
         </div>
 
         {/* Mobile full-screen filter overlay */}
@@ -912,37 +925,62 @@ function ListingsContent() {
                   )}
                 </p>
               </div>
-              <button
-                className={cn(
-                  'shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl transition-colors',
-                  showcaseParam === 'urgent_showcase'
-                    ? 'text-red-600 bg-white border border-white hover:bg-red-50'
-                    : 'text-orange-600 border border-orange-300 bg-orange-50 hover:bg-orange-100',
-                )}
-                onClick={() => {
-                  if (!isAuthenticated) {
-                    toast.error('يجب تسجيل الدخول لحفظ البحث.');
-                    router.push('/login');
-                    return;
-                  }
-                  setSaveModalOpen(true);
-                }}
-              >
-                <Star className="w-3.5 h-3.5" />
-                حفظ البحث
-              </button>
+              {/* حفظ البحث + فلاتر, paired at the end of the result header. فلاتر used
+                  to live at the far end of the seller-tabs row, where it was squeezed
+                  between a scrolling segment and the sort controls; up here it has room
+                  and matches its neighbour's metrics so the two read as one pair. */}
+              <div className="shrink-0 flex items-center gap-2">
+                <button
+                  className={cn(
+                    'shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl transition-colors',
+                    showcaseParam === 'urgent_showcase'
+                      ? 'text-red-600 bg-white border border-white hover:bg-red-50'
+                      : 'text-orange-600 border border-orange-300 bg-orange-50 hover:bg-orange-100',
+                  )}
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      toast.error('يجب تسجيل الدخول لحفظ البحث.');
+                      router.push('/login');
+                      return;
+                    }
+                    setSaveModalOpen(true);
+                  }}
+                >
+                  <Star className="w-3.5 h-3.5" />
+                  حفظ البحث
+                </button>
+
+                {/* Mobile only — lg+ has the always-visible sidebar. */}
+                <button
+                  onClick={() => setSidebarOpen((o) => !o)}
+                  className={cn(
+                    'lg:hidden shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl border transition-colors',
+                    showcaseParam === 'urgent_showcase'
+                      ? 'text-red-600 bg-white border-white hover:bg-red-50'
+                      : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-100',
+                  )}
+                >
+                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                  فلاتر
+                  {isActive && <span className="w-2 h-2 bg-orange-500 rounded-full inline-block" />}
+                </button>
+              </div>
             </div>
 
-            {/* ── Seller tabs + view toggles row ── */}
-            <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
-              {/* Seller type tabs */}
-              <div className="flex gap-0 bg-white shadow-pebble rounded-card overflow-hidden shrink-0">
+            {/* ── Seller tabs ←→ view toggles / sort — ONE row ──
+                NO flex-wrap, deliberately: with four Arabic tabs the segment fills a
+                phone's width, and wrapping dropped everything after it onto a second
+                line. The segment scrolls inside its own min-w-0 box instead, so the
+                sort/currency/view controls stay on the segment's line at any width. */}
+            <div className="flex items-center mb-2 gap-2">
+              {/* Seller type tabs — scrolls rather than pushing the row apart */}
+              <div className="flex gap-0 bg-white shadow-pebble rounded-card overflow-x-auto min-w-0 no-scrollbar">
                 {SELLER_TABS.map((tab) => (
                   <button
                     key={tab.value}
                     onClick={() => setSellerTab(tab.value)}
                     className={cn(
-                      'px-3.5 py-2 text-xs font-semibold transition-colors whitespace-nowrap',
+                      'px-3 py-2 text-xs font-semibold transition-colors whitespace-nowrap shrink-0',
                       activeSellerTab === tab.value
                         ? 'bg-orange-500 text-white'
                         : 'text-gray-600 hover:bg-gray-50',
@@ -953,8 +991,9 @@ function ListingsContent() {
                 ))}
               </div>
 
-              {/* View toggles + sort */}
-              <div className="flex items-center gap-2 ms-auto">
+              {/* Opposite end of the SAME row: view toggles + currency + sort.
+                  فلاتر moved up beside حفظ البحث in the result header. */}
+              <div className="flex items-center gap-1.5 ms-auto shrink-0">
                 {/* Grid / List toggle */}
                 <div className="flex bg-white shadow-pebble rounded-card overflow-hidden">
                   <button

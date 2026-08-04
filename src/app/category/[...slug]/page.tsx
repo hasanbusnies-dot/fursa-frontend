@@ -684,24 +684,31 @@ export default function CategoryPage() {
       {/* ── Quick-links sub-header ── */}
       <nav className="w-full bg-white border-b border-gray-200 shadow-sm">
         <div className="w-full px-4 sm:px-6 lg:px-8">
+          {/* المفضلة then قارن, adjacent — they are the same kind of action ("things
+              I've set aside"). قارن used to render LAST, after أبحاثي المحفوظة and
+              Recommendations, so the two were never neighbours. Favorites also drops its
+              `hidden md:flex` here: ComparePopover has no breakpoint, so on a phone
+              Favorites disappeared and قارن was left standing alone. */}
           <div className="flex items-center overflow-x-auto no-scrollbar pe-2">
-            {([
-              { href: '/account/favorites',      Icon: Star,     label: 'إعلاناتي المفضلة',  iconCls: 'text-amber-400' },
-              { href: '/account/saved-searches', Icon: Bookmark, label: 'أبحاثي المحفوظة',   iconCls: 'text-amber-400' },
-            ] as const).map(({ href, Icon, label, iconCls }) => (
-              <Link
-                key={href}
-                href={href}
-                className="group shrink-0 hidden md:flex items-center gap-2 px-5 py-3.5 text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-orange-500 transition-all whitespace-nowrap"
-              >
-                <Icon className={`w-4 h-4 ${iconCls}`} />
-                {label}
-              </Link>
-            ))}
+            <Link
+              href="/account/favorites"
+              className="group shrink-0 flex items-center gap-2 px-3 md:px-5 py-3.5 text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-orange-500 transition-all whitespace-nowrap"
+            >
+              <Star className="w-4 h-4 text-amber-400" />
+              <span className="hidden sm:inline">إعلاناتي المفضلة</span>
+              <span className="sm:hidden">المفضلة</span>
+            </Link>
+            <ComparePopover />
+            <Link
+              href="/account/saved-searches"
+              className="group shrink-0 hidden md:flex items-center gap-2 px-5 py-3.5 text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-orange-500 transition-all whitespace-nowrap"
+            >
+              <Bookmark className="w-4 h-4 text-amber-400" />
+              أبحاثي المحفوظة
+            </Link>
             <span className="hidden md:contents">
               <RecommendationsPopover />
             </span>
-            <ComparePopover />
           </div>
         </div>
       </nav>
@@ -793,18 +800,12 @@ export default function CategoryPage() {
 
           {(isBranchView || showListings) && (<>
 
-          {/* ── Mobile filter button (listings view only) ── */}
+          {/* ── Mobile page title (listings view only) ──
+              The فلاتر button used to sit here; it now lives beside حفظ البحث in the
+              result header below. */}
           {showListings && (
-            <div className="flex items-center justify-between mb-4 lg:hidden">
+            <div className="flex items-center justify-between mb-3 lg:hidden">
               <h1 className="text-xl font-bold text-gray-900">{pageTitle}</h1>
-              <button
-                onClick={() => setSidebarOpen((o) => !o)}
-                className="flex items-center gap-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl px-4 py-2 hover:bg-gray-100 transition-colors"
-              >
-                <SlidersHorizontal className="w-4 h-4" />
-                فلاتر
-                {isActive && <span className="w-2 h-2 bg-orange-500 rounded-full inline-block" />}
-              </button>
             </div>
           )}
 
@@ -873,35 +874,55 @@ export default function CategoryPage() {
                     )}
                   </p>
                 </div>
-                <button
-                  className="shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl transition-colors text-orange-600 border border-orange-300 bg-orange-50 hover:bg-orange-100"
-                  onClick={() => {
-                    if (!isAuthenticated) {
-                      toast.error('يجب تسجيل الدخول لحفظ البحث.');
-                      return;
-                    }
-                    setSaveModalOpen(true);
-                  }}
-                >
-                  <Star className="w-3.5 h-3.5" />
-                  حفظ البحث
-                </button>
+                {/* حفظ البحث + فلاتر, paired at the end of the result header. فلاتر used
+                    to live at the far end of the seller-tabs row, where it was squeezed
+                    between a scrolling segment and the sort controls; up here it has room
+                    and matches its neighbour's metrics so the two read as one pair. */}
+                <div className="shrink-0 flex items-center gap-2">
+                  <button
+                    className="shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl transition-colors text-orange-600 border border-orange-300 bg-orange-50 hover:bg-orange-100"
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        toast.error('يجب تسجيل الدخول لحفظ البحث.');
+                        return;
+                      }
+                      setSaveModalOpen(true);
+                    }}
+                  >
+                    <Star className="w-3.5 h-3.5" />
+                    حفظ البحث
+                  </button>
+
+                  {/* Mobile only — lg+ has the always-visible sidebar. */}
+                  <button
+                    onClick={() => setSidebarOpen((o) => !o)}
+                    className="lg:hidden shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl border transition-colors text-gray-700 bg-white border-gray-300 hover:bg-gray-100"
+                  >
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                    فلاتر
+                    {isActive && <span className="w-2 h-2 bg-orange-500 rounded-full inline-block" />}
+                  </button>
+                </div>
               </div>
 
-              {/* ── Seller tabs + view toggles ── */}
-              <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+              {/* ── Seller tabs ←→ view toggles / sort — ONE row ──
+                  NO flex-wrap: with four Arabic tabs the segment fills a phone's width,
+                  and wrapping dropped everything after it onto a second line. The
+                  segment scrolls inside its own min-w-0 box instead, so the sort/view
+                  controls stay on the segment's line at any width. */}
+              <div className="flex items-center mb-2 gap-2">
                 {/* Seller tabs use car-dealer language (من معرض) — only meaningful for
                     vehicles. Other categories express "who's publishing" through their
                     own catalog filters (e.g. real-estate's الناشر: المالك / مكتب عقاري /
                     شركة بناء) in the sidebar instead. */}
                 {isVehicles ? (
-                  <div className="flex gap-0 bg-white shadow-pebble rounded-card overflow-hidden shrink-0">
+                  <div className="flex gap-0 bg-white shadow-pebble rounded-card overflow-x-auto min-w-0 no-scrollbar">
                     {SELLER_TABS.filter((tab) => !isRentalSuv || tab.value === '').map((tab) => (
                       <button
                         key={tab.value}
                         onClick={() => setSellerTab(tab.value)}
                         className={cn(
-                          'px-3.5 py-2 text-xs font-semibold transition-colors whitespace-nowrap',
+                          'px-3 py-2 text-xs font-semibold transition-colors whitespace-nowrap shrink-0',
                           activeSellerTab === tab.value ? 'bg-orange-500 text-white' : 'text-gray-600 hover:bg-gray-50',
                         )}
                       >
@@ -911,7 +932,10 @@ export default function CategoryPage() {
                   </div>
                 ) : <div />}
 
-                <div className="flex items-center gap-2 ms-auto">
+                {/* Opposite end of the SAME row: view toggles + sort.
+                    فلاتر moved up beside حفظ البحث in the result header. */}
+                <div className="flex items-center gap-1.5 ms-auto shrink-0">
+
                   {/* Grid / List toggle */}
                   <div className="flex bg-white shadow-pebble rounded-card overflow-hidden">
                     <button
