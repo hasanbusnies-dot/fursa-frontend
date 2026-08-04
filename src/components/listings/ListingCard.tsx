@@ -11,31 +11,71 @@ function formatPrice(price: number, currency: 'SYP' | 'USD') {
 }
 
 /**
- * Compact vehicle spec line: «2018 · 85,000 كم · أوتوماتيك».
+ * ── Vehicle spec chips ────────────────────────────────────────────────────────
+ * «2018» «85,000 كم» «أوتوماتيك» as three small chips under the title.
  *
- * The data comes from `vehicleDetails`, which the LIST payload already includes
- * (it is null for non-vehicles) — so this needs no backend change. The top-level
- * `year`/`mileage` fields are a WRITE-side shape: CreateListingPayload sends them
- * flat and the backend files them under vehicleDetails, so reads come back null
- * at the top level. Both are checked anyway, matching ComparePopover's idiom, so
- * the card keeps working if a payload ever carries the flat form.
+ * PALETTE — two tones, not three. The card already spends its colour budget on
+ * the gold ★واجهة badge, the orange عاجل badge and the blue price, and these
+ * chips repeat across a whole grid, so three competing hues would read as noise
+ * rather than as data. Instead the brand gold marks ONE chip and a cool neutral
+ * carries the rest:
  *
- * Returns null when there is nothing worth showing, so non-vehicle cards render
+ *   gold  #FFF6D1 bg / #6B5200 text  — both derived from the brand gold #ffcb00
+ *                                      (18% and 42% respectively), so the accent
+ *                                      is the logo colour, not a yellow-ish guess
+ *   slate #F1F5F9 bg / #334155 text  — a cool counterweight that stays out of the
+ *                                      way of the blue price
+ *
+ * Gold lands on the YEAR deliberately: in a used-vehicle market that is the spec
+ * buyers scan first, so the colour encodes hierarchy instead of decorating. Both
+ * pairs clear WCAG AAA at this size (≈6.8:1 and ≈9.4:1), which is what makes the
+ * tints safe at 11px — a saturated #ffcb00 fill would not have been.
+ *
+ * The chips use a 6px radius while the promo badges above use rounded-full: same
+ * card, different KIND of information, so the shape says "data" not "promotion".
+ *
+ * DATA: `vehicleDetails` rides on the LIST payload already (null for
+ * non-vehicles) so none of this needs a backend change. The top-level
+ * `year`/`mileage` fields are a WRITE-side shape — CreateListingPayload sends
+ * them flat and the backend files them under vehicleDetails, so reads come back
+ * null at the top level. Both are checked anyway, matching ComparePopover's
+ * idiom, so the card keeps working if a payload ever carries the flat form.
+ *
+ * Returns [] when there is nothing worth showing, so non-vehicle cards render
  * exactly as before rather than gaining an empty row.
  */
-function vehicleSpecs(listing: Listing): string | null {
+type SpecTone = 'gold' | 'slate';
+
+interface SpecChip {
+  key: string;
+  text: string;
+  tone: SpecTone;
+}
+
+const SPEC_CHIP_BASE =
+  'inline-flex items-center rounded-md border px-1.5 py-0.5 text-[11px] font-semibold leading-none tabular-nums';
+
+const SPEC_CHIP_TONE: Record<SpecTone, string> = {
+  gold:  'bg-[#FFF6D1] text-[#6B5200] border-[#FFEDA6]',
+  slate: 'bg-slate-100 text-slate-700 border-slate-200',
+};
+
+function vehicleSpecs(listing: Listing): SpecChip[] {
   const vd = listing.vehicleDetails;
   const year = vd?.year ?? listing.year;
   const km = vd?.mileage ?? listing.mileage;
   const gearbox = vd?.transmission;
 
-  const parts: string[] = [];
-  if (year) parts.push(String(year));
+  const chips: SpecChip[] = [];
+  if (year) chips.push({ key: 'year', text: String(year), tone: 'gold' });
   // Thousands separators make six-digit odometers readable at a glance.
-  if (typeof km === 'number') parts.push(`${new Intl.NumberFormat('en-US').format(km)} كم`);
-  if (gearbox) parts.push(TRANSMISSION_AR[gearbox] ?? gearbox);
-
-  return parts.length ? parts.join(' · ') : null;
+  if (typeof km === 'number') {
+    chips.push({ key: 'km', text: `${new Intl.NumberFormat('en-US').format(km)} كم`, tone: 'slate' });
+  }
+  if (gearbox) {
+    chips.push({ key: 'gear', text: TRANSMISSION_AR[gearbox] ?? gearbox, tone: 'slate' });
+  }
+  return chips;
 }
 
 /** Gearbox enum → Arabic. Unknown values fall through to the raw string rather
@@ -172,8 +212,14 @@ export function ListingCard({
       )}>
         {listing.title}
       </p>
-      {specs && (
-        <p className="text-[11px] text-gray-500 truncate leading-tight">{specs}</p>
+      {specs.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1">
+          {specs.map((chip) => (
+            <span key={chip.key} className={cn(SPEC_CHIP_BASE, SPEC_CHIP_TONE[chip.tone])}>
+              {chip.text}
+            </span>
+          ))}
+        </div>
       )}
       <p className="text-base font-bold text-blue-600">
         {formatPrice(listing.price, listing.currency)}
