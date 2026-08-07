@@ -49,10 +49,15 @@ export function MobileCategoryList() {
                 i < CURATED_ROOTS.length - 1 ? ' border-b border-gray-100' : ''
               }`}
             >
-              {/* Saturated solid CIRCLE + white glyph (sahibinden reference). Phosphor
-                  weight="fill" renders a SOLID pictogram (not an outline) — the whole
-                  point of moving off lucide, which is line-only. */}
-              <div className={`w-14 h-14 rounded-full ${root.fill} flex items-center justify-center shrink-0`}>
+              {/* Saturated solid CIRCLE + WHITE symbol — the one category icon
+                  treatment, identical on every surface. Phosphor weight="fill"
+                  renders a SOLID pictogram (not an outline) — the whole point of
+                  moving off lucide, which is line-only. Every `fill` in
+                  category-root-meta.ts is dark enough to carry white (≥ 3.25:1). */}
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center shrink-0"
+                style={{ backgroundColor: root.palette.fill }}
+              >
                 <Icon weight="fill" className="w-7 h-7 text-white" />
               </div>
               {/* min-w-0: without it the flex child refuses to shrink and truncate is a

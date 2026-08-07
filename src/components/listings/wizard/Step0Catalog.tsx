@@ -22,11 +22,10 @@
 import { useEffect, useCallback, useRef, useState, Fragment } from 'react';
 import {
   Loader2, AlertCircle, Check, Search, ChevronDown, ChevronLeft, X,
-  Tag, Building2, Car, Wrench, Sofa, Shirt, PlugZap, Smartphone, UtensilsCrossed,
-  Sparkles, Briefcase, Baby, PawPrint, GraduationCap, Factory, Hash, Dumbbell,
-  Gamepad2, BookOpen,
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+// One category identity app-wide: icon + hue come from the shared root map, so a
+// category looks the same here as in the homepage nav and the group screens.
+import { categoryRootMeta } from '@/data/category-root-meta';
 import {
   catalogService,
   VEHICLES_ROOT_SLUG,
@@ -106,41 +105,14 @@ function levelLabel(type: CatalogNode['type'] | undefined): string {
   return type === 'BRAND' ? 'الماركة' : type === 'MODEL' ? 'الموديل' : 'التصنيف';
 }
 
-// ── Root-category visuals (reused from the old Step0CategorySelect) ─────────────────
-const CARD_SCHEMES = [
-  { border: 'border-t-red-500',     icon: 'text-red-600',     bg: 'bg-red-50'     },
-  { border: 'border-t-blue-500',    icon: 'text-blue-600',    bg: 'bg-blue-50'    },
-  { border: 'border-t-emerald-500', icon: 'text-emerald-600', bg: 'bg-emerald-50' },
-  { border: 'border-t-orange-500',  icon: 'text-orange-600',  bg: 'bg-orange-50'  },
-  { border: 'border-t-purple-500',  icon: 'text-purple-600',  bg: 'bg-purple-50'  },
-  { border: 'border-t-cyan-500',    icon: 'text-cyan-600',    bg: 'bg-cyan-50'    },
-  { border: 'border-t-yellow-500',  icon: 'text-yellow-600',  bg: 'bg-yellow-50'  },
-  { border: 'border-t-pink-500',    icon: 'text-pink-600',    bg: 'bg-pink-50'    },
-  { border: 'border-t-teal-500',    icon: 'text-teal-600',    bg: 'bg-teal-50'    },
-  { border: 'border-t-indigo-500',  icon: 'text-indigo-600',  bg: 'bg-indigo-50'  },
-] as const;
-
-// Keyed by SLUG (stable) — the catalog's nameAr differs from the old category names.
-const ROOT_ICONS: Record<string, LucideIcon> = {
-  'real-estate':                 Building2,
-  'vehicles':                    Car,
-  'services':                    Wrench,
-  'furniture-home-accessories':  Sofa,
-  'fashion':                     Shirt,
-  'electric-appliances':         PlugZap,
-  'electronic-devices':          Smartphone,
-  'food-and-drinks':             UtensilsCrossed,
-  'health-and-beauty':           Sparkles,
-  'job-listings':                Briefcase,
-  'kids-and-baby':               Baby,
-  'pets-and-plants':             PawPrint,
-  'private-lessons':             GraduationCap,
-  'professional-equipment':      Factory,
-  'special-numbers':             Hash,
-  'sports-and-outdoor':          Dumbbell,
-  'video-games':                 Gamepad2,
-  'books-and-stationery':        BookOpen,
-};
+// Root-category visuals now come from `category-root-meta.ts`. The two local maps
+// that used to live here are gone on purpose:
+//   • CARD_SCHEMES picked a color by ARRAY INDEX (`idx % 10`), so a category's
+//     color was a function of its position in the catalog response — reorder the
+//     roots and every card changed color, and none of them matched the color the
+//     same category wore in the homepage nav.
+//   • ROOT_ICONS was a second slug→icon map that had drifted (it was missing
+//     `helpers`, so that root fell back to the generic tag).
 
 interface Props {
   state: CatalogState;
@@ -239,8 +211,8 @@ export function Step0Catalog({ state, onChange, error }: Props) {
       ) : state.picked.length === 0 ? (
         // Top level: colorful icon-card grid (the signature entry moment).
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          {(state.levels[0] ?? []).map((node, idx) => (
-            <RootCategoryCard key={node.slug} node={node} idx={idx} onClick={() => selectAt(0, node)} />
+          {(state.levels[0] ?? []).map((node) => (
+            <RootCategoryCard key={node.slug} node={node} onClick={() => selectAt(0, node)} />
           ))}
         </div>
       ) : (
@@ -307,23 +279,29 @@ function isWideWidget(w: CatalogFilterDef['widget']): boolean {
 }
 
 // ─── Root category card — colored top border + icon tile, hover-lift ────────────────
-function RootCategoryCard({ node, idx, onClick }: {
-  node: CatalogNode; idx: number; onClick: () => void;
+function RootCategoryCard({ node, onClick }: {
+  node: CatalogNode; onClick: () => void;
 }) {
-  const scheme = CARD_SCHEMES[idx % CARD_SCHEMES.length];
-  const Icon = ROOT_ICONS[node.slug] ?? Tag;
+  const { icon: Icon, fill } = categoryRootMeta(node.slug);
   return (
     <button
       type="button"
       onClick={onClick}
+      // borderTopColor inline: the top rule is the category's own hue, and these
+      // are raw hex (see category-root-meta.ts on why Tailwind classes can't
+      // carry this palette).
+      style={{ borderTopColor: fill }}
       className={`flex flex-col items-center gap-2 px-3 py-4 rounded-xl bg-white text-center
-        border border-gray-200 border-t-4 ${scheme.border}
+        border border-gray-200 border-t-4
         hover:shadow-md hover:-translate-y-0.5 active:translate-y-0
         focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400
         transition-all duration-150 w-full`}
     >
-      <div className={`w-11 h-11 rounded-xl ${scheme.bg} flex items-center justify-center shrink-0`}>
-        <Icon className={`w-5 h-5 ${scheme.icon}`} />
+      <div
+        className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+        style={{ backgroundColor: fill }}
+      >
+        <Icon className="w-5 h-5 text-white" />
       </div>
       <span className="text-xs sm:text-sm font-bold text-gray-800 leading-snug line-clamp-2">
         {node.nameAr}

@@ -98,7 +98,7 @@ export default function CuratedUmbrellaPage() {
         {root && members !== null && (
           <div className="bg-white mt-2 rounded-t-2xl overflow-hidden">
             {members.map((node, i) => {
-              const { icon: Icon, color, bg } = categoryRootMeta(node.slug);
+              const { icon: Icon, fill } = categoryRootMeta(node.slug);
               return (
                 <Link
                   key={node.slug}
@@ -108,8 +108,11 @@ export default function CuratedUmbrellaPage() {
                     i < members.length - 1 && 'border-b border-gray-100',
                   )}
                 >
-                  <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center shrink-0`}>
-                    <Icon className={`w-5 h-5 ${color}`} />
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: fill }}
+                  >
+                    <Icon className="w-5 h-5 text-white" />
                   </div>
                   <span className="flex-1 text-lg leading-snug text-gray-800">{node.nameAr}</span>
                   {node.count > 0 && (
