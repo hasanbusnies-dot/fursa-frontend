@@ -10,11 +10,31 @@ import { cn } from '@/lib/utils';
 
 interface NavItem {
   href: string;
-  /** Pathname this tab highlights on — `href` without its query string. */
-  match: string;
+  /**
+   * Route SECTION this tab owns — path prefixes, not one exact pathname. A tab
+   * is active when the pathname equals a prefix or sits under it, so the tab
+   * (and the sliding indicator) stays lit across a whole section instead of
+   * only on its landing page. Longest matching prefix wins, so the favorites
+   * tab's '/account/favorites' beats the account tab's '/account'.
+   * '/' can only ever match exactly — every path starts with it.
+   */
+  section: string[];
   label: string;
   Icon: React.ElementType;
 }
+
+/** Length of the longest prefix in `section` that covers `pathname`; -1 = no match. */
+function sectionMatchLength(pathname: string, section: string[]): number {
+  return section.reduce((best, prefix) => {
+    const hit = pathname === prefix || pathname.startsWith(prefix + '/');
+    return hit && prefix.length > best ? prefix.length : best;
+  }, -1);
+}
+
+// Routes that deliberately light NO tab: the add-ad flow belongs to the elevated
+// centre FAB, which is not a tab the indicator can land on (see below). Parking
+// the lamp under «البحث» while you're filling in a new ad would just be wrong.
+const NO_TAB_PREFIXES = ['/listings/create', '/listings/edit'];
 
 // Logged out, the auth-gated tabs go straight to login carrying their return path
 // (LoginForm honors ?redirect=), instead of landing on a guarded page just to be
@@ -42,26 +62,55 @@ export function BottomNav() {
   const firstPaint   = useRef(true);
 
   const navItems: NavItem[] = [
-    { href: '/',         match: '/',         label: 'الرئيسية', Icon: Home   },
-    { href: '/listings', match: '/listings', label: 'البحث',    Icon: Search },
-    // Favorites keeps its label/icon when logged out — it still advertises where
-    // login lands you, and a second «دخول» tab would just be confusing. Its `match`
-    // stays the real destination so only the account tab highlights on /login.
+    { href: '/', section: ['/'], label: 'الرئيسية', Icon: Home },
+    // Search owns every browse surface, not just its own landing page: the
+    // catalog tree (/category/…), listing detail, the vitrin and compare are
+    // all places you arrive at BY searching.
     {
-      href:  isAuthenticated ? FAVORITES_HREF : loginHref(FAVORITES_HREF),
-      match: FAVORITES_HREF,
-      label: 'المفضلة',
-      Icon:  Star,
+      href:    '/listings',
+      section: ['/listings', '/category', '/vitrin', '/compare'],
+      label:   'البحث',
+      Icon:    Search,
+    },
+    // Favorites keeps its label/icon when logged out — it still advertises where
+    // login lands you, and a second «دخول» tab would just be confusing. Its
+    // section stays the real destination so only the account tab lights on /login.
+    {
+      href:    isAuthenticated ? FAVORITES_HREF : loginHref(FAVORITES_HREF),
+      section: [FAVORITES_HREF, '/account/favorite-sellers'],
+      label:   'المفضلة',
+      Icon:    Star,
     },
     isAuthenticated
-      ? { href: ACCOUNT_HREF,             match: ACCOUNT_HREF, label: 'الحساب', Icon: User  }
-      : { href: loginHref(ACCOUNT_HREF),  match: '/login',     label: 'دخول',   Icon: LogIn },
+      ? {
+          href:    ACCOUNT_HREF,
+          section: [ACCOUNT_HREF, '/messages'],
+          label:   'الحساب',
+          Icon:    User,
+        }
+      : {
+          href:    loginHref(ACCOUNT_HREF),
+          section: ['/login', '/register', ACCOUNT_HREF, '/messages'],
+          label:   'دخول',
+          Icon:    LogIn,
+        },
   ];
 
-  const activeIndex = navItems.findIndex((it) => pathname === it.match);
+  // Longest-prefix wins, so nested sections resolve to the deeper tab.
+  const activeIndex = NO_TAB_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(p + '/'),
+  )
+    ? -1
+    : navItems.reduce(
+        (best, it, i) => {
+          const len = sectionMatchLength(pathname, it.section);
+          return len > best.len ? { i, len } : best;
+        },
+        { i: -1, len: -1 },
+      ).i;
 
-  // Position the indicator under the active tab; hide it when no tab matches
-  // (exact-match miss, e.g. a listing detail page) — a parked indicator lies.
+  // Position the indicator under the active tab; hide it when no tab owns the
+  // route (the add-ad flow) — a parked indicator lies.
   const position = () => {
     const nav = navRef.current, ind = indicatorRef.current;
     if (!nav || !ind) return;
@@ -136,14 +185,14 @@ export function BottomNav() {
       <div className="flex items-end justify-around h-16 px-1">
 
         {/* Regular tabs — first two */}
-        {navItems.slice(0, 2).map(({ href, match, label, Icon }, i) => (
+        {navItems.slice(0, 2).map(({ href, label, Icon }, i) => (
           <Link
             key={href}
             href={href}
             ref={(el) => { tabRefs.current[i] = el; }}
             className={cn(
               'flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-colors',
-              pathname === match ? 'text-orange-500' : 'text-gray-400 hover:text-gray-600',
+              i === activeIndex ? 'text-orange-500' : 'text-gray-400 hover:text-gray-600',
             )}
           >
             <Icon className="w-5 h-5" />
@@ -180,14 +229,14 @@ export function BottomNav() {
         )}
 
         {/* Regular tabs — last two */}
-        {navItems.slice(2).map(({ href, match, label, Icon }, i) => (
+        {navItems.slice(2).map(({ href, label, Icon }, i) => (
           <Link
             key={href}
             href={href}
             ref={(el) => { tabRefs.current[i + 2] = el; }}
             className={cn(
               'flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-colors',
-              pathname === match ? 'text-orange-500' : 'text-gray-400 hover:text-gray-600',
+              i + 2 === activeIndex ? 'text-orange-500' : 'text-gray-400 hover:text-gray-600',
             )}
           >
             <Icon className="w-5 h-5" />

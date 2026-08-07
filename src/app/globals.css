@@ -56,7 +56,7 @@
      screens keep their utility classes and inherit via the remaps above.
      --color-input-bg is defined now, applied to inputs in Step 3. */
   /* Pebble geometry + elevation (DESIGN.md Shapes/Elevation). Pixel values on
-     purpose: the root font-size dial (81.25%/75%) shrinks rem-based radii, but
+     purpose: the root font-size dial (87.5%/81.25%) rescales rem-based radii, but
      the spec's 20/14/12px are absolute. shadow-pebble = "blur 15px, spread
      -5px, 4% opacity" — edges defined by shadow, not borders. */
   --radius-card: 20px;  /* product/content cards */
@@ -83,17 +83,18 @@
 
 @layer base {
   html {
-    /* 13px base. html font-size is the global zoom dial: because all Tailwind
+    /* 14px base. html font-size is the global zoom dial: because all Tailwind
        spacing/sizing/text is rem-based, it scales the WHOLE page, not just text
        — so it can't make font bigger AND layout denser at once. We keep it at a
-       legible 13px and drive density separately via tightened spacing/grid on
-       the layout itself (sahibinden's approach: readable text, compact shell). */
-    font-size: 81.25%;
+       legible 14px and drive density separately via tightened spacing/grid on
+       the layout itself (sahibinden's approach: readable text, compact shell).
+       Raised one step from 13px (81.25%) on 2026-08-07 for readability. */
+    font-size: 87.5%;
   }
 
   @media (min-width: 1280px) {
     html {
-      font-size: 75%; /* 12px — slightly tighter on large desktop monitors */
+      font-size: 81.25%; /* 13px — slightly tighter on large desktop monitors */
     }
   }
 
