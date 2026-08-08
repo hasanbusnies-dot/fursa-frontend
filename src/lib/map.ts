@@ -319,17 +319,22 @@ export function formatAddressPath(parts: {
 /**
  * The listing's location catalog ancestry, rendered as an address.
  *
- * This is the FULL-DEPTH path — «دمشق، دمشق، المزة، الربوة» — and it supersedes
+ * This is the FULL-DEPTH path — «دمشق، المزة، الربوة» — and it supersedes
  * `formatAddressPath` wherever the backend sends `locationPath`, because the
  * denormalised text columns physically cannot express the middle rungs: the write
  * path stores only the governorate (also copied into `city`) and the leaf name,
  * so منطقة and ناحية exist nowhere else in the payload.
  *
- * Nothing is dropped, including the repeated name in «دمشق، دمشق» — محافظة دمشق
- * and منطقة دمشق genuinely share one, and collapsing it would silently delete a
- * rung of an administrative path that other rows need in full.
+ * ADJACENT rungs sharing a display name collapse to one: محافظة دمشق and منطقة
+ * دمشق are distinct rows that happen to be called the same thing, and «دمشق،
+ * دمشق، المزة، الربوة» reads as a typo to everyone who is not looking at the
+ * administrative tree. Only NEIGHBOURS collapse — two rungs with the same name
+ * and something else between them are a real repetition of a name at two points
+ * in the path, and both are kept. The `locationPath` payload itself is untouched:
+ * this is display shaping, and every rung (with its `level` and `slug`) is still
+ * there for anyone who needs the true depth.
  *
- * `specificFirst` flips to «الربوة، المزة، دمشق، دمشق» for the line UNDER a map,
+ * `specificFirst` flips to «الربوة، المزة، دمشق» for the line UNDER a map,
  * where the pin is the subject and the wider names qualify it — the same split
  * `formatAddressLine` and `formatAddressPath` already draw.
  */
@@ -340,7 +345,8 @@ export function formatRegionPath(
   if (!path?.length) return '';
   const names = path
     .map((n) => n.nameAr?.trim())
-    .filter((n): n is string => !!n);
+    .filter((n): n is string => !!n)
+    .filter((n, i, a) => n !== a[i - 1]); // adjacent duplicates only — «دمشق، دمشق» → «دمشق»
   if (opts?.specificFirst) names.reverse();
   return names.join('، ');
 }
