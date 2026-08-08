@@ -144,7 +144,11 @@ export default function PrivacyPage() {
             'حذف إعلاناتك في أي وقت.',
             'إيقاف الإشعارات الفورية والبريدية.',
             'إنهاء جلسات الأجهزة الأخرى من إعدادات أمان الحساب.',
-            'طلب حذف حسابك عبر التواصل معنا.',
+            // Play policy requires the in-app path to be the stated one — "contact us"
+            // is a rejection reason. Points at the control in
+            // /account/settings/profile; §8 (retention) is unchanged and still governs
+            // what survives deletion.
+            'حذف حسابك نهائياً من إعدادات الحساب في أي وقت.',
           ]}
         />
       </Section>

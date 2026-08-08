@@ -91,6 +91,44 @@ export interface UserSession {
   current: boolean; // matched against the x-refresh-token header we send
 }
 
+// ── Account deletion (Play Store requirement) ──────────────────────────────────
+// GET  /users/me/deletion-preview → what the user is about to lose, as FACTS
+// DELETE /users/me { password, reason? } → tombstone + revoke every token
+//
+// The preview's `warnings` are CODES, never prose — the Arabic lives in
+// lib/account-deletion.ts, same split as AccountBlockCode. Money arrives as
+// decimal STRINGS (see lib/money.ts): never parse it through Number().
+
+export interface DeletionWalletBalance {
+  currency: string;
+  balance: string;   // decimal string — format with formatMoney, don't Number() it
+  positive: boolean; // the backend's own verdict; don't re-derive from the string
+}
+
+export interface DeletionStore {
+  name: string;
+  status: string;
+  membership?: { status: string; paidUntil?: string | null } | null;
+}
+
+export interface DeletionPreview {
+  wallet?: { status: string; balances: DeletionWalletBalance[] } | null;
+  stores?: DeletionStore[];
+  activeListings?: number;
+  pendingTopups?: number;
+  /** Codes only — see ACCOUNT_DELETION_WARNING_COPY. Unknown codes are ignored. */
+  warnings?: string[];
+  /** The phone freed for re-registration; shown on the farewell screen. */
+  reRegistrationPhone?: string | null;
+}
+
+export type DeletionReason = 'NO_LONGER_NEEDED' | 'PRIVACY' | 'OTHER';
+
+export interface DeletionResult {
+  deletedAt: string;
+  freedPhone?: string | null;
+}
+
 export const usersService = {
   getMe: async (): Promise<MeUser> => {
     const res = await api.get<{ data: MeUser }>('/users/me');
@@ -150,5 +188,29 @@ export const usersService = {
   // Revokes every refresh token, including this device's — caller must log out locally after.
   logoutAllDevices: async (): Promise<void> => {
     await api.post<unknown>('/auth/logout-all', {});
+  },
+
+  getDeletionPreview: async (): Promise<DeletionPreview> => {
+    const res = await api.get<{ data: DeletionPreview }>('/users/me/deletion-preview');
+    return res.data ?? {};
+  },
+
+  /**
+   * Deletes the account. The backend re-authenticates with `password`, tombstones the
+   * user and revokes every token — so THIS session is dead the moment it returns, and
+   * the caller must log out locally rather than making another request.
+   *
+   * Errors the caller must distinguish: 400 wrong password (generic by design — it
+   * must not confirm which half was wrong), 403 staff/admin, 409 already deleted,
+   * 429 rate-limited.
+   */
+  deleteAccount: async (password: string, reason?: DeletionReason): Promise<DeletionResult> => {
+    // `api.delete` takes RequestInit, so the body is stringified here — the wrapper
+    // only does that for post/put/patch. Content-Type: application/json is added by
+    // `request` for every call, so the DELETE body parses server-side.
+    const res = await api.delete<{ data: DeletionResult }>('/users/me', {
+      body: JSON.stringify({ password, ...(reason ? { reason } : {}) }),
+    });
+    return res?.data ?? { deletedAt: new Date().toISOString() };
   },
 };

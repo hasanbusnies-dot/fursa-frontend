@@ -9,6 +9,7 @@ import {
 import {
   PhotoSection, LoginInfoSection, IndividualSection, CorporateSection,
 } from '@/components/account/settings/ProfileSections';
+import { DeleteAccountSection } from '@/components/account/settings/DeleteAccountSection';
 
 export default function ProfileSettingsPage() {
   const ready = useRequireAuth('/account/settings/profile');
@@ -37,6 +38,12 @@ export default function ProfileSettingsPage() {
 
       {me.userType === 'INDIVIDUAL' && <IndividualSection me={me} />}
       {me.userType === 'CORPORATE'  && <CorporateSection me={me} />}
+
+      {/* Last on the page, after everything a user might actually have come here to
+          change. Staff accounts don't get the control at all: the backend answers
+          them with 403, and offering a button that cannot work is worse than not
+          offering it. */}
+      {(me.userType === 'INDIVIDUAL' || me.userType === 'CORPORATE') && <DeleteAccountSection />}
     </div>
   );
 }
