@@ -457,18 +457,17 @@ function DamageMap({ damage }: { damage: Record<string, DamageEntry> }) {
 
 // ── Section heading ───────────────────────────────────────────────────────────
 /**
- * The header band over every group inside the listing details — «تفاصيل الإعلان»,
+ * The heading over every group inside the listing details — «تفاصيل الإعلان»,
  * «المواصفات الفنية», «الأمان والسلامة (21)» and the rest.
  *
- * Pale gold on dark gold-brown, the exact pair already carried by the tab strip
- * and the vehicle spec badges (#FFF6D1 / #6B5200, 6.8:1). One component rather
- * than a repeated className because these headings had drifted into three
- * different treatments — grey band, bare grey caption, bare dark caption — and a
- * shared accent colour is only a system if every instance actually matches.
+ * Deliberately NEUTRAL. The gold belongs to the CONTENT under these headings (see
+ * `GOLD_PANEL`): the heading names the block, the block is what carries the
+ * accent. One component so the label styling can't drift again, not so it can be
+ * tinted.
  *
- * `attached` is for a band that IS a card's header (it loses its rounding and
- * gains a hairline instead of floating above the card with a gap). `action`
- * lands at the inline END — the LEFT in RTL.
+ * `attached` is for a heading that IS a card's header — a grey band with a rule
+ * under it, rather than a bare caption floating above the block. `action` lands
+ * at the inline END — the LEFT in RTL.
  */
 function SectionHeading({
   label,
@@ -485,19 +484,31 @@ function SectionHeading({
 }) {
   return (
     <div
-      className={`flex items-center gap-2 px-4 py-2.5 ${attached ? 'border-b' : 'rounded-lg'} ${className}`}
-      style={{
-        backgroundColor: TAB_GOLD_SOFT,
-        color: TAB_GOLD_SOFT_INK,
-        ...(attached ? { borderBottomColor: TAB_GOLD_LINE } : null),
-      }}
+      className={`flex items-center gap-2 ${
+        attached ? 'px-4 py-2.5 bg-gray-50/80 border-b border-gray-200' : ''
+      } ${className}`}
     >
-      <p className="text-xs font-bold uppercase tracking-wider">{label}</p>
-      {count != null && <span className="text-xs opacity-70 tabular-nums">({count})</span>}
+      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</p>
+      {count != null && <span className="text-xs text-gray-400 tabular-nums">({count})</span>}
       {action && <div className="ms-auto shrink-0">{action}</div>}
     </div>
   );
 }
+
+/**
+ * The pale-gold panel behind the GROUPED spec sections — «الأمان والسلامة»,
+ * «الراحة والرفاهية» and the rest of the technical-spec groups.
+ *
+ * Same #FFF6D1 as the tab strip's inactive segments and the vehicle spec badges,
+ * so the page has one gold rather than three.
+ *
+ * NOT the head table above them (رقم الإعلان / تاريخ الإعلان / الماركة / …): that
+ * one stays plain white on purpose. It is where the ad number's dark red and the
+ * date's blue live, and those two colours are meant to be the only thing the eye
+ * catches in that block — a tinted field behind them would put them in
+ * competition with their own background.
+ */
+const GOLD_PANEL = { backgroundColor: TAB_GOLD_SOFT } as const;
 
 // ── Technical Specs Grid ──────────────────────────────────────────────────────
 // Section headers run full width with the features laid out beneath them in a
@@ -521,9 +532,12 @@ function TechSpecsGrid({ specs }: { specs: string[] }) {
             count={items.length}
             attached
           />
-          <div className="px-4 py-3 grid grid-cols-2 md:grid-cols-3 gap-y-2.5 gap-x-3">
+          <div
+            className="px-4 py-3 grid grid-cols-2 md:grid-cols-3 gap-y-2.5 gap-x-3"
+            style={GOLD_PANEL}
+          >
             {items.map((item) => (
-              <div key={item} className="flex items-start gap-2 text-[13px] sm:text-sm text-gray-700 leading-snug">
+              <div key={item} className="flex items-start gap-2 text-[13px] sm:text-sm text-gray-800 leading-snug">
                 <span className="mt-0.5 w-4 h-4 rounded-full bg-green-100 border border-green-300 flex items-center justify-center shrink-0">
                   <Check className="w-2.5 h-2.5 text-green-600" strokeWidth={3} />
                 </span>
@@ -1480,9 +1494,12 @@ function ListingIdentityBlock({ listing }: { listing: Listing }) {
       <div className="mt-3 h-px w-full bg-gray-900/10" />
 
       <div className="mt-3 space-y-1.5">
-        {/* Catalog path — blue, the page's navigable colour */}
+        {/* Catalog path — blue, the page's navigable colour. Centred, under the
+            centred seller name: `justify-center` rather than `text-center` because
+            both lines are flex rows, so the alignment has to come from the flow —
+            and it keeps a wrapped crumb chain centred line by line. */}
         {trail.length > 0 && (
-          <nav className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[13px] leading-snug">
+          <nav className="flex flex-wrap items-center justify-center gap-x-1 gap-y-0.5 text-[13px] leading-snug">
             {trail.map((crumb, i) => (
               <span key={`${crumb.label}-${i}`} className="inline-flex items-center gap-1">
                 {i > 0 && <ChevronLeft className="w-3 h-3 text-blue-300 shrink-0" aria-hidden />}
@@ -1501,9 +1518,11 @@ function ListingIdentityBlock({ listing }: { listing: Listing }) {
           </nav>
         )}
 
-        {/* Address — grey: context, not a control */}
+        {/* Address — grey: context, not a control. Centred with the crumb above it;
+            `flex-wrap` so a four-level path centres both lines instead of pushing
+            the pin off the row. */}
         {address && (
-          <p className="flex items-center gap-1.5 text-[13px] text-gray-500">
+          <p className="flex flex-wrap items-center justify-center gap-1.5 text-[13px] text-gray-500 text-center">
             <MapPin className="w-3.5 h-3.5 shrink-0 text-gray-400" />
             {address}
           </p>
@@ -1563,10 +1582,10 @@ function TabPanel({ listing, filterDefs, mobile = false }: { listing: Listing; f
 
           The strip contains the TABS AND NOTHING ELSE: it starts and ends on real
           tabs, so its gold edge is a truthful boundary of "things you can switch
-          between". Share and report ride in the same row on MOBILE (desktop has
-          both in the price bar) but stay outside the strip — no gold, no seam, no
-          blue baseline — because they are actions, not a fourth destination. */}
-      <div className="flex items-stretch gap-2 pe-2 border-b border-gray-200 overflow-x-auto no-scrollbar">
+          between". Share and report used to sit beside it; both now live together
+          at the end of the «تفاصيل الإعلان» heading below. The wrapper stays: it
+          carries the row's full-width rule, which the strip's baseline sits on. */}
+      <div className="flex items-stretch border-b border-gray-200 overflow-x-auto no-scrollbar">
         {/* ── The strip ── -mb-px drops its 2px baseline onto the row's 1px rule so
             the two read as one edge rather than a stack. */}
         <div
@@ -1598,20 +1617,8 @@ function TabPanel({ listing, filterDefs, mobile = false }: { listing: Listing; f
           ))}
         </div>
 
-        {/* ── Share — beside the strip, not in it, still the first thing past the
-            last tab (the LEFT in RTL). Report used to sit here too; it moved down
-            to the «تفاصيل الإعلان» section heading. Share stayed: it acts on the
-            listing as a whole, so the top of the card is where it belongs, and a
-            share affordance buried in one tab's content would be hard to find. ── */}
-        {mobile && isShareable(listing.status) && (
-          <div className="flex items-center shrink-0">
-            <ShareButton
-              listingId={listing.id}
-              subject={{ title: listing.title, city: listing.city }}
-              className="gap-1 px-2.5 py-1.5 rounded-lg text-[11px] [&_svg]:w-3.5 [&_svg]:h-3.5"
-            />
-          </div>
-        )}
+        {/* Nothing rides beside the strip — share and report are paired at the end
+            of the «تفاصيل الإعلان» heading below. */}
       </div>
 
       {/* Tab content */}
@@ -1619,20 +1626,33 @@ function TabPanel({ listing, filterDefs, mobile = false }: { listing: Listing; f
         {activeTab === 'details' && (
           <div className="space-y-6">
             {/* (a) Key-value detail table — always shown. The heading doubles as the
-                report row: «إبلاغ» sits at its inline END (the LEFT in RTL), across
-                from the label. Mobile only — desktop carries report in the price bar
-                — and `justify-between` rather than a spacer so the button lands on
-                the far edge whatever the heading's width. */}
+                page's action row: «مشاركة» and «إبلاغ» sit together at its inline
+                END (the LEFT in RTL), across from the label. Mobile only — desktop
+                carries both in the price bar. Share keeps its green and report its
+                red; only the sizing is matched, so the pair reads as one control
+                group without the two losing their very different weights.
+                Share is still gated on ACTIVE (`isShareable`): a pending or
+                rejected ad is publicly fetchable and must not be handed a share
+                affordance, while reporting one has to stay possible. */}
             <section>
               <SectionHeading
                 label="تفاصيل الإعلان"
                 className="mb-3"
                 action={mobile ? (
-                  <ReportButton
-                    listingId={listing.id}
-                    sellerId={listing.user?.id}
-                    className="gap-1 px-2.5 py-1 rounded-lg text-[11px] [&_svg]:w-3.5 [&_svg]:h-3.5"
-                  />
+                  <div className="flex items-center gap-1.5">
+                    {isShareable(listing.status) && (
+                      <ShareButton
+                        listingId={listing.id}
+                        subject={{ title: listing.title, city: listing.city }}
+                        className="gap-1 px-2.5 py-1 rounded-lg text-[11px] [&_svg]:w-3.5 [&_svg]:h-3.5"
+                      />
+                    )}
+                    <ReportButton
+                      listingId={listing.id}
+                      sellerId={listing.user?.id}
+                      className="gap-1 px-2.5 py-1 rounded-lg text-[11px] [&_svg]:w-3.5 [&_svg]:h-3.5"
+                    />
+                  </div>
                 ) : undefined}
               />
               <div className="rounded-xl border border-gray-200 overflow-hidden">
@@ -1666,7 +1686,9 @@ function TabPanel({ listing, filterDefs, mobile = false }: { listing: Listing; f
 
         {activeTab === 'damage' && (
           <div>
-            <SectionHeading label="تقرير حالة الهيكل" className="mb-4" />
+            {/* Its own size/weight, as before — this tab has a single heading and
+                no sibling captions to line up with. */}
+            <p className="text-sm font-semibold text-gray-700 mb-4">تقرير حالة الهيكل</p>
             {damage ? (
               <DamageMap damage={damage} />
             ) : (
