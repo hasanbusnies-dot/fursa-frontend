@@ -1,12 +1,12 @@
-[
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "app.fursago.twa",
-      "sha256_cert_fingerprints": [
-        "REPLACE_WITH_SHA256_FINGERPRINT_FROM_PLAY_CONSOLE_APP_INTEGRITY"
-      ]
-    }
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.fursago.twa",
+    "sha256_cert_fingerprints": [
+      "0D:90:85:D9:85:94:6E:05:C7:E5:A1:0A:AB:91:A3:14:57:10:D9:F0:AD:5F:2C:F9:08:53:0D:33:C9:1D:5F:5A",
+      "EA:99:2D:94:63:09:6C:19:FD:2C:4B:47:18:99:7E:66:D9:9B:00:0B:06:48:9E:05:03:63:AC:B4:D7:A2:A6:2F",
+      "BE:0F:D1:5B:F7:AD:E5:C6:01:B2:E8:FA:5D:5B:DF:4C:AE:98:6E:4D:25:7B:BB:D9:5B:AB:CB:33:80:42:BE:43"
+    ]
   }
-]
+}]
