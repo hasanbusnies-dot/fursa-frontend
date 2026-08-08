@@ -34,19 +34,30 @@ export default function ListingMap({
   coords,
   label,
   variant = 'exact',
+  zoom,
+  radiusKm,
   onError,
   className = 'h-[300px] sm:h-[400px]',
 }: {
   /**
    * `exact`: the seller's own coordinate — drawn as a pin.
-   * `approximate`: a governorate centre derived at RENDER TIME from the city
-   *   field. Never a stored coordinate, and deliberately never a pin: it is
-   *   drawn as a soft circle so it cannot be mistaken for a precise location.
+   * `approximate`: a catalog centroid (the picked region's, or the governorate's)
+   *   derived at RENDER TIME. Never a stored coordinate, and deliberately never a
+   *   pin: it is drawn as a soft circle so it cannot be mistaken for a precise
+   *   location.
    */
   coords: Coords;
   /** Ad title — the marker's accessible name / tooltip. */
   label?: string;
   variant?: 'exact' | 'approximate';
+  /**
+   * Override the default zoom / circle size. Both exist for `approximate`, whose
+   * honesty depends on how good the centroid is: a ناحية centroid deserves a
+   * closer view and a smaller circle than a whole governorate. Omitted ⇒ the
+   * governorate-scale defaults, i.e. exactly the previous behaviour.
+   */
+  zoom?: number;
+  radiusKm?: number;
   /** Called once when the map cannot be shown, so the tab can fall back to text. */
   onError?: () => void;
   className?: string;
@@ -59,8 +70,9 @@ export default function ListingMap({
   const { containerRef, mapRef, ready } = useListingMapBase({
     center: coords,
     // Approximate views open wide: a street-level zoom on a governorate centre
-    // would imply precision we don't have.
-    zoom: approximate ? MAP_GOVERNORATE_ZOOM : MAP_DEFAULT_ZOOM,
+    // would imply precision we don't have. A caller that knows the centroid came
+    // from a tighter level passes its own zoom.
+    zoom: zoom ?? (approximate ? MAP_GOVERNORATE_ZOOM : MAP_DEFAULT_ZOOM),
     // Scroll/one-finger gestures belong to the page, not the map.
     mapOptions: { cooperativeGestures: true },
     locale: approximate ? { 'Map.Title': 'خريطة تقريبية' } : undefined,
@@ -89,7 +101,10 @@ export default function ListingMap({
     if (!map || !approximate || !ready) return;
     if (map.getSource(AREA_SOURCE)) return;
 
-    map.addSource(AREA_SOURCE, { type: 'geojson', data: approximateAreaGeoJSON(coords) });
+    map.addSource(AREA_SOURCE, {
+      type: 'geojson',
+      data: approximateAreaGeoJSON(coords, radiusKm),
+    });
     map.addLayer({
       id: AREA_FILL,
       type: 'fill',
@@ -116,7 +131,7 @@ export default function ListingMap({
       if (map.getLayer(AREA_FILL)) map.removeLayer(AREA_FILL);
       map.removeSource(AREA_SOURCE);
     };
-  }, [approximate, ready, coords, mapRef]);
+  }, [approximate, ready, coords, radiusKm, mapRef]);
 
   // A coordinate change after mount is not a reason to rebuild the map — move
   // the marker and ease the camera instead. (In practice one listing per page.)

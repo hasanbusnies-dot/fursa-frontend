@@ -38,6 +38,9 @@ import {
   toValidCoords,
   formatAddressLine,
   formatAddressPath,
+  formatRegionPath,
+  zoomForRegionLevel,
+  approxRadiusForRegionLevel,
   directionsUrl,
   currentPlatform,
   governorateCenter,
@@ -1175,13 +1178,23 @@ function LocationTab({ listing }: { listing: Listing }) {
   useEffect(() => { setPlatform(currentPlatform()); }, []);
 
   const coords = toValidCoords(listing.latitude, listing.longitude);
-  const addressLine = formatAddressLine(listing);
+  // Most-specific-first here, unlike the identity block: under a map the pin is
+  // the subject and the wider names qualify it. Full depth either way.
+  const addressLine = formatRegionPath(listing.locationPath, { specificFirst: true })
+    || formatAddressLine(listing);
   const hidden = isLocationMapHidden(listing.attributes);
-  // Display-only derivation — never persisted. The wizard stores the chosen
-  // governorate in `city`, so that is the lookup key (with `governorate` first
-  // for whenever the backend column starts being populated).
-  const approxCenter =
-    !coords && !hidden ? governorateCenter(listing.governorate ?? listing.city) : null;
+
+  // Display-only derivation — never persisted, and never a pin (see the circle in
+  // ListingMap). Precedence: the catalog centroid of the region the seller
+  // actually picked, then the governorate centre. The region centre is the better
+  // approximation by a wide margin — الربوة instead of the middle of Damascus —
+  // and it comes with the level that produced it, so the zoom and the circle can
+  // say how much it is worth rather than framing a neighbourhood like a street.
+  const regionCenter = toValidCoords(listing.region?.centerLat, listing.region?.centerLng);
+  const approxCenter = !coords && !hidden
+    ? regionCenter ?? governorateCenter(listing.governorate ?? listing.city)
+    : null;
+  const approxLevel = approxCenter && regionCenter ? listing.region?.level : 'GOVERNORATE';
 
   const heading = (
     <div className="flex items-start gap-2">
@@ -1210,6 +1223,8 @@ function LocationTab({ listing }: { listing: Listing }) {
         <ListingMap
           coords={approxCenter}
           variant="approximate"
+          zoom={zoomForRegionLevel(approxLevel)}
+          radiusKm={approxRadiusForRegionLevel(approxLevel)}
           label={listing.title}
           onError={() => setMapFailed(true)}
         />
@@ -1338,27 +1353,29 @@ function useCatalogTrail(listing: Listing): Crumb[] {
 }
 
 /**
- * The listing's address, broadest-first.
+ * The listing's address, broadest-first, at FULL depth.
  *
- * DEPTH (Phase 4): a region can run four levels — GOVERNORATE › منطقة › ناحية ›
- * حي/قرية — and this renders every level the payload carries. Today that is two:
- * the write path (backend `listing.location.ts`) denormalises only `governorate`
- * (also copied into `city`) and `neighborhood`; `district` is left NULL and there
- * is no subdistrict column at all. The deeper rungs live behind `regionId`, which
- * the detail payload exposes as a bare UUID while every /locations endpoint is
- * keyed by SLUG — so the chain is not resolvable from the client. `formatAddressPath`
- * already accepts the middle levels, so the day the API sends them this deepens
- * with no change here.
+ * `locationPath` is the catalog's own ancestry and the only complete source: a
+ * region runs up to four levels (GOVERNORATE › منطقة › ناحية › حي/قرية), while
+ * the denormalised columns carry at most two — the backend's write path stores
+ * the governorate (also copied into `city`) and the leaf name, and never the
+ * middle rungs. So the path wins whenever it is there.
+ *
+ * The fallback is not dead code: every listing created before the region FK has
+ * `region: null` and an empty path, and those rows still have to render an
+ * address. `formatAddressPath` de-dupes there, because those columns really do
+ * repeat the governorate in `city`.
  */
 function listingAddress(listing: Listing): string {
-  const raw = listing as any;
-  return formatAddressPath({
-    governorate:  listing.governorate,
-    city:         listing.city,
-    district:     listing.district ?? raw.region?.district,
-    subdistrict:  raw.subdistrict ?? raw.subDistrict ?? raw.region?.subdistrict ?? null,
-    neighborhood: listing.neighborhood,
-  });
+  return (
+    formatRegionPath(listing.locationPath) ||
+    formatAddressPath({
+      governorate:  listing.governorate,
+      city:         listing.city,
+      district:     listing.district,
+      neighborhood: listing.neighborhood,
+    })
+  );
 }
 
 /**

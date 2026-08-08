@@ -42,6 +42,31 @@ export interface Category {
   children?: Category[];
 }
 
+/**
+ * A rung of the location catalog. Four levels since Phase 4:
+ * GOVERNORATE › DISTRICT (منطقة) › SUBDISTRICT (ناحية) › PLACE (حي/قرية).
+ */
+export type RegionLevel = 'GOVERNORATE' | 'DISTRICT' | 'SUBDISTRICT' | 'PLACE';
+
+/** One node of a listing's `locationPath`. */
+export interface RegionPathNode {
+  slug: string;
+  nameAr: string;
+  level: RegionLevel;
+}
+
+/**
+ * The region a listing is actually filed against — the DEEPEST node the seller
+ * picked, which is not always a PLACE (a curated city ناحية is selectable too).
+ * `centerLat/Lng` are the catalog's own centroid, never the seller's pin.
+ */
+export interface ListingRegion extends RegionPathNode {
+  nameEn?: string | null;
+  placeType?: string | null;
+  centerLat?: number | null;
+  centerLng?: number | null;
+}
+
 export interface VehicleDetails {
   make?: string;
   model?: string;
@@ -93,6 +118,19 @@ export interface Listing {
   neighborhood?: string;
   /** Free-text street line the seller typed (optional; often absent). */
   address?: string | null;
+  /**
+   * The catalog region this listing is filed against. Detail payload only, and
+   * null on pre-3c rows that predate the FK — every reader must handle that.
+   */
+  region?: ListingRegion | null;
+  /**
+   * The region's full ancestry, ROOT-FIRST — «دمشق › دمشق › المزة › الربوة» —
+   * with the region itself as the last node. This is the ONLY place the middle
+   * rungs (منطقة / ناحية) appear: the denormalised `governorate`/`district`/
+   * `neighborhood` columns below carry at most two of them. Empty on legacy rows,
+   * which fall back to those columns.
+   */
+  locationPath?: RegionPathNode[];
   /**
    * Exact seller-provided coordinate, shown as-is on the listing map
    * (sahibinden-style — no jitter or rounding). Both are null on listings

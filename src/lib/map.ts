@@ -144,6 +144,28 @@ export const GOVERNORATE_CENTERS: Record<string, Coords> = {
 export const MAP_APPROX_RADIUS_KM = 10;
 
 /**
+ * How wide the "approximately here" circle should be for a centre that came from
+ * level X of the location catalog — the radius counterpart to
+ * `zoomForRegionLevel`.
+ *
+ * A centroid is only ever as good as the area it is the middle of, so the circle
+ * has to shrink with the level: keeping the 10 km governorate radius around a
+ * neighbourhood centroid would swallow half of Damascus and read as far less
+ * knowledge than we actually have. These are soft, deliberately round numbers —
+ * the «موقع تقريبي» label is still what does the real work.
+ */
+export function approxRadiusForRegionLevel(
+  level: 'GOVERNORATE' | 'DISTRICT' | 'SUBDISTRICT' | 'PLACE' | null | undefined,
+): number {
+  switch (level) {
+    case 'PLACE':       return 2;
+    case 'SUBDISTRICT': return 4;
+    case 'DISTRICT':    return 7;
+    default:            return MAP_APPROX_RADIUS_KM;
+  }
+}
+
+/**
  * Key under which the seller's "don't show a map on my listing" choice rides in
  * `Listing.attributes` (JSONB).
  *
@@ -265,18 +287,17 @@ export function formatAddressLine(parts: {
  * it; this order is used as standalone provenance, where the reader needs the
  * governorate to anchor before the detail means anything.
  *
- * DEPTH: takes every level the payload carries and drops none. Regions are four
- * levels since Phase 4 — GOVERNORATE › DISTRICT (منطقة) › SUBDISTRICT (ناحية) ›
- * PLACE — so `subdistrict` is accepted here even though the listing payload does
- * not expose it yet; the moment the API adds it, this renders it with no change.
- * Blank and duplicate parts are dropped (listings routinely repeat city in
- * governorate), so a shallow location simply produces a shorter path.
+ * SCOPE: this reads the DENORMALISED columns, which is now the LEGACY path —
+ * `formatRegionPath` and the backend's `locationPath` are the full-depth source
+ * for any listing that has a region FK. These columns can only ever express the
+ * governorate and the leaf, so this is what pre-3c rows (region: null) fall back
+ * to. Blank and duplicate parts are dropped, because those columns really do
+ * repeat the governorate in `city`.
  */
 export function formatAddressPath(parts: {
   governorate?: string | null;
   city?: string | null;
   district?: string | null;
-  subdistrict?: string | null;
   neighborhood?: string | null;
 }): string {
   const seen = new Set<string>();
@@ -285,7 +306,6 @@ export function formatAddressPath(parts: {
     parts.governorate,
     parts.city,
     parts.district,
-    parts.subdistrict,
     parts.neighborhood,
   ]) {
     const t = p?.trim();
@@ -294,6 +314,35 @@ export function formatAddressPath(parts: {
     out.push(t);
   }
   return out.join('، ');
+}
+
+/**
+ * The listing's location catalog ancestry, rendered as an address.
+ *
+ * This is the FULL-DEPTH path — «دمشق، دمشق، المزة، الربوة» — and it supersedes
+ * `formatAddressPath` wherever the backend sends `locationPath`, because the
+ * denormalised text columns physically cannot express the middle rungs: the write
+ * path stores only the governorate (also copied into `city`) and the leaf name,
+ * so منطقة and ناحية exist nowhere else in the payload.
+ *
+ * Nothing is dropped, including the repeated name in «دمشق، دمشق» — محافظة دمشق
+ * and منطقة دمشق genuinely share one, and collapsing it would silently delete a
+ * rung of an administrative path that other rows need in full.
+ *
+ * `specificFirst` flips to «الربوة، المزة، دمشق، دمشق» for the line UNDER a map,
+ * where the pin is the subject and the wider names qualify it — the same split
+ * `formatAddressLine` and `formatAddressPath` already draw.
+ */
+export function formatRegionPath(
+  path: { nameAr?: string | null }[] | null | undefined,
+  opts?: { specificFirst?: boolean },
+): string {
+  if (!path?.length) return '';
+  const names = path
+    .map((n) => n.nameAr?.trim())
+    .filter((n): n is string => !!n);
+  if (opts?.specificFirst) names.reverse();
+  return names.join('، ');
 }
 
 type Platform = 'android' | 'ios' | 'other';
