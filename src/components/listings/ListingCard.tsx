@@ -139,6 +139,9 @@ export function ListingCard({
 }: ListingCardProps) {
   const primary = listing.images?.find((img) => img.isPrimary) ?? listing.images?.[0];
   const now     = Date.now();
+  // Computed before the homepage branch returns: BOTH layouts render the chips,
+  // so a car looks like a car wherever it is shown.
+  const specs   = vehicleSpecs(listing);
 
   // ── Homepage view: ONLY homepageShowcaseUntil matters ───────────────────────
   if (isHomepageView) {
@@ -182,6 +185,15 @@ export function ListingCard({
         </div>
         <div className="flex-1 min-w-0 p-2.5 space-y-1.5">
           <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">{listing.title}</p>
+          {specs.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1">
+              {specs.map((chip) => (
+                <span key={chip.key} className={cn(SPEC_CHIP_BASE, SPEC_CHIP_TONE[chip.tone])}>
+                  {chip.text}
+                </span>
+              ))}
+            </div>
+          )}
           <p className="text-base font-bold text-blue-600">{formatPrice(listing.price, listing.currency)}</p>
           <div className="flex items-center justify-between text-xs text-gray-400 pt-0.5">
             <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{listing.city}</span>
@@ -199,8 +211,6 @@ export function ListingCard({
     showcaseContext === 'category' &&
     !!listing.categoryShowcaseUntil &&
     new Date(listing.categoryShowcaseUntil).getTime() > now;
-
-  const specs = vehicleSpecs(listing);
 
   // Shared title/price/meta markup — reused by both the overlay and side layouts
   // so the overlay (default) DOM stays byte-identical.
