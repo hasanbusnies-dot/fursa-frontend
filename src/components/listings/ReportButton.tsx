@@ -68,7 +68,10 @@ export function ReportButton({
         )}
       >
         <Flag className="w-4 h-4" />
-        الإبلاغ عن إعلان مخالف
+        {/* Short label: the button sits in a tight row beside the tabs, and the
+            full «الإبلاغ عن إعلان مخالف» is still on the tooltip and the dialog
+            heading — where there is room to say what is being reported. */}
+        إبلاغ
       </button>
     </>
   );

@@ -1,29 +1,59 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { create } from 'zustand';
 import { notificationOriginBack } from '@/lib/notifications';
+import { cn } from '@/lib/utils';
 
-// ── Title store ───────────────────────────────────────────────────────────────
-// Lets dynamic pages (listing detail, category) override the resolved title.
-interface MobileTitleState {
+// ── Top-bar store ─────────────────────────────────────────────────────────────
+// Lets dynamic pages (listing detail, category) override what the shared bar
+// shows: its title, its colour, and an optional slot of page actions.
+type BarTone = 'default' | 'brand';
+
+interface MobileTopBarState {
   title: string | null;
-  setTitle: (t: string | null) => void;
+  tone: BarTone;
+  /** Rendered at the inline-END of the bar (the LEFT side in RTL). */
+  actions: ReactNode | null;
+  setBar: (s: { title: string | null; tone: BarTone; actions: ReactNode | null }) => void;
 }
-const useMobileTitleStore = create<MobileTitleState>((set) => ({
+const useMobileTitleStore = create<MobileTopBarState>((set) => ({
   title: null,
-  setTitle: (title) => set({ title }),
+  tone: 'default',
+  actions: null,
+  setBar: (s) => set(s),
 }));
+
+const RESET = { title: null, tone: 'default' as const, actions: null };
 
 /** Set the mobile top-bar title for the current page (cleared on unmount). */
 export function useMobileTitle(title: string | null | undefined) {
-  const setTitle = useMobileTitleStore((s) => s.setTitle);
+  const setBar = useMobileTitleStore((s) => s.setBar);
   useEffect(() => {
-    setTitle(title && title.trim() ? title : null);
-    return () => setTitle(null);
-  }, [title, setTitle]);
+    setBar({ ...RESET, title: title && title.trim() ? title : null });
+    return () => setBar(RESET);
+  }, [title, setBar]);
+}
+
+/**
+ * Full control of the shared bar for one page: title, colour and an actions slot.
+ *
+ * `actions` is a ReactNode held in the store, so the CALLER must memoise it —
+ * an inline JSX literal is a new object every render and would loop this effect.
+ */
+export function useMobileTopBar(opts: {
+  title?: string | null;
+  tone?: BarTone;
+  actions?: ReactNode | null;
+}) {
+  const { title = null, tone = 'default', actions = null } = opts;
+  const setBar = useMobileTitleStore((s) => s.setBar);
+  useEffect(() => {
+    setBar({ title: title && title.trim() ? title : null, tone, actions });
+    return () => setBar(RESET);
+  }, [title, tone, actions, setBar]);
 }
 
 // ── Route config ────────────────────────────────────────────────────────────────
@@ -97,13 +127,27 @@ export function MobileTopBar() {
   const pathname = usePathname();
   const router   = useRouter();
   const ctxTitle = useMobileTitleStore((s) => s.title);
+  const tone     = useMobileTitleStore((s) => s.tone);
+  const actions  = useMobileTitleStore((s) => s.actions);
 
   if (!shouldShowMobileTopBar(pathname)) return null;
 
   const title = ctxTitle ?? ROUTE_TITLES[pathname] ?? fallbackTitle(pathname);
+  const brand = tone === 'brand';
 
   return (
-    <div className="md:hidden sticky top-0 z-40 bg-white/70 backdrop-blur-[20px] border-b border-gray-200/60">
+    // 'brand' paints the bar in the primary blue and flips its contents to white.
+    // The glass treatment is dropped there on purpose: a translucent blue bar
+    // picks up whatever scrolls under it, and the point of the solid bar is that
+    // it reads as a fixed piece of app chrome.
+    <div
+      className={cn(
+        'md:hidden sticky top-0 z-40',
+        brand
+          ? 'bg-blue-600 border-b border-blue-700/40 shadow-sm'
+          : 'bg-white/70 backdrop-blur-[20px] border-b border-gray-200/60',
+      )}
+    >
       <div className="flex items-center gap-2 h-14 px-3">
         <button
           type="button"
@@ -111,13 +155,22 @@ export function MobileTopBar() {
           // there is nothing storage-dependent in the server/first-client markup.
           onClick={() => router.push(notificationOriginBack(pathname) ?? parentOf(pathname))}
           aria-label="رجوع"
-          className="shrink-0 p-1.5 -ms-1.5 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+          className={cn(
+            'shrink-0 p-1.5 -ms-1.5 rounded-lg transition-colors',
+            brand ? 'text-white hover:bg-white/15' : 'text-gray-700 hover:bg-gray-100',
+          )}
         >
           <ChevronRight className="w-5 h-5" />
         </button>
-        <h1 className="flex-1 min-w-0 truncate text-base font-bold text-gray-900">
+        <h1
+          className={cn(
+            'flex-1 min-w-0 truncate text-base font-bold',
+            brand ? 'text-white' : 'text-gray-900',
+          )}
+        >
           {title}
         </h1>
+        {actions && <div className="flex items-center gap-1.5 shrink-0">{actions}</div>}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -12,7 +12,7 @@ import {
 import { SealCheckIcon } from '@phosphor-icons/react/dist/ssr';
 import { toast } from 'sonner';
 import { listingsService } from '@/services/listings.service';
-import { catalogService, type CatalogFilterDef } from '@/services/catalog.service';
+import { catalogService, type CatalogFilterDef, type CatalogPathNode } from '@/services/catalog.service';
 import { messagesService } from '@/services/messages.service';
 import { qaService, questionText, maskedAskerName, askerInitials, type Question } from '@/services/qa.service';
 import { offersService } from '@/services/offers.service';
@@ -33,10 +33,11 @@ import { isShareable } from '@/lib/share';
 import { isConnectionError } from '@/lib/net-error';
 import { ConnectionError } from '@/components/ui/ConnectionError';
 import { recommendationsService } from '@/services/recommendations.service';
-import { useMobileTitle } from '@/components/layout/MobileTopBar';
+import { useMobileTopBar } from '@/components/layout/MobileTopBar';
 import {
   toValidCoords,
   formatAddressLine,
+  formatAddressPath,
   directionsUrl,
   currentPlatform,
   governorateCenter,
@@ -54,6 +55,28 @@ function formatPrice(price: number, currency: 'SYP' | 'USD') {
   const n = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(price));
   return currency === 'USD' ? `$${n}` : `${n} ل.س`;
 }
+
+/**
+ * Ad number colour. The founder's dark red, darkened until it holds on white
+ * (7.3:1) — it marks the one string a user copies out of this page and quotes to
+ * support, so it reads as an identifier rather than as running text.
+ */
+const META_RED = '#A81E17';
+
+/**
+ * Tab palette — the founder's brand gold, made readable.
+ *
+ * #FFCB00 is the logo yellow and it is 1.5:1 against white, so nothing light can
+ * sit on it: the label has to go DARK. `TAB_GOLD_INK` is that gold pushed almost
+ * to brown (8.9:1 on the fill), which keeps the pair inside one hue instead of
+ * dropping neutral black onto a saturated yellow. The inactive segment reuses the
+ * pale-gold badge pair already shipped on the vehicle spec cards
+ * (ListingCard.tsx, 6.8:1) so the two golds read as one family.
+ */
+const TAB_GOLD          = '#FFCB00';
+const TAB_GOLD_INK      = '#3D2C00';
+const TAB_GOLD_SOFT     = '#FFF6D1';
+const TAB_GOLD_SOFT_INK = '#6B5200';
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('ar-SY', {
@@ -293,29 +316,19 @@ function ImageGallery({ images }: { images: Listing['images'] }) {
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
-              <span className="absolute bottom-3 end-3 bg-black/50 text-white text-xs font-medium px-2.5 py-1 rounded-full">
+              {/* Photo counter — bottom CENTRE, the gallery's only inline chrome.
+                  It replaces the thumbnail strip that used to sit under the photo:
+                  the strip cost ~60px of vertical space on every listing to show
+                  what one line of text says, and the thumbnails now live in the
+                  lightbox, where there is room for them and where picking a photo
+                  is what you actually came to do. Centred rather than corner-set so
+                  it reads as a position indicator, not a badge. */}
+              <span className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/55 text-white text-xs font-semibold px-3 py-1 rounded-full tabular-nums select-none pointer-events-none">
                 {selected + 1} / {images.length}
               </span>
             </>
           )}
         </div>
-        {images.length > 1 && (
-          <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
-            {images.map((img, i) => (
-              <button
-                key={i}
-                onClick={() => scrollToSlide(i)}
-                className={`shrink-0 w-[72px] h-[54px] rounded-field overflow-hidden border-2 transition-all ${
-                  i === selected
-                    ? 'border-blue-600 ring-1 ring-blue-600'
-                    : 'border-transparent hover:border-gray-300 opacity-70 hover:opacity-100'
-                }`}
-              >
-                <img src={img.url} alt={`مصغرة ${i + 1}`} className="w-full h-full object-cover" />
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* ── Lightbox ── */}
@@ -589,7 +602,10 @@ function ListingNumberCell({ listingNumber }: { listingNumber: string }) {
             ? <Check className="w-4 h-4 text-emerald-500" />
             : <Copy className="w-4 h-4" />}
         </button>
-        <span dir="ltr" className="font-medium text-gray-900 tabular-nums">
+        {/* Dark red — the ad number is the one string a user copies out of this
+            page and quotes to support, so it is coloured where it actually lives
+            (this table), not duplicated elsewhere on the page. */}
+        <span dir="ltr" className="font-bold tabular-nums" style={{ color: META_RED }}>
           {listingNumber}
         </span>
       </span>
@@ -626,7 +642,16 @@ function AdSpecsTable({ listing, filterDefs, compact = false }: {
       // WITHOUT the copy button or the search hint — that number isn't
       // searchable, and promising otherwise would be a lie.
       : { label: 'رقم الإعلان', value: '#' + listing.id.slice(-8).toUpperCase() },
-    { label: 'تاريخ الإعلان', value: formatDate(listing.createdAt) },
+    {
+      label: 'تاريخ الإعلان',
+      value: formatDate(listing.createdAt),
+      // Blue — freshness is the other thing buyers scan this table for, and blue
+      // is the page's emphasis colour. Coloured here, in the real row, rather
+      // than restated under the address.
+      node: (
+        <span className="font-bold text-blue-600">{formatDate(listing.createdAt)}</span>
+      ),
+    },
   ];
 
   let rows: SpecRow[];
@@ -937,20 +962,35 @@ function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 
     );
   }
 
-  // ── Mobile: compact seller line (name + join date), no avatar/card/follow ──
+  // ── Mobile: centred seller identity (name + follow, join date beneath) ──
+  // Centred and set larger than the metadata under it, because this is the answer
+  // to "who am I buying from" — the first question after the photo. The follow
+  // control sits directly beside the name it follows; «عضو منذ» drops to its own
+  // line so the name is never competing with a date for the same eye position.
   if (variant === 'line') {
     return (
-      <div className="flex flex-wrap items-center gap-x-2 text-xs text-gray-500">
-        <span className="font-semibold text-gray-700 inline-flex items-center gap-1">
-          {name}
-          {/* Inline member seal: bare fill-weight seal (no white disc — on the white
-              card the check cutout reads white by itself; a disc here would look like
-              a sticker in running text). Same memberBadge gate as the avatar seal. */}
-          {memberBadge && (
-            <SealCheckIcon weight="fill" className="w-4 h-4 text-blue-600 shrink-0" aria-label="متجر معتمد" />
+      <div className="text-center">
+        <div className="flex items-center justify-center gap-2">
+          {/* text-lg: clearly the largest thing in this block, and still a step under
+              the listing title above the gallery, which stays the page's headline. */}
+          <span className="text-lg font-bold text-gray-900 inline-flex items-center gap-1.5 min-w-0">
+            <span className="truncate">{name}</span>
+            {/* Inline member seal: bare fill-weight seal (no white disc — on the white
+                card the check cutout reads white by itself; a disc here would look like
+                a sticker in running text). Same memberBadge gate as the avatar seal. */}
+            {memberBadge && (
+              <SealCheckIcon weight="fill" className="w-5 h-5 text-blue-600 shrink-0" aria-label="متجر معتمد" />
+            )}
+          </span>
+          {/* Sized down from the default 36px disc: beside a name it is a modifier of
+              that name, not a peer of the call/message buttons in the sticky bar. */}
+          {!isOwner && listing.user?.id && (
+            <FavoriteSellerButton sellerId={listing.user.id} variant="icon" className="w-8 h-8 shrink-0" />
           )}
-        </span>
-        {accountDate && <span>· عضو منذ {accountDate}</span>}
+        </div>
+        {accountDate && (
+          <p className="mt-1 text-sm text-gray-500">عضو منذ {accountDate}</p>
+        )}
       </div>
     );
   }
@@ -1217,6 +1257,200 @@ const MOBILE_TABS: { id: TabId; label: string }[] = [
   { id: 'location',    label: 'الموقع' },
 ];
 
+// ── Catalog trail (breadcrumb data) ───────────────────────────────────────────
+/** One crumb. `href` is absent when the crumb is a value, not a catalog node. */
+type Crumb = { label: string; href?: string };
+
+const norm = (s: string) => s.trim().toLowerCase();
+
+/**
+ * The FULL catalog chain for a listing — «المركبات › سيارات للبيع › بي إم دبليو ›
+ * سيريز 5» — assembled from two different kinds of truth.
+ *
+ * WHY IT WAS SHORT: a listing's `categoryId` is not the node the seller picked. The
+ * wizard resolves it to the DEEPEST **CATEGORY**-type node in the path
+ * (`catalogService.resolveCategoryId`), so a car drilled down to BMW › 5 Series is
+ * still filed against «سيارات للبيع», and the brand/model nodes are dropped on the
+ * way in. Worse, the API's `listing.category` carries exactly ONE ancestor
+ * (`parent`), so anything reading it can only ever draw two crumbs. Both halves are
+ * fixed here: `getPath` for the true ancestor chain at whatever depth it runs, and
+ * a catalog lookup to put the brand/model rungs back.
+ *
+ * The brand/model that survive the write are `vehicleDetails.make` / `.model`, and
+ * they are the node's LATIN name ("BMW" / "5 Series" — see CreateListingForm, which
+ * seeds them from the picked node's `name`). Matching those back against the
+ * catalog's children is what turns them into Arabic, linkable crumbs. When nothing
+ * matches — a seller who typed «أخرى», or a make from before the tree covered it —
+ * the raw string is still shown, just without a link, rather than inventing a URL
+ * that would 404.
+ *
+ * Both lookups go through the catalog's session cache, so a page with the sidebar
+ * open does not re-fetch what browse already holds.
+ */
+function useCatalogTrail(listing: Listing): Crumb[] {
+  const slug  = listing.category?.slug;
+  const vd    = listing.vehicleDetails as any;
+  const raw   = listing as any;
+  const make  = (vd?.make  ?? raw.make  ?? '') as string;
+  const model = (vd?.model ?? raw.model ?? '') as string;
+
+  const [trail, setTrail] = useState<Crumb[]>([]);
+
+  useEffect(() => {
+    if (!slug) { setTrail([]); return; }
+    let cancelled = false;
+
+    (async () => {
+      const path = await catalogService
+        .getPath(slug)
+        .catch(() => [] as CatalogPathNode[]); // orientation, not function — a miss just shortens it
+      const crumbs: Crumb[] = path.map((n) => ({
+        label: n.nameAr || n.name,
+        href:  `/category/${n.slug}`,
+      }));
+
+      // A seller who DID get filed against a brand/model node already has it in the
+      // path; don't append a second copy under its other name.
+      const seen = new Set(path.flatMap((n) => [norm(n.name), norm(n.nameAr || '')]));
+      const wanted = (v: string) => !!v.trim() && !seen.has(norm(v));
+
+      if (wanted(make)) {
+        const brands = await catalogService.getChildren(slug);
+        const brand  = brands.find((b) => norm(b.name) === norm(make) || norm(b.nameAr) === norm(make));
+        crumbs.push(brand ? { label: brand.nameAr || brand.name, href: `/category/${brand.slug}` } : { label: make.trim() });
+
+        if (wanted(model)) {
+          const models = brand ? await catalogService.getChildren(brand.slug) : [];
+          const node   = models.find((m) => norm(m.name) === norm(model) || norm(m.nameAr) === norm(model));
+          crumbs.push(node ? { label: node.nameAr || node.name, href: `/category/${node.slug}` } : { label: model.trim() });
+        }
+      } else if (wanted(model)) {
+        crumbs.push({ label: model.trim() });
+      }
+
+      if (!cancelled) setTrail(crumbs);
+    })();
+
+    return () => { cancelled = true; };
+  }, [slug, make, model]);
+
+  return trail;
+}
+
+/**
+ * The listing's address, broadest-first.
+ *
+ * DEPTH (Phase 4): a region can run four levels — GOVERNORATE › منطقة › ناحية ›
+ * حي/قرية — and this renders every level the payload carries. Today that is two:
+ * the write path (backend `listing.location.ts`) denormalises only `governorate`
+ * (also copied into `city`) and `neighborhood`; `district` is left NULL and there
+ * is no subdistrict column at all. The deeper rungs live behind `regionId`, which
+ * the detail payload exposes as a bare UUID while every /locations endpoint is
+ * keyed by SLUG — so the chain is not resolvable from the client. `formatAddressPath`
+ * already accepts the middle levels, so the day the API sends them this deepens
+ * with no change here.
+ */
+function listingAddress(listing: Listing): string {
+  const raw = listing as any;
+  return formatAddressPath({
+    governorate:  listing.governorate,
+    city:         listing.city,
+    district:     listing.district ?? raw.region?.district,
+    subdistrict:  raw.subdistrict ?? raw.subDistrict ?? raw.region?.subdistrict ?? null,
+    neighborhood: listing.neighborhood,
+  });
+}
+
+/**
+ * Desktop breadcrumb. Same trail as the mobile block — one source, so the two
+ * surfaces cannot drift — kept in the quiet grey the desktop header has always
+ * used, with the current listing as the dead-end crumb.
+ */
+function DesktopBreadcrumb({ listing }: { listing: Listing }) {
+  const trail = useCatalogTrail(listing);
+
+  return (
+    <nav className="flex items-center gap-1.5 text-sm text-gray-400 mb-4 flex-wrap">
+      <Link href="/" className="flex items-center gap-1 hover:text-blue-600 transition-colors">
+        <Home className="w-3.5 h-3.5" />
+        الرئيسية
+      </Link>
+      {trail.map((crumb, i) => (
+        <span key={`${crumb.label}-${i}`} className="flex items-center gap-1.5">
+          <span>/</span>
+          {crumb.href ? (
+            <Link href={crumb.href} className="hover:text-blue-600 transition-colors">
+              {crumb.label}
+            </Link>
+          ) : (
+            <span>{crumb.label}</span>
+          )}
+        </span>
+      ))}
+      <span>/</span>
+      <span className="text-gray-700 font-medium line-clamp-1">{listing.title}</span>
+    </nav>
+  );
+}
+
+// ── Listing identity block (mobile) ───────────────────────────────────────────
+/**
+ * Who is selling, and where this ad sits — placed in the vertical space the
+ * thumbnail strip used to occupy under the photo.
+ *
+ * The two metadata lines are a colour ladder, not decoration: blue = navigable
+ * (the catalog path, the page's action colour), grey = context you read but
+ * cannot act on (the address). The ad number and the date are deliberately NOT
+ * repeated here — they already have a home in the details table, and that is
+ * where their colours live.
+ */
+function ListingIdentityBlock({ listing }: { listing: Listing }) {
+  const trail   = useCatalogTrail(listing);
+  const address = listingAddress(listing);
+
+  return (
+    <div>
+      {/* Seller identity — centred name + follow, «عضو منذ» beneath. */}
+      <SellerBox listing={listing} variant="line" />
+
+      {/* Hairline rule — a tenth-opacity ink line rather than a grey border, so it
+          separates without drawing a second edge next to the card boundaries. */}
+      <div className="mt-3 h-px w-full bg-gray-900/10" />
+
+      <div className="mt-3 space-y-1.5">
+        {/* Catalog path — blue, the page's navigable colour */}
+        {trail.length > 0 && (
+          <nav className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[13px] leading-snug">
+            {trail.map((crumb, i) => (
+              <span key={`${crumb.label}-${i}`} className="inline-flex items-center gap-1">
+                {i > 0 && <ChevronLeft className="w-3 h-3 text-blue-300 shrink-0" aria-hidden />}
+                {crumb.href ? (
+                  <Link
+                    href={crumb.href}
+                    className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                  >
+                    {crumb.label}
+                  </Link>
+                ) : (
+                  <span className="text-blue-600">{crumb.label}</span>
+                )}
+              </span>
+            ))}
+          </nav>
+        )}
+
+        {/* Address — grey: context, not a control */}
+        {address && (
+          <p className="flex items-center gap-1.5 text-[13px] text-gray-500">
+            <MapPin className="w-3.5 h-3.5 shrink-0 text-gray-400" />
+            {address}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function TabPanel({ listing, filterDefs, mobile = false }: { listing: Listing; filterDefs?: CatalogFilterDef[]; mobile?: boolean }) {
   const [activeTab, setActiveTab] = useState<TabId>(mobile ? 'details' : 'description');
   const vd  = listing.vehicleDetails as any;
@@ -1244,21 +1478,60 @@ function TabPanel({ listing, filterDefs, mobile = false }: { listing: Listing; f
 
   return (
     <div className="bg-white rounded-card shadow-pebble overflow-hidden">
-      {/* Tab bar */}
-      <div className="flex bg-gray-50/80 border-b border-gray-200 overflow-x-auto">
+      {/* Tab bar — filled GOLD segments, each keeping the thin blue underline.
+          Gold is the founder's call and it works here because the tabs are the only
+          gold on the page, so the badge language it usually carries isn't competing
+          with anything. Brand gold #FFCB00 is far too bright for white text (1.5:1),
+          so the label is a dark gold-brown: 8.9:1 on the active fill, and the
+          inactive segment reuses the pale-gold pair already shipped on the vehicle
+          spec badges (#FFF6D1 / #6B5200, 6.8:1) so the two golds are one family.
+          The blue underline stays on EVERY segment and goes solid on the active one
+          — colour alone shouldn't be the only thing marking the current tab.
+          Share and report join this row on MOBILE only, just left of «الموقع»;
+          desktop already carries both in the price bar. */}
+      <div className="flex items-center gap-1.5 p-1.5 bg-gray-50/80 border-b border-gray-200 overflow-x-auto no-scrollbar">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`shrink-0 px-5 py-3.5 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${
+            aria-pressed={activeTab === tab.id}
+            style={
               activeTab === tab.id
-                ? 'text-blue-600 border-blue-600 bg-white'
-                : 'text-gray-500 border-transparent hover:text-gray-700'
+                ? { backgroundColor: TAB_GOLD, color: TAB_GOLD_INK }
+                : { backgroundColor: TAB_GOLD_SOFT, color: TAB_GOLD_SOFT_INK }
+            }
+            className={`shrink-0 px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors border-b-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-1 ${
+              activeTab === tab.id
+                ? 'border-blue-600 shadow-sm'
+                : 'border-blue-600/25 hover:brightness-95'
             }`}
           >
             {tab.label}
           </button>
         ))}
+
+        {/* Directly after the last tab, so in RTL they land immediately to the LEFT
+            of «الموقع» rather than drifting to the far edge on a wide phone.
+            The rule keeps them from reading as a fourth tab. */}
+        {mobile && (
+          <>
+            <div className="self-stretch w-px my-1 bg-gray-200 shrink-0" aria-hidden />
+            <div className="flex items-center gap-1.5 shrink-0">
+              {isShareable(listing.status) && (
+                <ShareButton
+                  listingId={listing.id}
+                  subject={{ title: listing.title, city: listing.city }}
+                  className="gap-1 px-2.5 py-1.5 rounded-lg text-[11px] [&_svg]:w-3.5 [&_svg]:h-3.5"
+                />
+              )}
+              <ReportButton
+                listingId={listing.id}
+                sellerId={listing.user?.id}
+                className="gap-1 px-2.5 py-1.5 rounded-lg text-[11px] [&_svg]:w-3.5 [&_svg]:h-3.5"
+              />
+            </div>
+          </>
+        )}
       </div>
 
       {/* Tab content */}
@@ -1607,7 +1880,26 @@ export default function ListingDetailClient() {
       .finally(() => setLoading(false));
   }, [id, retryKey]);
 
-  useMobileTitle(listing?.title);
+  // Favourite + compare ride in the mobile top bar, which is painted brand blue for
+  // this page. Memoised because the node is HELD in the top-bar store — a fresh
+  // object each render would re-fire the store effect forever.
+  // `variant="card"` (the white disc) rather than the labelled pill: it keeps both
+  // buttons legible on blue AND keeps their state visible — a favourited star stays
+  // yellow, and an in-compare listing turns the disc blue.
+  const barActions = useMemo(() => {
+    if (!listing) return null;
+    const chip = 'w-9 h-9 shadow-none ring-1 ring-white/40';
+    return (
+      <>
+        <FavoriteButton listingId={listing.id} checkOnMount variant="card" className={chip} />
+        <CompareButton listing={listing} variant="card" className={chip} />
+      </>
+    );
+  }, [listing]);
+
+  // No title here on purpose: it moved down to sit above the gallery, so the bar
+  // falls back to the generic «تفاصيل الإعلان» label and carries the actions instead.
+  useMobileTopBar({ tone: 'brand', actions: barActions });
 
   if (loading) return <ListingSkeleton />;
   if (loadError === 'connection') {
@@ -1634,26 +1926,8 @@ export default function ListingDetailClient() {
         {/* ══ Desktop (lg+) — unchanged 3-column layout ══ */}
         <div className="hidden lg:block">
 
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 text-sm text-gray-400 mb-4 flex-wrap">
-            <Link href="/" className="flex items-center gap-1 hover:text-blue-600 transition-colors">
-              <Home className="w-3.5 h-3.5" />
-              الرئيسية
-            </Link>
-            <span>/</span>
-            {listing.category && (
-              <>
-                <Link
-                  href={`/listings?categoryId=${listing.category.id ?? ''}`}
-                  className="hover:text-blue-600 transition-colors"
-                >
-                  {listing.category.name}
-                </Link>
-                <span>/</span>
-              </>
-            )}
-            <span className="text-gray-700 font-medium line-clamp-1">{listing.title}</span>
-          </nav>
+          {/* Breadcrumb — the full catalog chain, brand and model included */}
+          <DesktopBreadcrumb listing={listing} />
 
           {/* Title */}
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-snug mb-4">
@@ -1668,9 +1942,11 @@ export default function ListingDetailClient() {
             {/* flex-wrap: the report button makes this row long enough to overflow the
                 price bar on narrower desktop widths. */}
             <div className="flex flex-wrap items-center gap-3">
+              {/* Full location path, not the bare city — `city` holds the
+                  GOVERNORATE name, so alone it lost the neighbourhood. */}
               <div className="flex items-center gap-1.5 text-sm text-gray-500">
                 <MapPin className="w-4 h-4 shrink-0" />
-                {listing.city}
+                {listingAddress(listing) || listing.city}
               </div>
               <FavoriteButton listingId={listing.id} checkOnMount variant="detail" />
               <CompareButton listing={listing} variant="detail" />
@@ -1721,63 +1997,28 @@ export default function ListingDetailClient() {
         {/* ══ Mobile (<lg) — sahibinden-style linear order ══ */}
         <div className="lg:hidden space-y-4 pb-32">
 
-          {/* 1 — Favorite + Compare + Follow seller (above the gallery). Share and
-              report moved down to the seller line — see 3. flex-wrap so the row cannot
-              overflow a narrow phone. */}
-          <div className="flex flex-wrap items-center gap-3">
-            <FavoriteButton listingId={listing.id} checkOnMount variant="detail" />
-            <CompareButton listing={listing} variant="detail" />
-            {listing.user?.id && authUser?.id !== listing.user.id && (
-              <FavoriteSellerButton sellerId={listing.user.id} variant="icon" />
-            )}
-          </div>
+          {/* 1 — Title. It swapped places with favourite/compare: those are now in
+              the blue top bar (see useMobileTopBar below), and the title took their
+              slot above the gallery — which is also where a title belongs, since it
+              names the photo you are about to look at. */}
+          <h1 className="text-xl font-bold text-gray-900 leading-snug">
+            {listing.title}
+          </h1>
 
           {/* 2 — Image gallery (full-bleed, no card) */}
           <ImageGallery images={listing.images ?? []} />
 
-          {/* 3 — Seller name + join date (compact line, sahibinden-style), with
-              share + report filling the empty space at its END (= the LEFT side in
-              RTL). Compact sizing is passed in: the shared buttons are sized for the
-              desktop price bar, and twMerge lets these win. */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <SellerBox listing={listing} variant="line" />
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {isShareable(listing.status) && (
-                <ShareButton
-                  listingId={listing.id}
-                  subject={{ title: listing.title, city: listing.city }}
-                  className="gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] [&_svg]:w-3.5 [&_svg]:h-3.5"
-                />
-              )}
-              <ReportButton
-                listingId={listing.id}
-                sellerId={listing.user?.id}
-                className="gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] [&_svg]:w-3.5 [&_svg]:h-3.5"
-              />
-            </div>
-          </div>
+          {/* 3 — Seller + provenance, in the space the thumbnail strip vacated:
+              name / «عضو منذ» with follow-share-report at the END, a hairline rule,
+              then the catalog path, address, ad number and date. */}
+          <ListingIdentityBlock listing={listing} />
 
-          {/* 4 — Title + price + location + date */}
-          <div>
-            <h1 className="text-xl font-bold text-gray-900 leading-snug mb-2">
-              {listing.title}
-            </h1>
-            <p className="text-2xl font-extrabold text-blue-700 leading-none mb-2.5">
-              {formatPrice(listing.price, listing.currency)}
-            </p>
-            <div className="flex items-center gap-4 text-sm text-gray-500">
-              <span className="flex items-center gap-1">
-                <MapPin className="w-4 h-4 shrink-0" />
-                {listing.city}
-              </span>
-              <span className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 shrink-0" />
-                {formatDate(listing.createdAt)}
-              </span>
-            </div>
-          </div>
+          {/* 4 — Price. The title moved up to 1, and the city/date pair moved into
+              the identity block above, so this is the price alone — which is what a
+              buyer is scanning for at this point in the page anyway. */}
+          <p className="text-2xl font-extrabold text-blue-700 leading-none">
+            {formatPrice(listing.price, listing.currency)}
+          </p>
 
           {/* 5 — Tabs (3-tab sahibinden layout; tab 1 stacks table + damage + specs) */}
           <TabPanel listing={listing} filterDefs={filterDefs} mobile />

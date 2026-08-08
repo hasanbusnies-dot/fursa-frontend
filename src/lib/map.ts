@@ -256,6 +256,46 @@ export function formatAddressLine(parts: {
   return out.join('، ');
 }
 
+/**
+ * Human address path, BROADEST first — «دمشق، المزة، …» — walking down the region
+ * hierarchy the way a person names a place out loud.
+ *
+ * Separate from `formatAddressLine` (most-specific first) on purpose: that order
+ * is right under a map, where the pin is the subject and the neighbourhood names
+ * it; this order is used as standalone provenance, where the reader needs the
+ * governorate to anchor before the detail means anything.
+ *
+ * DEPTH: takes every level the payload carries and drops none. Regions are four
+ * levels since Phase 4 — GOVERNORATE › DISTRICT (منطقة) › SUBDISTRICT (ناحية) ›
+ * PLACE — so `subdistrict` is accepted here even though the listing payload does
+ * not expose it yet; the moment the API adds it, this renders it with no change.
+ * Blank and duplicate parts are dropped (listings routinely repeat city in
+ * governorate), so a shallow location simply produces a shorter path.
+ */
+export function formatAddressPath(parts: {
+  governorate?: string | null;
+  city?: string | null;
+  district?: string | null;
+  subdistrict?: string | null;
+  neighborhood?: string | null;
+}): string {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const p of [
+    parts.governorate,
+    parts.city,
+    parts.district,
+    parts.subdistrict,
+    parts.neighborhood,
+  ]) {
+    const t = p?.trim();
+    if (!t || seen.has(t)) continue;
+    seen.add(t);
+    out.push(t);
+  }
+  return out.join('، ');
+}
+
 type Platform = 'android' | 'ios' | 'other';
 
 function detectPlatform(): Platform {
