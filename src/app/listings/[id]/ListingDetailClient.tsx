@@ -20,7 +20,7 @@ import { useAuthStore } from '@/store/auth.store';
 import type { Listing, VehicleDetails } from '@/types';
 import {
   TECH_SPEC_VALUES, TECH_SPEC_CATEGORY_AR, techSpecLabel,
-  PANEL_LABELS, STATUS_COLORS, STATUS_LABELS,
+  SVG_PANELS, PANEL_LABELS, STATUS_COLORS, STATUS_LABELS, hasCarBodyPanels,
   type DamageStatus,
 } from '@/components/listings/wizard/schema';
 import { CarDamageDiagram } from '@/components/listings/CarDamageDiagram';
@@ -107,14 +107,38 @@ const STATUS_NORM: Record<string, DamageStatus> = {
 
 type DamageEntry = { status: DamageStatus; detail?: string };
 
-function normalizeDamageReport(
-  raw: Record<string, string | { status: string; detail?: string }>,
+/**
+ * The COMPLETE 15-panel report: every panel seeded ORIGINAL, then whatever the
+ * listing actually stored laid over the top.
+ *
+ * ABSENCE MEANS "ALL ORIGINAL" — this is not a guess, it is how the wizard
+ * encodes it. `getDefaultDamageReport()` starts every panel at ORIGINAL, the
+ * damage step is a mandatory stop in the vehicle flow, and CreateListingForm
+ * ships only the panels that are NOT original (`.filter(status !== 'ORIGINAL')`,
+ * then `undefined` when nothing is left). So "no damageReport" is the storage
+ * encoding of an intact car, not a seller who skipped the question — the model
+ * has no "unknown" state to confuse it with. The wizard's own review step reads
+ * it back the same way (`damageReport[key]?.status ?? 'ORIGINAL'`).
+ *
+ * Seeding every panel also fixes the PARTIAL case, which was wrong in the same
+ * way: a car with one repainted fender used to list exactly one panel in the
+ * summary, silently omitting the fourteen that were fine.
+ *
+ * Order comes from SVG_PANELS (front → back), not from the payload's key order,
+ * so the summary reads down the car instead of in whatever sequence the damaged
+ * panels happened to be stored.
+ */
+function fullDamageReport(
+  raw?: Record<string, string | { status: string; detail?: string }> | null,
 ): Record<string, DamageEntry> {
+  const stored = raw ?? {};
   return Object.fromEntries(
-    Object.entries(raw).map(([key, val]) => {
+    SVG_PANELS.map((p) => {
+      const val = stored[p.key];
+      if (val == null) return [p.key, { status: 'ORIGINAL' as DamageStatus }];
       const s      = typeof val === 'string' ? val : val?.status ?? 'ORIGINAL';
       const detail = typeof val === 'string' ? undefined : val?.detail || undefined;
-      return [key, { status: STATUS_NORM[s] ?? 'ORIGINAL', detail }];
+      return [p.key, { status: STATUS_NORM[s] ?? 'ORIGINAL', detail }];
     }),
   );
 }
@@ -432,25 +456,36 @@ function DamageMap({ damage }: { damage: Record<string, DamageEntry> }) {
     <div className="flex flex-col items-center gap-6">
       <CarDamageDiagram report={damage} />
 
-      {/* Panel summary */}
+      {/* Panel summary — all 15, front to back. Driven off SVG_PANELS rather than
+          the report's own keys so an intact car lists every panel as سليم instead
+          of rendering an empty grid. */}
       <div className="w-full grid grid-cols-2 gap-2">
-        {Object.entries(damage).map(([panel, entry]) => (
-          <div
-            key={panel}
-            className={`flex flex-col bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-100 ${entry.detail ? 'col-span-2' : ''}`}
-          >
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-600">{PANEL_LABELS[panel] ?? panel}</span>
-              <span className={`font-medium px-1.5 py-0.5 rounded shrink-0 ms-2 ${STATUS_COLORS[entry.status].badge}`}>
-                {STATUS_LABELS[entry.status]}
-              </span>
+        {SVG_PANELS.map((p) => {
+          const entry = damage[p.key] ?? { status: 'ORIGINAL' as DamageStatus };
+          return (
+            <div
+              key={p.key}
+              className={`flex flex-col bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-100 ${entry.detail ? 'col-span-2' : ''}`}
+            >
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-600">{PANEL_LABELS[p.key] ?? p.key}</span>
+                <span className={`font-medium px-1.5 py-0.5 rounded shrink-0 ms-2 ${STATUS_COLORS[entry.status].badge}`}>
+                  {STATUS_LABELS[entry.status]}
+                </span>
+              </div>
+              {entry.detail && (
+                <p className="text-xs text-gray-500 mt-1">ملاحظة: {entry.detail}</p>
+              )}
             </div>
-            {entry.detail && (
-              <p className="text-xs text-gray-500 mt-1">ملاحظة: {entry.detail}</p>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
+
+      {/* The page now ASSERTS a condition for every panel, including ones the
+          seller never touched, so it says whose assertion it is. */}
+      <p className="w-full text-[11px] text-gray-400 text-center leading-relaxed">
+        حالة الهيكل حسب تصريح البائع.
+      </p>
     </div>
   );
 }
@@ -1438,6 +1473,44 @@ function listingAddress(listing: Listing): string {
 }
 
 /**
+ * Does this listing's category sit under a car body — the 15-panel shell the
+ * damage diagram draws?
+ *
+ * The listing's own slug answers it for anything the wizard created, because
+ * `resolveCategoryId` files those against the deepest CATEGORY node, which in the
+ * vehicles tree IS the body type (`cars`, `suv`, `motorcycles`, `truck`). That is
+ * the synchronous fast path and it covers the normal case with no request.
+ *
+ * But it is NOT universal: real rows exist whose category is a BRAND or MODEL node
+ * — `suv-haval`, `suv-toyota-rav4`, `motorcycles-yamaha` — and for those the slug
+ * alone says nothing. So when the fast path misses, the catalog's own ancestor
+ * chain decides, and a car body anywhere in it counts. `getPath` is session-cached
+ * and this page already calls it for the breadcrumb, so in practice the answer is
+ * in memory before this runs.
+ *
+ * Starts FALSE and only turns on once known: an SUV whose diagram appears a beat
+ * late is a smaller error than a motorcycle that briefly shows a bonnet.
+ */
+function useCarBodyCategory(listing: Listing): boolean {
+  const slug = listing.category?.slug;
+  const direct = hasCarBodyPanels(slug);
+  const [viaPath, setViaPath] = useState(false);
+
+  useEffect(() => {
+    if (!slug || direct) return; // fast path already decided it
+    let cancelled = false;
+    catalogService.getPath(slug)
+      .then((path) => {
+        if (!cancelled) setViaPath(path.some((n) => hasCarBodyPanels(n.slug)));
+      })
+      .catch(() => { /* unknown chain → no diagram, the safe direction */ });
+    return () => { cancelled = true; };
+  }, [slug, direct]);
+
+  return direct || viaPath;
+}
+
+/**
  * Desktop breadcrumb. Same trail as the mobile block — one source, so the two
  * surfaces cannot drift — kept in the quiet grey the desktop header has always
  * used, with the current listing as the dead-end crumb.
@@ -1542,9 +1615,12 @@ function TabPanel({ listing, filterDefs, mobile = false }: { listing: Listing; f
     vd?.damageReports ??
     raw.damageReport  ??
     raw.damageReports;
-  const damage = rawDamage && Object.keys(rawDamage).length > 0
-    ? normalizeDamageReport(rawDamage as Record<string, string | { status: string; detail?: string }>)
-    : null;
+  // Always a complete report — an absent/empty payload IS "all original", so this
+  // never returns null and the section never has an empty state to hide behind.
+  // Whether it renders at all is decided by `carBody` below, not by the data.
+  const damage = fullDamageReport(
+    rawDamage as Record<string, string | { status: string; detail?: string }> | undefined,
+  );
 
   const techSpecs = (
     vd?.technicalSpecs ?? vd?.specs ?? vd?.features ??
@@ -1554,7 +1630,16 @@ function TabPanel({ listing, filterDefs, mobile = false }: { listing: Listing; f
   // Damage report + technical specs are vehicle concepts. Non-vehicle listings drop those
   // tabs entirely — leaving details (attribute table) + description + location (+ Q&A below).
   const vehicle = isVehicleListing(listing);
-  const desktopTabs = vehicle ? TABS : TABS.filter((t) => t.id !== 'damage' && t.id !== 'specs');
+  // The DIAGRAM needs more than "is a vehicle": it draws one specific 15-panel car
+  // shell, so it is gated on the category actually having that body. A motorcycle
+  // or a truck is a vehicle with technical specs and no bonnet.
+  // Called unconditionally — `vehicle && useCarBodyCategory(...)` would make it a
+  // conditional hook.
+  const carBodyCategory = useCarBodyCategory(listing);
+  const carBody = vehicle && carBodyCategory;
+  const desktopTabs = TABS.filter((t) =>
+    (t.id !== 'damage' || carBody) && (t.id !== 'specs' || vehicle),
+  );
   const tabs = mobile ? MOBILE_TABS : desktopTabs;
 
   return (
@@ -1660,8 +1745,13 @@ function TabPanel({ listing, filterDefs, mobile = false }: { listing: Listing; f
               </div>
             </section>
 
-            {/* (b) Damage & paint report — vehicles only, and only if data present */}
-            {vehicle && damage && (
+            {/* (b) Damage & paint report — every CAR-BODY listing, damaged or not.
+                Two separate gates, both deliberate: it used to be hidden when the
+                payload was empty, which hid it on exactly the cars whose report is
+                the best news (an intact car stores nothing — see fullDamageReport),
+                and it used to show for any vehicle, which would have drawn a car
+                outline on a motorcycle. */}
+            {carBody && (
               <section>
                 <SectionHeading label="تقرير الأضرار والطلاء" className="mb-3" />
                 <DamageMap damage={damage} />
@@ -1689,13 +1779,9 @@ function TabPanel({ listing, filterDefs, mobile = false }: { listing: Listing; f
             {/* Its own size/weight, as before — this tab has a single heading and
                 no sibling captions to line up with. */}
             <p className="text-sm font-semibold text-gray-700 mb-4">تقرير حالة الهيكل</p>
-            {damage ? (
-              <DamageMap damage={damage} />
-            ) : (
-              <p className="text-sm text-gray-400 text-center py-10">
-                لم يُقدَّم تقرير أضرار لهذا الإعلان.
-              </p>
-            )}
+            {/* No empty state: this tab exists only for vehicles, and every vehicle
+                has a full report once absence is read as all-original. */}
+            <DamageMap damage={damage} />
           </div>
         )}
 

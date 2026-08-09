@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { Send, Loader2, MapPin, AlertTriangle, CheckCircle } from 'lucide-react';
 import type { WizardFormData, DamageReportState } from './schema';
-import { SVG_PANELS, STATUS_LABELS, techSpecLabel } from './schema';
+import { SVG_PANELS, STATUS_LABELS, techSpecLabel, hasCarBodyPanels } from './schema';
 import type { CatalogState } from './Step0Catalog';
 import type { CatalogFilterDef } from '@/services/catalog.service';
 import { toValidCoords } from '@/lib/map';
@@ -69,6 +69,10 @@ function SpecRow({ label, value }: { label: string; value?: string | number | nu
 export function Step6Review({ form, catalog, damageReport, photos, isSubmitting, submitPhase, onSubmit }: Props) {
   const d = form.getValues();
   const isVehicle = catalog.isVehicle;
+  // Mirrors the step gate in CreateListingForm: no damage step was shown for a
+  // motorcycle or a truck, so the review must not summarise one either — «جميع
+  // القطع أصلية» about panels that don't exist is a claim, not a blank.
+  const isCarBody = catalog.picked.some((p) => hasCarBodyPanels(p.slug));
   const categoryTrail = catalog.picked.map((p) => p.nameAr).join(' › ');
   // Generic attributes to display: each visible (non-LOCATION) filter that has a value.
   const attrRows = catalog.filters
@@ -203,11 +207,13 @@ export function Step6Review({ form, catalog, damageReport, photos, isSubmitting,
           )}
         </div>
 
-        {/* Damage + Tech specs footer (vehicle listings only) */}
+        {/* Damage + Tech specs footer (vehicle listings only) — damage is further
+            narrowed to car bodies, so the grid collapses to one column without it. */}
         {isVehicle && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 border-t border-gray-100">
+        <div className={`grid grid-cols-1 border-t border-gray-100 ${isCarBody ? 'sm:grid-cols-2' : ''}`}>
 
           {/* Damage summary */}
+          {isCarBody && (
           <div className="px-5 py-4 border-b sm:border-b-0 sm:border-e border-gray-100">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">تقرير الأضرار</p>
             {modifiedPanels.length === 0 ? (
@@ -226,6 +232,7 @@ export function Step6Review({ form, catalog, damageReport, photos, isSubmitting,
               </div>
             )}
           </div>
+          )}
 
           {/* Tech specs summary */}
           <div className="px-5 py-4">

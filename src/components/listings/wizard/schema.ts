@@ -62,6 +62,47 @@ export function getDefaultDamageReport(): DamageReportState {
   );
 }
 
+// ── Which vehicles actually HAVE these panels ─────────────────────────────────
+/**
+ * Catalog categories whose body is the 15-panel car shell the diagram draws.
+ *
+ * The panel list above is not a generic "vehicle condition" model — it is one
+ * specific body: bonnet, four doors, two rockers, a roof and a boot. Being a
+ * vehicle is not the test. A motorcycle has no doors, a truck is a cab plus a
+ * separate box, a trailer has no bonnet, and drawing a car outline for any of
+ * them reports panels that do not exist on the thing being sold.
+ *
+ * Keyed on the listing's own category slug because the catalog already puts the
+ * body type at exactly that level: a listing's `categoryId` resolves to the
+ * DEEPEST CATEGORY node (`catalogService.resolveCategoryId`), and in the vehicles
+ * tree that node IS the body type — `cars`, `suv`, `motorcycles`, `truck`,
+ * `electric-cars`. Brands and models hang off it as BRAND/MODEL nodes, so the
+ * discriminator needs no path walk and no network call.
+ *
+ * An ALLOW-list, not a deny-list, so an unknown or newly seeded vehicle category
+ * renders no diagram rather than the wrong one. That is the safe direction to
+ * fail: a missing report is an omission, a car map on a boat is a false claim.
+ * If the backend ever inserts a level between one of these and its brands, the
+ * listing's category becomes the new node and its diagram disappears until the
+ * slug is added here — visible, and the right way round.
+ */
+export const CAR_BODY_CATEGORY_SLUGS = new Set([
+  'cars',              // سيارات للبيع
+  'suv',               // دفع رباعي وبيك أب
+  'minivan',           // ميني فان وفان
+  'electric-cars',     // سيارات كهربائية
+  'damaged-cars',      // سيارات متضررة — the report matters most here
+  'damaged-suv',       // دفع رباعي وبيك أب متضررة
+  'cars-for-rent',     // سيارات للإيجار
+  'suv-for-rent',      // دفع رباعي وبيك أب للإيجار
+  'minivan-for-rent',  // ميني فان وفان للإيجار
+]);
+
+/** Does this listing's category have a car body worth reporting panel-by-panel? */
+export function hasCarBodyPanels(categorySlug?: string | null): boolean {
+  return !!categorySlug && CAR_BODY_CATEGORY_SLUGS.has(categorySlug);
+}
+
 // ── Tech specs ────────────────────────────────────────────────────────────────
 
 /**

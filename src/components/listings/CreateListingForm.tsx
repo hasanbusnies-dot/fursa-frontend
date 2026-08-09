@@ -29,6 +29,7 @@ import { Step6Review }       from './wizard/Step6Review';
 import {
   wizardSchema,
   getDefaultDamageReport,
+  hasCarBodyPanels,
   SVG_PANELS,
   type WizardFormData,
   type DamageReportState,
@@ -113,6 +114,13 @@ export function CreateListingForm({
   const brandNode = catalog.picked.find((p) => p.type === 'BRAND');
   const modelNode = catalog.picked.find((p) => p.type === 'MODEL');
 
+  // Does the picked chain land on a car BODY? `isVehicle` is true for motorcycles
+  // and trucks too, and asking their sellers to mark a bonnet and four doors
+  // collects data about panels the vehicle does not have. Checks the whole picked
+  // chain rather than the leaf, because the body type is a CATEGORY node above the
+  // brand (vehicles → cars → BMW → 5 Series).
+  const isCarBody = catalog.picked.some((p) => hasCarBodyPanels(p.slug));
+
   // ── Sync catalog selection → RHF (categoryId, kind, make/model) ────────────
   useEffect(() => {
     setValue('categoryId', catalog.categoryId ?? '', { shouldValidate: false });
@@ -151,9 +159,12 @@ export function CreateListingForm({
       // picked[0] is the ROOT catalog node — it selects the category's example text.
       node: <Step2AdDetails form={form} rootSlug={catalog.picked[0]?.slug ?? null} />,
     },
-    ...(catalog.isVehicle ? [
+    // The damage step is car-body only; tech specs apply to any vehicle.
+    ...(isCarBody ? [
       { key: 'damage', label: 'تقرير الأضرار',
         node: <Step3DamageReport damageReport={damageReport} onChange={setDamageReport} /> },
+    ] : []),
+    ...(catalog.isVehicle ? [
       { key: 'specs',  label: 'المواصفات الفنية',
         node: <Step4TechSpecs form={form} /> },
     ] : []),
@@ -260,7 +271,10 @@ export function CreateListingForm({
         warranty:       data.warranty       ?? undefined,
         tradeIn:        data.tradeIn        ?? undefined,
         fromWho:        data.fromWho        || undefined,
-        damageReport:   Object.keys(damagePayload).length > 0 ? damagePayload : undefined,
+        // isCarBody guard: `damageReport` state survives a category change, so a
+        // seller who filled the panels for a car and then switched to a motorcycle
+        // would otherwise ship car panels on a bike.
+        damageReport:   isCarBody && Object.keys(damagePayload).length > 0 ? damagePayload : undefined,
         technicalSpecs: data.technicalSpecs?.length ? data.technicalSpecs : undefined,
       } : undefined;
 
