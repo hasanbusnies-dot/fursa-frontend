@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ChevronRight, SearchX } from 'lucide-react';
 import { catalogService, type CatalogNode } from '@/services/catalog.service';
 import { CURATED_ROOTS } from '@/data/curated-categories';
-import { categoryRootMeta } from '@/data/category-root-meta';
+import { categoryRootMeta, categorySymbol } from '@/data/category-root-meta';
 import { cn } from '@/lib/utils';
 
 // Curated umbrella landing (/m/g/<id>) — the screen behind a curated root that
@@ -98,7 +98,8 @@ export default function CuratedUmbrellaPage() {
         {root && members !== null && (
           <div className="bg-white mt-2 rounded-t-2xl overflow-hidden">
             {members.map((node, i) => {
-              const { icon: Icon, fill } = categoryRootMeta(node.slug);
+              const meta = categoryRootMeta(node.slug);
+              const { icon: Icon, fill } = meta;
               return (
                 <Link
                   key={node.slug}
@@ -112,7 +113,7 @@ export default function CuratedUmbrellaPage() {
                     className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                     style={{ backgroundColor: fill }}
                   >
-                    <Icon className="w-5 h-5 text-white" />
+                    <Icon className="w-5 h-5" style={{ color: categorySymbol(meta) }} />
                   </div>
                   <span className="flex-1 text-lg leading-snug text-gray-800">{node.nameAr}</span>
                   {node.count > 0 && (

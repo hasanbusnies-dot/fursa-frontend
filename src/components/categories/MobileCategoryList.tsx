@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { LayoutGrid } from 'lucide-react';
 import { CURATED_ROOTS, curatedHref } from '@/data/curated-categories';
+import { categorySymbol } from '@/data/category-root-meta';
 
 // Mobile homepage category nav (md:hidden). Renders the founder's CURATED 10 roots —
 // his labels, order and grouping — from `curated-categories.ts`.
@@ -49,16 +50,17 @@ export function MobileCategoryList() {
                 i < CURATED_ROOTS.length - 1 ? ' border-b border-gray-100' : ''
               }`}
             >
-              {/* Saturated solid CIRCLE + WHITE symbol — the one category icon
+              {/* Saturated solid CIRCLE + its symbol — the one category icon
                   treatment, identical on every surface. Phosphor weight="fill"
                   renders a SOLID pictogram (not an outline) — the whole point of
-                  moving off lucide, which is line-only. Every `fill` in
-                  category-root-meta.ts is dark enough to carry white (≥ 3.25:1). */}
+                  moving off lucide, which is line-only. The symbol is white on
+                  every hue dark enough to carry it and comes from `categorySymbol`
+                  on the one that isn't (see category-root-meta.ts). */}
               <div
                 className="w-14 h-14 rounded-full flex items-center justify-center shrink-0"
                 style={{ backgroundColor: root.palette.fill }}
               >
-                <Icon weight="fill" className="w-7 h-7 text-white" />
+                <Icon weight="fill" className="w-7 h-7" style={{ color: categorySymbol(root.palette) }} />
               </div>
               {/* min-w-0: without it the flex child refuses to shrink and truncate is a
                   silent no-op — the classic flexbox ellipsis failure. */}

@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 // One category identity app-wide: icon + hue come from the shared root map, so a
 // category looks the same here as in the homepage nav and the group screens.
-import { categoryRootMeta } from '@/data/category-root-meta';
+import { categoryRootMeta, categorySymbol } from '@/data/category-root-meta';
 import {
   catalogService,
   VEHICLES_ROOT_SLUG,
@@ -282,7 +282,8 @@ function isWideWidget(w: CatalogFilterDef['widget']): boolean {
 function RootCategoryCard({ node, onClick }: {
   node: CatalogNode; onClick: () => void;
 }) {
-  const { icon: Icon, fill } = categoryRootMeta(node.slug);
+  const meta = categoryRootMeta(node.slug);
+  const { icon: Icon, fill } = meta;
   return (
     <button
       type="button"
@@ -301,7 +302,7 @@ function RootCategoryCard({ node, onClick }: {
         className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
         style={{ backgroundColor: fill }}
       >
-        <Icon className="w-5 h-5 text-white" />
+        <Icon className="w-5 h-5" style={{ color: categorySymbol(meta) }} />
       </div>
       <span className="text-xs sm:text-sm font-bold text-gray-800 leading-snug line-clamp-2">
         {node.nameAr}

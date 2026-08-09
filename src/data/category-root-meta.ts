@@ -43,17 +43,34 @@ import {
  * Every category renders the same way: its hue as a solid container, the symbol
  * in white on top. No per-category exceptions — uniformity is the point.
  *
- * That constraint sets the lightness. White needs ≥ 3:1, so nine hues whose
- * bright form could not carry it were darkened until they could, buying back
- * some of the lost vividness with extra saturation. Biggest moves: real-estate
- * #F9B006 → #BC8400 and food-and-drinks #E6D40A → #9E9000, both of which give
- * up real brightness — they sit at the yellow peak, where nothing bright holds
- * white. The other twelve were already dark enough and are untouched.
- * Every fill in this file clears white at ≥ 3.25:1.
+ * That constraint set the lightness for most of the wheel. White needs ≥ 3:1, so
+ * hues whose bright form could not carry it were darkened until they could,
+ * buying back some of the lost vividness with extra saturation. Biggest move was
+ * food-and-drinks #E6D40A → #9E9000: it sits at the yellow peak, where nothing
+ * bright holds white.
+ *
+ * REAL-ESTATE IS THE ONE DELIBERATE EXCEPTION TO THAT RATIO (founder's call,
+ * 2026-08-09). It runs #F1A536 with a white symbol at 2.06:1, chosen with the
+ * number known: the founder wanted the lighter amber and judged the readability
+ * directly. The two are mutually exclusive here — holding white at 3:1 caps
+ * luminance at 0.30, and the lightest fill between #F1A536 and the old #BC8400
+ * that clears it is #C58909 (3.02:1), 83% of the way back to where it started
+ * and visually indistinguishable from it. Lighter won. Recorded so nobody
+ * "fixes" it back to an ochre on contrast grounds; it is a decision, not drift.
+ *
+ * Every other fill clears white at ≥ 3.25:1.
  */
 export interface CategoryPalette {
-  /** The category's hue as a solid container. Always carries a WHITE symbol. */
+  /** The category's hue as a solid container. Carries the symbol colour below. */
   fill:  string;
+  /**
+   * Symbol colour ON `fill`. NOTHING SETS THIS TODAY — every category is white,
+   * which is the point (see the header). It exists as the one-line escape hatch
+   * if a future hue is ever given a dark glyph, so that decision stays a data
+   * edit here instead of a hunt through four render sites. Read through
+   * `categorySymbol()`, never directly, so every surface resolves it the same way.
+   */
+  symbol?: string;
   /**
    * Pale wash + its dark glyph — the low-emphasis pair, for any surface that
    * wants a quiet tile instead of a saturated one. Not currently rendered
@@ -76,9 +93,9 @@ export const CATEGORY_ROOT_FALLBACK: CategoryRootMeta = {
 
 export const CATEGORY_ROOT_META: Record<string, CategoryRootMeta> = {
   // ── warm arc: property, people, goods you live with ──
-  // Darkened from #F9B006 so a white symbol reads — the yellow peak cannot hold
-  // white at full brightness.
-  'real-estate':                { icon: Home,            fill: '#BC8400', tint: '#FEF8E9', ink: '#936C10' },
+  // Lighter amber, white symbol at 2.06:1 — the founder's deliberate exception to
+  // the ≥ 3:1 rule the rest of the map follows. See the header before changing it.
+  'real-estate':                { icon: Home,            fill: '#F1A536', tint: '#FEF8E9', ink: '#936C10' },
   'vehicles':                   { icon: Car,             fill: '#E72923', tint: '#FDEBEA', ink: '#D31E17' },
   'helpers':                    { icon: HeartHandshake,  fill: '#F75B00', tint: '#FEF1E9', ink: '#B85014' },
   // Wood brown — a dark amber. Separated from its warm neighbours by LIGHTNESS
@@ -110,4 +127,18 @@ export const CATEGORY_ROOT_META: Record<string, CategoryRootMeta> = {
 
 export function categoryRootMeta(slug: string): CategoryRootMeta {
   return CATEGORY_ROOT_META[slug] ?? CATEGORY_ROOT_FALLBACK;
+}
+
+/** Default symbol colour on a category `fill`. */
+export const CATEGORY_SYMBOL_DEFAULT = '#FFFFFF';
+
+/**
+ * The colour a category's symbol should be drawn in on its own `fill`.
+ *
+ * Every render site goes through this rather than hardcoding `text-white`, which
+ * is what let one hue opt out without hunting down four call sites — and what
+ * stops the next one from being missed.
+ */
+export function categorySymbol(palette: Pick<CategoryPalette, 'symbol'>): string {
+  return palette.symbol ?? CATEGORY_SYMBOL_DEFAULT;
 }

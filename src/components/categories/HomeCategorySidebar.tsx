@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Clock, LayoutGrid } from 'lucide-react';
 import { catalogService, type CatalogNode } from '@/services/catalog.service';
 import { CURATED_ROOTS, curatedHref, PROMOTED_SLUGS, type CuratedRoot } from '@/data/curated-categories';
+import { categorySymbol } from '@/data/category-root-meta';
 
 // ── SubItem — a level-2 subcategory row. Always a navigation link; clicking
 // drills down to the category page (no inline list expansion in the sidebar). ──
@@ -40,11 +41,12 @@ function RootGroup({ root, subs }: { root: CuratedRoot; subs: CatalogNode[] }) {
         className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
         style={{ backgroundColor: root.palette.fill }}
       >
-        {/* Saturated tile + WHITE symbol, same as the mobile list — one category
+        {/* Saturated tile + its symbol, same as the mobile list — one category
             icon treatment everywhere. weight="fill" (solid pictogram) rather than
-            the old line style, because a hairline outline in white on a saturated
-            14px tile all but disappears. */}
-        <Icon weight="fill" className="w-3.5 h-3.5 text-white" />
+            the old line style, because a hairline outline on a saturated 14px tile
+            all but disappears. Colour via categorySymbol: white on every hue that
+            can carry it, dark on the one that can't. */}
+        <Icon weight="fill" className="w-3.5 h-3.5" style={{ color: categorySymbol(root.palette) }} />
       </div>
       <span className="flex-1 text-sm font-semibold text-gray-800 text-start">
         {root.label}
