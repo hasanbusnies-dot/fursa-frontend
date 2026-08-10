@@ -2082,8 +2082,8 @@ export default function ListingDetailClient() {
       .finally(() => setLoading(false));
   }, [id, retryKey]);
 
-  // Favourite + compare ride in the mobile top bar, which is painted brand blue for
-  // this page. Memoised because the node is HELD in the top-bar store — a fresh
+  // Favourite + compare ride in the mobile top bar, which is brand blue on every
+  // inner page. Memoised because the node is HELD in the top-bar store — a fresh
   // object each render would re-fire the store effect forever.
   // `variant="card"` (the white disc) rather than the labelled pill: it keeps both
   // buttons legible on blue AND keeps their state visible — a favourited star stays
@@ -2101,7 +2101,7 @@ export default function ListingDetailClient() {
 
   // No title here on purpose: it moved down to sit above the gallery, so the bar
   // falls back to the generic «تفاصيل الإعلان» label and carries the actions instead.
-  useMobileTopBar({ tone: 'brand', actions: barActions });
+  useMobileTopBar({ actions: barActions });
 
   if (loading) return <ListingSkeleton />;
   if (loadError === 'connection') {
