@@ -109,6 +109,16 @@ const RESIDENTIAL_FOR_SALE_TYPES = [
 ] as const;
 
 // ── Residential-for-sale filter data ─────────────────────────────────────────
+//
+// NOT the source for the real-estate browse filter. Every non-vehicle root
+// early-returns <CatalogFilterView> (see the branch above the main render), which
+// renders `rooms` straight from the catalog's own SELECT options — so an apartment
+// search already shows whatever the backend seeded, with no list here involved.
+// These constants feed the legacy pathname-gated residential panels only.
+//
+// They are kept in step with the catalog's wording anyway (X+Y bedrooms-first,
+// tail «أكثر من 10»): two spellings of the same option in one codebase is how a
+// filter silently stops matching what the create form wrote.
 
 const ROOM_COUNTS = [
   'استوديو (1+0)', '1+1', '1.5+1', '2+0', '2+1', '2.5+1', '2+2',
@@ -119,7 +129,7 @@ const ROOM_COUNTS = [
   '7+1', '7+2', '7+3',
   '8+1', '8+2', '8+3', '8+4',
   '9+1', '9+2', '9+3', '9+4', '9+5', '9+6',
-  '10+1', '10+2', '10 وما فوق',
+  '10+1', '10+2', 'أكثر من 10',
 ] as const;
 
 const BUILDING_AGES = [
@@ -203,6 +213,8 @@ const PROJECT_STATUS_OPTIONS = [
   'مستمر (قيد الإنشاء)', 'مكتمل (جاهز)',
 ] as const;
 
+// Same X+Y notation and the same «أكثر من 10» tail as the catalog's `rooms`
+// options — no studio row, since a project unit mix always names a bedroom count.
 const PROJECT_ROOM_COUNTS = [
   '1+1', '1.5+1', '2+0', '2+1', '2.5+1', '2+2',
   '3+0', '3+1', '3.5+1', '3+2', '3+3',
@@ -211,7 +223,7 @@ const PROJECT_ROOM_COUNTS = [
   '6+1', '6+2', '6.5+1', '6+3', '6+4',
   '7+1', '7+2', '7+3', '8+1', '8+2', '8+3', '8+4',
   '9+1', '9+2', '9+3', '9+4', '9+5', '9+6',
-  '10+1', '10+2', '10 وما فوق',
+  '10+1', '10+2', 'أكثر من 10',
 ] as const;
 
 const PROJECT_HEATING_TYPES = [
