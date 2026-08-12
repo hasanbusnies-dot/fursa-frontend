@@ -177,12 +177,28 @@ export const listingsService = {
 
     // Raw responses are deliberately NOT logged anywhere in this service: listing
     // payloads carry seller PII (phone, profile) and precise coordinates.
-    const raw = await api.get<ApiResponse<ListingsEnvelope>>(`/listings${query}`);
+    // Pagination rides BESIDE `data`, not inside it — the live envelope is
+    // `{ success, message, data: Listing[], meta: { total, page, totalPages, … } }`.
+    // Typing that sibling here is what lets the array branch see a total at all.
+    const raw = await api.get<ApiResponse<ListingsEnvelope> & { meta?: ListingsMeta }>(
+      `/listings${query}`,
+    );
 
     const data = raw.data;
+    const meta = raw.meta;
 
     if (Array.isArray(data)) {
-      return { listings: data, total: data.length, page: params?.page ?? 1, totalPages: 1 };
+      // `data.length` is the size of the PAGE, never the size of the result set,
+      // so it is a last resort rather than the answer: with `limit: 1` it reports
+      // "1 result" for a 25-listing search. It also pinned `totalPages` to 1,
+      // which is why the browse pager rendered «صفحة 1 / 1» and kept «التالي»
+      // disabled — the API was reporting totalPages: 25, hasNextPage: true.
+      return {
+        listings:   data,
+        total:      meta?.total      ?? data.length,
+        page:       meta?.page       ?? params?.page ?? 1,
+        totalPages: meta?.totalPages ?? 1,
+      };
     }
     if (data && 'listings' in data && Array.isArray(data.listings)) {
       return extractResult(data, params?.page ?? 1);

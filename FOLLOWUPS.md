@@ -325,3 +325,22 @@ field. Remaining gaps:
   reached by hand as دمشق → المزة → الجلاء (3 controls) reopens as دمشق → الجلاء (2), since
   «أحياء المدينة» carries it directly. Same `regionSlug`, same map centre, fewer controls —
   deliberate, but worth knowing before someone files it as a prefill bug.
+
+## `getMyListingsPaged` may share the `meta.total` bug — UNVERIFIED (logged 2026-08-13)
+
+`getListings` was returning the PAGE SIZE as `total` (`data.length`) because the live
+`/listings` envelope puts pagination in a `meta` sibling of `data`, not inside it — which
+pinned `totalPages` to 1 and left the browse pager stuck on «صفحة 1 / 1» with «التالي»
+disabled. Fixed for `/listings`.
+
+`getMyListingsPaged` (`listings.service.ts`, the `/users/me/listings` → `/listings/me`
+fallback pair) has the SAME array branch — `{ listings: data, total: data.length,
+totalPages: 1 }` — and feeds the account-listings pager the same way. It is very likely
+broken identically.
+
+Deliberately NOT changed: that route is auth-gated and its envelope was never observed, so
+applying the fix would be guessing at a shape (§2 — verify before acting on a label).
+
+TO DO: call `/users/me/listings?page=1&limit=1` with a real session, look at where `total`
+actually lives, and if it is a `meta` sibling apply the same `meta?.total ?? data.length`
+treatment. Check `getMyListings` (unpaged) at the same time.
