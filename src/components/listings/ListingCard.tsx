@@ -87,6 +87,83 @@ const TRANSMISSION_AR: Record<string, string> = {
   CVT: 'CVT',
 };
 
+/**
+ * ── Real-estate spec chips ────────────────────────────────────────────────────
+ * «140 م²» «3+1» «الطابق 2» — the property mirror of the vehicle chips above,
+ * sharing their tokens and their two-tone palette. Gold lands on AREA for the
+ * same reason it lands on year for cars: it is the spec buyers scan first, so
+ * the accent encodes hierarchy rather than decorating a second thing.
+ *
+ * DETECTION — by attribute key, not by category. The LIST payload carries only
+ * the LEAF category (`{ slug: 'apartment-for-sale' }`), never its root, so the
+ * card cannot ask "is this real-estate?" the way a page can via `getPath`. It
+ * doesn't need to: `area` / `rooms` / `floor` are declared ONLY under the
+ * real-estate tree — verified against the live catalog across all 19 roots — so
+ * their presence IS the category signal. That also keeps §4.1 intact: no
+ * hardcoded per-category branch, just the catalog's own keys rendered as they
+ * come. Vehicles are checked first and keep their own chips regardless.
+ *
+ * OPAQUE VALUES — `rooms` and `floor` are SELECT values, so they are printed
+ * VERBATIM and never parsed or coerced. The live option sets are exactly why:
+ *   rooms → 'استوديو (1+0)', '3.5+1', 'أكثر من 10'
+ *   floor → 'قبو', 'طابق أرضي', '11-15', '30+'
+ * Any attempt to read a number out of those loses or mangles most of the range.
+ *
+ * The «الطابق» prefix is therefore CONDITIONAL: it reads correctly only in front
+ * of a number («الطابق 5»), while the two textual options would produce broken
+ * Arabic («الطابق طابق أرضي»). Digit-leading values take the prefix — which also
+ * covers the banded options, «الطابق 11-15» being perfectly idiomatic — and
+ * anything else renders bare, as its own complete label.
+ *
+ * `area` is the one genuine number (RANGE widget, single-valued on the write
+ * side: 140, not 100–150) and gets the m² unit plus thousands separators, which
+ * land plots need far more than apartments do.
+ *
+ * Missing keys are simply skipped, exactly like the vehicle chips: land carries
+ * area alone, commercial area + floor, a farmhouse may have no floor at all.
+ */
+function realEstateSpecs(listing: Listing): SpecChip[] {
+  // `attributes` is typed Record<string, string>, but the JSONB genuinely holds
+  // mixed scalars (area is a number, balcony a boolean). Same local widening
+  // ListingDetailClient uses rather than loosening the shared type.
+  const attrs = (listing.attributes ?? {}) as Record<string, unknown>;
+
+  const chips: SpecChip[] = [];
+
+  const area = attrs.area;
+  const areaNum = typeof area === 'number' ? area : typeof area === 'string' ? Number(area) : NaN;
+  if (Number.isFinite(areaNum) && areaNum > 0) {
+    chips.push({
+      key: 'area',
+      text: `${new Intl.NumberFormat('en-US').format(areaNum)} م²`,
+      tone: 'gold',
+    });
+  }
+
+  const rooms = attrText(attrs.rooms);
+  if (rooms) chips.push({ key: 'rooms', text: rooms, tone: 'slate' });
+
+  const floor = attrText(attrs.floor);
+  if (floor) {
+    chips.push({
+      key: 'floor',
+      text: /^\d/.test(floor) ? `الطابق ${floor}` : floor,
+      tone: 'slate',
+    });
+  }
+
+  return chips;
+}
+
+/** An attribute rendered as text: strings pass through untouched (they are
+ *  opaque catalog values), finite numbers stringify, everything else is absent.
+ *  Never interprets the value — see the note above. */
+function attrText(v: unknown): string | null {
+  if (typeof v === 'string') return v.trim() || null;
+  if (typeof v === 'number' && Number.isFinite(v)) return String(v);
+  return null;
+}
+
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60_000);
@@ -141,7 +218,11 @@ export function ListingCard({
   const now     = Date.now();
   // Computed before the homepage branch returns: BOTH layouts render the chips,
   // so a car looks like a car wherever it is shown.
-  const specs   = vehicleSpecs(listing);
+  // Vehicles win the tie — they have bespoke fields (vehicleDetails) rather than
+  // catalog attributes — and everything else falls through to the catalog-driven
+  // chips, which stay empty for the roots that declare none of those keys.
+  const vehicle = vehicleSpecs(listing);
+  const specs   = vehicle.length > 0 ? vehicle : realEstateSpecs(listing);
 
   // ── Homepage view: ONLY homepageShowcaseUntil matters ───────────────────────
   if (isHomepageView) {
