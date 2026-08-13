@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Home, ChevronLeft, SlidersHorizontal, X, SearchX,
-  Star, LayoutGrid, List, ChevronDown, MapPin, ImageOff, Bookmark,
+  Star, ChevronDown, MapPin, ImageOff, Bookmark,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { listingsService } from '@/services/listings.service';
@@ -19,11 +19,16 @@ import { FavoriteButton } from '@/components/listings/FavoriteButton';
 import { CompareButton } from '@/components/listings/CompareButton';
 import { FilterSidebar, EMPTY_FILTERS, hasActiveFilters } from '@/components/listings/FilterSidebar';
 import type { FilterValues } from '@/components/listings/FilterSidebar';
+import {
+  ViewModeToggle, useMapViewParam, MAP_VIEW_VALUE, type ViewMode,
+} from '@/components/listings/ViewModeToggle';
+import ListingsMapView from '@/components/listings/ListingsMapView';
 import { RecommendationsPopover } from '@/components/layout/RecommendationsPopover';
 import { ComparePopover } from '@/components/layout/ComparePopover';
 import ProjectsLandingPage from '@/components/real-estate/ProjectsLandingPage';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
+import { buildListingQuery } from '@/lib/listing-query';
 import { isConnectionError } from '@/lib/net-error';
 import { ConnectionError } from '@/components/ui/ConnectionError';
 import type { Category, Listing } from '@/types';
@@ -376,7 +381,15 @@ export default function CategoryPage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   const searchParams  = useSearchParams();
-  const forceListings = searchParams.get('view') === 'listings';
+  // `?view=` answers one question — "what should this page show?" — and now has
+  // two answers that both mean "the result set, not the category drill-down":
+  // `listings` (the original, forcing listings on a branch node) and `map`. Map
+  // MUST defeat the drill-down the same way, or picking the map toggle on a
+  // branch would throw the user back into the child-category box. The toggle's
+  // half of this — restoring `view=listings` on the way out — is in
+  // ViewModeToggle's `offValue`.
+  const forceListings = searchParams.get('view') === 'listings'
+                     || searchParams.get('view') === MAP_VIEW_VALUE;
 
   const slugArr  = Array.isArray(params.slug) ? params.slug : [params.slug as string];
   const lastSlug = slugArr[slugArr.length - 1] ?? '';
@@ -496,6 +509,20 @@ export default function CategoryPage() {
       setViewMode('grid');
     }
   }, []);
+
+  // Map view rides in the URL so it survives a refresh and can be shared; grid
+  // and list stay local. Leaving the map on a BRANCH node restores
+  // `view=listings` rather than dropping the param — see the note on
+  // `forceListings` above.
+  const { isMap, setMapView } = useMapViewParam({
+    offValue: catalogStatus === 'branch' ? 'listings' : undefined,
+  });
+  const activeView: ViewMode = isMap ? 'map' : viewMode;
+  const selectView = (v: ViewMode) => {
+    if (v === 'map') { setMapView(true); return; }
+    setViewMode(v);
+    if (isMap) setMapView(false);
+  };
   const [sortBy,         setSortBy]         = useState('');
   const [sortOpen,       setSortOpen]       = useState(false);
   const [sidebarOpen,    setSidebarOpen]    = useState(false);
@@ -517,6 +544,18 @@ export default function CategoryPage() {
 
   useEffect(() => { setPage(1); }, [filters, sortBy]);
 
+  // The filter half of the request, built ONCE and shared with the map view (S5)
+  // so both endpoints describe the same result set — see lib/listing-query.ts.
+  // Belt-and-suspenders for the EV page: always force fuelType=ELECTRIC so the
+  // query is correct even when the backend categoryId doesn't exist yet.
+  const listingQuery = useMemo(
+    () => buildListingQuery(filters, {
+      sort: sortBy,
+      fuelTypeOverride: lastSlug === 'electric' ? 'ELECTRIC' : undefined,
+    }),
+    [filters, sortBy, lastSlug],
+  );
+
   useEffect(() => {
     // Don't fetch until the slug has been resolved to a categoryId (prevents an
     // initial empty-filter request that returns all listings). Both branch and
@@ -528,39 +567,11 @@ export default function CategoryPage() {
 
     let cancelled = false;
     setLoading(true);
-    const f = filters;
-
-    // Belt-and-suspenders for EV page: always send fuelType=ELECTRIC so the
-    // query is correct even when the backend categoryId doesn't exist yet.
-    const evFuelType = lastSlug === 'electric' ? 'ELECTRIC' : undefined;
 
     listingsService.getListings({
-      limit:        PER_PAGE,
+      ...listingQuery,
+      limit: PER_PAGE,
       page,
-      categoryId:   f.categoryId   || undefined,
-      make:         f.make         || undefined,
-      model:        f.model        || undefined,
-      city:         f.city         || undefined,
-      district:     f.district     || undefined,
-      minPrice:     f.minPrice     ? Number(f.minPrice)    : undefined,
-      maxPrice:     f.maxPrice     ? Number(f.maxPrice)    : undefined,
-      minYear:      f.minYear      ? Number(f.minYear)     : undefined,
-      maxYear:      f.maxYear      ? Number(f.maxYear)     : undefined,
-      minMileage:   f.minMileage   ? Number(f.minMileage)  : undefined,
-      maxMileage:   f.maxMileage   ? Number(f.maxMileage)  : undefined,
-      minRange:     f.minRange     ? Number(f.minRange)    : undefined,
-      maxRange:     f.maxRange     ? Number(f.maxRange)    : undefined,
-      fuelType:     evFuelType ?? (f.fuelTypes.join(',') || undefined),
-      transmission: f.transmissions.join(',') || undefined,
-      condition:    f.conditions.join(',')    || undefined,
-      bodyType:     f.bodyType     || undefined,
-      drivetrain:   f.drivetrains.join(',')   || undefined,
-      color:        f.colors.join(',')        || undefined,
-      warranty:     f.warranty     ? f.warranty     === 'true' : undefined,
-      heavyDamage:  f.heavyDamage  ? f.heavyDamage  === 'true' : undefined,
-      tradeIn:      f.tradeIn      ? f.tradeIn      === 'true' : undefined,
-      fromWho:      f.fromWhos.join(',')      || undefined,
-      sort:         sortBy || undefined,
     }).then((result) => {
       if (cancelled) return;
       setListings(result.listings ?? []);
@@ -573,7 +584,7 @@ export default function CategoryPage() {
       if (!cancelled) setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [filters, page, sortBy, slugResolved]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [listingQuery, page, slugResolved]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Seller tab (maps to fromWhos filter) ────────────────────────────────────
   const activeSellerTab = filters.fromWhos.length === 1 ? filters.fromWhos[0] : '';
@@ -936,23 +947,8 @@ export default function CategoryPage() {
                     فلاتر moved up beside حفظ البحث in the result header. */}
                 <div className="flex items-center gap-1.5 ms-auto shrink-0">
 
-                  {/* Grid / List toggle */}
-                  <div className="flex bg-white shadow-pebble rounded-card overflow-hidden">
-                    <button
-                      onClick={() => setViewMode('grid')}
-                      className={cn('p-2 transition-colors', viewMode === 'grid' ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-600')}
-                      title="عرض شبكي"
-                    >
-                      <LayoutGrid className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => setViewMode('list')}
-                      className={cn('p-2 transition-colors', viewMode === 'list' ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-600')}
-                      title="عرض قائمة"
-                    >
-                      <List className="w-4 h-4" />
-                    </button>
-                  </div>
+                  {/* Grid / List / Map toggle */}
+                  <ViewModeToggle value={activeView} onChange={selectView} />
 
                   {/* Sort dropdown */}
                   <div className="relative" onClick={(e) => e.stopPropagation()}>
@@ -994,8 +990,14 @@ export default function CategoryPage() {
                 </div>
               )}
 
-              {/* ── Listings ── */}
-              {loading ? (
+              {/* ── Listings — or the map, which replaces them entirely ──
+                  The map runs its OWN unpaginated fetch, so it is deliberately
+                  not gated on the list's loading/empty state, and the pager
+                  below is not rendered in map view: the map already shows the
+                  whole matched set. */}
+              {isMap ? (
+                <ListingsMapView query={listingQuery} />
+              ) : loading ? (
                 viewMode === 'grid' ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                     {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}

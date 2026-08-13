@@ -58,6 +58,30 @@ export function currencyLabel(currency: string): string {
   return (CURRENCY as Record<string, { symbol: string }>)[currency]?.symbol ?? currency;
 }
 
+/**
+ * A LISTING price, in the compact form the cards use — «$65,000», «19,900 ل.س».
+ *
+ * Deliberately separate from `formatMoney` above, and deliberately `number`-based:
+ *   · wallet amounts are unbounded decimal STRINGS that must never touch Number(),
+ *     and always want their 2 decimal places;
+ *   · listing prices arrive as JSON numbers far below 2^53, and a map pill reading
+ *     «$65,000.00» would be noise — the ad is not priced to the cent.
+ *
+ * It lives here rather than in a component because the browse map now labels
+ * markers with it: a price on the map MUST read exactly like the same price on the
+ * card, and one shared function is what makes drift impossible.
+ *
+ * NOTE: `ListingCard` and `FeaturedSection` still carry their own local copies of
+ * this logic (identical output). Folding them into this one is a separate cleanup —
+ * see FOLLOWUPS.md — kept out of the map work so card rendering isn't touched here.
+ */
+const listingPriceGrouping = new Intl.NumberFormat('en-US');
+
+export function formatListingPrice(price: number, currency: 'SYP' | 'USD' | string): string {
+  const n = listingPriceGrouping.format(price);
+  return currency === 'USD' ? `$${n}` : `${n} ل.س`;
+}
+
 /** Decimal-string value scaled to BigInt cents — exact at any magnitude, no floats.
  *  (BigInt() calls, not literals — the tsconfig target predates ES2020.) */
 function toCents(value: string): bigint {

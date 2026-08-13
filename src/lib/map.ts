@@ -97,6 +97,47 @@ export function zoomForRegionLevel(
 /** Brand orange-500 — the marker colour, matching the CTA palette. */
 export const MAP_MARKER_COLOR = '#f97316';
 
+/**
+ * Brand blue-600 — clusters on the browse map.
+ *
+ * Clusters are a different KIND of thing from a listing marker (a count, not an
+ * ad), so they take the other brand colour rather than a lighter orange, which
+ * would read as "the same thing, less important".
+ */
+export const MAP_CLUSTER_COLOR = '#2563eb';
+
+/**
+ * The price pill drawn beside an exact seller pin on the browse map.
+ *
+ * White ground with an orange rim rather than a solid orange chip: the pill sits
+ * on top of a busy basemap and has to stay readable over roads, parks and water,
+ * and dark text on white is the only combination that does that at 12px. The rim
+ * is `MAP_MARKER_COLOR` so the label reads as belonging to the dot beneath it
+ * instead of as a separate piece of map furniture.
+ */
+export const MAP_PRICE_PILL_BG     = '#ffffff';
+export const MAP_PRICE_PILL_BORDER = MAP_MARKER_COLOR;
+export const MAP_PRICE_PILL_TEXT   = '#0f172a'; // slate-900
+
+/**
+ * Country view for the browse map when nothing is filtered. Not a governorate
+ * centre — the point is to frame Syria as a whole, and the map fits itself to the
+ * actual result set as soon as there are points to fit.
+ */
+export const SYRIA_CENTER: Coords = { lat: 35.0, lng: 38.5 };
+export const MAP_COUNTRY_ZOOM = 6;
+
+/**
+ * Ceiling for the browse map's initial `fitBounds`.
+ *
+ * A result set can collapse to a single coordinate — one listing, or (far more
+ * often here) several listings sharing one region centroid. Fitting zero-width
+ * bounds would slam the camera to maximum zoom and frame a whole neighbourhood's
+ * worth of ads as one doorstep. Capping the fit keeps an approximate point looking
+ * approximate.
+ */
+export const MAP_FIT_MAX_ZOOM = 14;
+
 export type Coords = { lat: number; lng: number };
 
 /** Fallback centre when the seller hasn't picked a governorate yet. */

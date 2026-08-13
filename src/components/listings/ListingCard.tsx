@@ -46,16 +46,16 @@ function formatPrice(price: number, currency: 'SYP' | 'USD') {
  */
 type SpecTone = 'gold' | 'slate';
 
-interface SpecChip {
+export interface SpecChip {
   key: string;
   text: string;
   tone: SpecTone;
 }
 
-const SPEC_CHIP_BASE =
+export const SPEC_CHIP_BASE =
   'inline-flex items-center rounded-md border px-1.5 py-0.5 text-[11px] font-semibold leading-none tabular-nums';
 
-const SPEC_CHIP_TONE: Record<SpecTone, string> = {
+export const SPEC_CHIP_TONE: Record<SpecTone, string> = {
   gold:  'bg-[#FFF6D1] text-[#6B5200] border-[#FFEDA6]',
   slate: 'bg-slate-100 text-slate-700 border-slate-200',
 };
@@ -164,6 +164,20 @@ function attrText(v: unknown): string | null {
   return null;
 }
 
+/**
+ * The chips for a listing, whatever kind it is: vehicles first, then real-estate.
+ *
+ * Exported because the browse map's cluster sheet lists the same listings in a
+ * compact row and must show the SAME specs — extracted as one function rather
+ * than copied so the two surfaces cannot drift. The precedence (a vehicle keeps
+ * its own chips regardless) is the rule the card has always applied; this is
+ * where it now lives.
+ */
+export function listingSpecChips(listing: Listing): SpecChip[] {
+  const vehicle = vehicleSpecs(listing);
+  return vehicle.length > 0 ? vehicle : realEstateSpecs(listing);
+}
+
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60_000);
@@ -221,8 +235,7 @@ export function ListingCard({
   // Vehicles win the tie — they have bespoke fields (vehicleDetails) rather than
   // catalog attributes — and everything else falls through to the catalog-driven
   // chips, which stay empty for the roots that declare none of those keys.
-  const vehicle = vehicleSpecs(listing);
-  const specs   = vehicle.length > 0 ? vehicle : realEstateSpecs(listing);
+  const specs = listingSpecChips(listing);
 
   // ── Homepage view: ONLY homepageShowcaseUntil matters ───────────────────────
   if (isHomepageView) {

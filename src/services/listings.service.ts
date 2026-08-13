@@ -118,6 +118,55 @@ export interface ListingsResult {
   totalPages: number;
 }
 
+// ── Map points ────────────────────────────────────────────────────────────────
+
+/**
+ * How a point's coordinate was arrived at — the map's honesty signal, and the
+ * reason the browse map can show pinless listings at all.
+ *
+ *  · `exact`        — the seller's own pin.
+ *  · `region`       — the catalog centroid of the region they picked.
+ *  · `governorate`  — only the governorate is known.
+ *
+ * The last two are SHARED coordinates: every pinless listing in a region sits on
+ * one identical point, which is why the map clusters rather than zoom-expands.
+ */
+export type MapPointPrecision = 'exact' | 'region' | 'governorate';
+
+/** One placeable listing. Deliberately tiny — thousands of these ride one response. */
+export interface MapPoint {
+  id: string;
+  lat: number;
+  lng: number;
+  price: number;
+  currency: 'SYP' | 'USD';
+  precision: MapPointPrecision;
+}
+
+/**
+ * Why `returned` can be less than `matched`, stated by the backend rather than
+ * guessed at by the map:
+ *   returned = matched − hiddenByOptOut − unplaceable
+ * and `matched` equals the list's `total` for the same filters — UNLESS `capped`
+ * is true, in which case `matched` was clamped to `cap` by design and the parity
+ * assertion does not apply.
+ */
+export interface MapPointsMeta {
+  matched: number;
+  returned: number;
+  /** Sellers who chose not to show a map on their listing. */
+  hiddenByOptOut: number;
+  /** No pin, no region, no known governorate — nothing to place them with. */
+  unplaceable: number;
+  capped: boolean;
+  cap: number;
+}
+
+export interface MapPointsResult {
+  points: MapPoint[];
+  meta: MapPointsMeta;
+}
+
 // Backend may return listings directly in data[], or nested under data.listings.
 // Pagination may be at the top level OR inside a nested `meta` object.
 type ListingsMeta = { page?: number; totalPages?: number; total?: number };
@@ -139,40 +188,74 @@ function extractResult(
   };
 }
 
+/**
+ * Params → query string, shared by the list feed and the map points.
+ *
+ * The two endpoints MUST express the same filter state identically: the backend
+ * runs both through one where-clause builder, so any difference here shows up as
+ * a map that disagrees with the list beneath it. Serialising in one place is what
+ * makes that impossible — `buildListingQuery` (lib/listing-query.ts) produces the
+ * params, this turns them into the request.
+ *
+ * `paging` is the only legitimate difference: the feed is paginated, the map asks
+ * for the whole matched set. `sort` goes with it — ordering is meaningless for a
+ * set of points, and the endpoint rejects it.
+ */
+function buildListingSearchParams(
+  params: GetListingsParams | undefined,
+  { paging }: { paging: boolean },
+): URLSearchParams {
+  const qs = new URLSearchParams();
+  if (paging) {
+    if (params?.limit) qs.set('limit', String(params.limit));
+    if (params?.page)  qs.set('page',  String(params.page));
+    if (params?.sort)  qs.set('sort',  params.sort);
+  }
+  if (params?.query)       qs.set('query',        params.query);
+  if (params?.isFeatured)  qs.set('isFeatured',   'true');
+  if (params?.categoryId)  qs.set('categoryId',   params.categoryId);
+  if (params?.city)        qs.set('city',         params.city);
+  if (params?.district)    qs.set('district',     params.district);
+  if (params?.minPrice)    qs.set('minPrice',     String(params.minPrice));
+  if (params?.maxPrice)    qs.set('maxPrice',     String(params.maxPrice));
+  if (params?.currency)    qs.set('currency',     params.currency);
+  if (params?.minYear)     qs.set('minYear',      String(params.minYear));
+  if (params?.maxYear)     qs.set('maxYear',      String(params.maxYear));
+  if (params?.minMileage)  qs.set('minMileage',   String(params.minMileage));
+  if (params?.maxMileage)  qs.set('maxMileage',   String(params.maxMileage));
+  if (params?.minRange)    qs.set('minRange',     String(params.minRange));
+  if (params?.maxRange)    qs.set('maxRange',     String(params.maxRange));
+  if (params?.fuelType)    qs.set('fuelType',     params.fuelType);
+  if (params?.transmission) qs.set('transmission', params.transmission);
+  if (params?.condition)   qs.set('condition',    params.condition);
+  if (params?.bodyType)    qs.set('bodyType',     params.bodyType);
+  if (params?.drivetrain)  qs.set('drivetrain',   params.drivetrain);
+  if (params?.color)       qs.set('color',        params.color);
+  if (params?.warranty    != null) qs.set('warranty',    String(params.warranty));
+  if (params?.heavyDamage != null) qs.set('heavyDamage', String(params.heavyDamage));
+  if (params?.tradeIn     != null) qs.set('tradeIn',     String(params.tradeIn));
+  if (params?.fromWho)     qs.set('fromWho',      params.fromWho);
+  if (params?.make)        qs.set('make',         params.make);
+  if (params?.model)       qs.set('model',        params.model);
+  if (params?.status)      qs.set('status',       params.status);
+  if (params?.sellerId)    qs.set('sellerId',     params.sellerId);
+  return qs;
+}
+
+/**
+ * Ceiling on `getListingsByIds`, and deliberately the SAME number the backend
+ * caps `/listings/by-ids` at. Kept client-side so the caller can tell the user
+ * "showing the first 30" before the request rather than silently rendering a
+ * truncated list; sized for a sheet a person will actually read, not for a
+ * cluster's theoretical maximum — the live data's biggest pile is 6.
+ *
+ * If the backend's cap ever moves, move this with it.
+ */
+export const MAX_LISTINGS_BY_ID = 30;
+
 export const listingsService = {
   getListings: async (params?: GetListingsParams): Promise<ListingsResult> => {
-    const qs = new URLSearchParams();
-    if (params?.limit)       qs.set('limit',       String(params.limit));
-    if (params?.page)        qs.set('page',         String(params.page));
-    if (params?.query)       qs.set('query',        params.query);
-    if (params?.isFeatured)  qs.set('isFeatured',   'true');
-    if (params?.categoryId)  qs.set('categoryId',   params.categoryId);
-    if (params?.city)        qs.set('city',         params.city);
-    if (params?.district)    qs.set('district',     params.district);
-    if (params?.minPrice)    qs.set('minPrice',     String(params.minPrice));
-    if (params?.maxPrice)    qs.set('maxPrice',     String(params.maxPrice));
-    if (params?.currency)    qs.set('currency',     params.currency);
-    if (params?.minYear)     qs.set('minYear',      String(params.minYear));
-    if (params?.maxYear)     qs.set('maxYear',      String(params.maxYear));
-    if (params?.minMileage)  qs.set('minMileage',   String(params.minMileage));
-    if (params?.maxMileage)  qs.set('maxMileage',   String(params.maxMileage));
-    if (params?.minRange)    qs.set('minRange',     String(params.minRange));
-    if (params?.maxRange)    qs.set('maxRange',     String(params.maxRange));
-    if (params?.fuelType)    qs.set('fuelType',     params.fuelType);
-    if (params?.transmission) qs.set('transmission', params.transmission);
-    if (params?.condition)   qs.set('condition',    params.condition);
-    if (params?.bodyType)    qs.set('bodyType',     params.bodyType);
-    if (params?.drivetrain)  qs.set('drivetrain',   params.drivetrain);
-    if (params?.color)       qs.set('color',        params.color);
-    if (params?.warranty   != null) qs.set('warranty',    String(params.warranty));
-    if (params?.heavyDamage != null) qs.set('heavyDamage', String(params.heavyDamage));
-    if (params?.tradeIn    != null) qs.set('tradeIn',     String(params.tradeIn));
-    if (params?.fromWho)     qs.set('fromWho',      params.fromWho);
-    if (params?.make)        qs.set('make',         params.make);
-    if (params?.model)       qs.set('model',        params.model);
-    if (params?.status)      qs.set('status',       params.status);
-    if (params?.sort)        qs.set('sort',         params.sort);
-    if (params?.sellerId)    qs.set('sellerId',     params.sellerId);
+    const qs = buildListingSearchParams(params, { paging: true });
     const query = qs.toString() ? `?${qs}` : '';
 
     // Raw responses are deliberately NOT logged anywhere in this service: listing
@@ -206,9 +289,106 @@ export const listingsService = {
     return { listings: [], total: 0, page: 1, totalPages: 0 };
   },
 
+  /**
+   * Placeable coordinates for EVERY listing matching the filters — the browse
+   * map's data source.
+   *
+   * Takes the SAME `GetListingsParams` the feed takes, and is meant to be handed
+   * the very same object: `paging: false` drops `page`/`limit`/`sort` here rather
+   * than asking callers to remember to strip them, so a caller physically cannot
+   * send the map a narrower or wider filter set than the list. That is the whole
+   * point of the shared builder above.
+   *
+   * Unpaginated by design (the backend caps at `meta.cap` and says so via
+   * `meta.capped`): a map that only plotted the current page would be a map of
+   * thirty listings pretending to be a map of the search.
+   */
+  getMapPoints: async (params?: GetListingsParams): Promise<MapPointsResult> => {
+    const qs = buildListingSearchParams(params, { paging: false });
+    const query = qs.toString() ? `?${qs}` : '';
+    // Coordinates are PII-adjacent — like getListings, responses are never logged.
+    const raw = await api.get<ApiResponse<MapPoint[]> & { meta?: MapPointsMeta }>(
+      `/listings/map-points${query}`,
+    );
+    const points = Array.isArray(raw.data) ? raw.data : [];
+    return {
+      points,
+      // A missing meta must not read as "0 matched, nothing hidden" — that would
+      // make a broken response look like an empty search. Fall back to what we
+      // can actually see, and leave the counts we cannot know at zero.
+      meta: raw.meta ?? {
+        matched: points.length,
+        returned: points.length,
+        hiddenByOptOut: 0,
+        unplaceable: 0,
+        capped: false,
+        cap: 0,
+      },
+    };
+  },
+
   getListingById: async (id: string): Promise<Listing> => {
     const res = await api.get<ApiResponse<Listing>>(`/listings/${id}`);
     return res.data;
+  },
+
+  /**
+   * Cards for a KNOWN set of ids — what the browse map's cluster sheet needs
+   * when the user opens a pile of listings sharing one coordinate.
+   *
+   * ONE REQUEST, via the dedicated `GET /listings/by-ids?ids=a,b,c`. This used to
+   * fan out one `GET /listings/:id` per id, which made the sheet visibly slow: a
+   * six-listing cluster cost six round trips and ~17KB of DETAIL payloads
+   * (description, seller, questions) to render six thumbnails. The batch call is
+   * one trip and ~9KB of CARD payloads — the same shape browse renders.
+   *
+   * Use the DEDICATED PATH, never `GET /listings?ids=`. The list endpoint
+   * silently IGNORES `?ids=` and `?id=` and returns the whole unfiltered result
+   * set (verified live — asking for 2 ids returned all 25). That failure mode is
+   * the dangerous kind: the response looks perfectly healthy while containing the
+   * wrong listings. `/listings/by-ids` is a different route and genuinely filters.
+   *
+   * PARTIAL RESULTS ARE NORMAL, and the reason nothing here throws on a short
+   * response: a listing can be deleted or moderated away between the map-points
+   * response and the click, and the backend simply omits ids it will not serve.
+   * Five rows out of six is a correct sheet, not a failed one.
+   *
+   * Hard-capped to match the backend's own cap (see `MAX_LISTINGS_BY_ID`) — a
+   * cluster can legitimately hold hundreds of ids, and the caller shows the true
+   * count in its header and says the rest are not listed.
+   *
+   * LOCATION — the card payload carries the four DENORMALISED columns
+   * (`neighborhood`, `district`, `city`, `governorate`) and NOT the `region`
+   * relation or the flattened `locationPath`; those two live only in the detail
+   * payload (`LISTING_DETAIL_INCLUDE`). That is the right split, not a gap:
+   * `neighborhood` is the only column that separates one «دمشق» listing from the
+   * next, which is exactly what a cluster of centroid-placed listings needs, and
+   * the sheet's `locationLine` already reads it. Verified live: a six-listing
+   * pile renders «قدسيا، دمشق» / «التجارة، دمشق» rather than six identical rows.
+   *
+   * Do not "upgrade" this to the detail payload to chase `locationPath` — the
+   * columns express governorate + leaf, which is the whole of what a row shows.
+   */
+  getListingsByIds: async (ids: string[]): Promise<Listing[]> => {
+    // De-duplicated BEFORE the cap so a repeated id cannot eat a slot, and so the
+    // re-order below cannot emit the same listing twice.
+    const wanted = [...new Set(ids)].slice(0, MAX_LISTINGS_BY_ID);
+    // The endpoint rejects an empty `ids` (400) — an empty ask is not an error,
+    // it is simply nothing to fetch.
+    if (wanted.length === 0) return [];
+
+    const qs = new URLSearchParams({ ids: wanted.join(',') });
+    // Card payloads still carry seller info and are never logged (see getListings).
+    const raw = await api.get<ApiResponse<Listing[]>>(`/listings/by-ids?${qs}`);
+    const rows = Array.isArray(raw.data) ? raw.data : [];
+
+    // Re-ordered to the order asked for. The backend does return them in request
+    // order today, but the sheet's stability must not depend on that staying
+    // true — the caller's order is the map's, and any other order would reshuffle
+    // the rows on every open.
+    const byId = new Map<string, Listing>();
+    for (const row of rows) if (row?.id) byId.set(row.id, row);
+    return wanted.map((id) => byId.get(id)).filter((l): l is Listing => l != null);
   },
 
   create: async (payload: CreateListingPayload) => {

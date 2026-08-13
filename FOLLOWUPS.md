@@ -344,3 +344,57 @@ applying the fix would be guessing at a shape (§2 — verify before acting on a
 TO DO: call `/users/me/listings?page=1&limit=1` with a real session, look at where `total`
 actually lives, and if it is a `meta` sibling apply the same `meta?.total ?? data.length`
 treatment. Check `getMyListings` (unpaged) at the same time.
+
+## Three copies of the listing-price formatter (logged 2026-08-13)
+
+`formatListingPrice` now lives in `src/lib/money.ts` because the browse map's price
+labels must read identically to the cards («$65,000», «19,900 ل.س») and a shared
+function is the only thing that guarantees it.
+
+`ListingCard.tsx` and `FeaturedSection.tsx` still each carry a local `formatPrice`
+with the same output (FeaturedSection's rounds and pins `maximumFractionDigits: 0`,
+so it is near-identical rather than identical). Deliberately left alone: swapping them
+out touches shipped card rendering, which has nothing to do with the map work in
+flight, and every one of them currently agrees.
+
+TO DO: point both components at `formatListingPrice` and delete the local copies —
+after confirming the FeaturedSection rounding difference is not load-bearing.
+
+## ~~No by-ids listing endpoint~~ — RESOLVED 2026-08-13, with one field still missing
+
+**Resolved:** the backend shipped `GET /listings/by-ids?ids=a,b,c` (live on
+api.fursago.com and local dev). `listingsService.getListingsByIds` now makes ONE request
+instead of N; verified live: a 6-listing cluster went from 6 requests / ~17KB of detail
+payloads to 1 request / ~9KB of card payloads. Request order is honoured server-side,
+unknown ids are omitted, and the server cap matches `MAX_LISTINGS_BY_ID = 30`.
+
+**Still true, still load-bearing:** `GET /listings` **silently ignores** `?ids=` and
+`?id=` and returns the whole unfiltered result set (verified live — asking for 2 ids
+returned all 25, with a healthy `200`). The fix is the dedicated `/listings/by-ids`
+path; anyone who "simplifies" it back onto the list endpoint ships a sheet showing the
+wrong listings that looks fine doing it.
+
+### ~~Open: the card payload has no `neighborhood` / `district`~~ — RESOLVED same day
+
+Briefly true and no longer: the first `/listings/by-ids` build returned only
+`city`/`governorate`, so every row of a centroid pile read «دمشق». The backend added
+`neighborhood` + `district` to `LISTING_CARD_SELECT`. Re-verified live on the biggest
+real cluster — 3 distinct location lines where there had been 1:
+
+| row | renders |
+| --- | ------- |
+| شقة فاخرة بإطلالات في قدسيا | قدسيا، دمشق |
+| شقة رائعة في منطقة التجارة | التجارة، دمشق |
+| the other four (no neighborhood set) | دمشق |
+
+**No frontend change was needed** — `locationLine()` already read those columns through
+`formatAddressLine`. Worth recording because the diagnosis that reached us was that the
+card payload carried the `region` RELATION (nameAr + parent chain) and the frontend was
+reading the flat columns instead. It is the other way round: `LISTING_CARD_SELECT` has
+the four flat columns and no `region`; `region` + the flattened `locationPath` are
+`LISTING_DETAIL_INCLUDE` only. Reading the columns is correct on a card.
+
+So `locationLine()` keeps both branches: `locationPath` when it has real depth (detail-
+shaped data), else the columns. On card payloads the first branch simply never fires.
+The remaining bare «دمشق» rows are test listings with no neighborhood in the DB — the
+data is genuinely absent, not dropped in transit.

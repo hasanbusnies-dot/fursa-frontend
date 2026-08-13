@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   SlidersHorizontal, X, SearchX, Search,
-  Star, LayoutGrid, List, ChevronDown,
+  Star, ChevronDown,
   Bookmark,
   MapPin, ImageOff,
 } from 'lucide-react';
@@ -18,8 +18,11 @@ import { FavoriteButton } from '@/components/listings/FavoriteButton';
 import { CompareButton } from '@/components/listings/CompareButton';
 import { FilterSidebar, EMPTY_FILTERS, hasActiveFilters } from '@/components/listings/FilterSidebar';
 import type { FilterValues } from '@/components/listings/FilterSidebar';
+import { ViewModeToggle, useMapViewParam, type ViewMode } from '@/components/listings/ViewModeToggle';
+import ListingsMapView from '@/components/listings/ListingsMapView';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
+import { buildListingQuery } from '@/lib/listing-query';
 import { isConnectionError } from '@/lib/net-error';
 import { ConnectionError } from '@/components/ui/ConnectionError';
 import type { Category, Listing } from '@/types';
@@ -570,7 +573,18 @@ function ListingsContent() {
   const activeSellerTab = applied.fromWhos.length === 1 ? applied.fromWhos[0] : '';
 
   const [page, setPage]             = useState(1);
+  // Grid/list stay local; the map lives in the URL so it can be shared and
+  // survive a refresh (see ViewModeToggle). `viewMode` remembers which of the
+  // two the user was on, so leaving the map returns them there rather than to a
+  // default.
   const [viewMode, setViewMode]     = useState<'grid' | 'list'>('list');
+  const { isMap, setMapView }       = useMapViewParam();
+  const activeView: ViewMode        = isMap ? 'map' : viewMode;
+  const selectView = (v: ViewMode) => {
+    if (v === 'map') { setMapView(true); return; }
+    setViewMode(v);
+    if (isMap) setMapView(false);
+  };
   const [sortOpen, setSortOpen]     = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
 
@@ -589,40 +603,28 @@ function ListingsContent() {
   // isn't torn down for a frame before the route changes.
   const redirectingRef = useRef(false);
 
+  // The filter half of the request, built ONCE and shared. The map view (S5) hands
+  // this same object to `getMapPoints`, which is what keeps the two endpoints
+  // asking about the same result set — see lib/listing-query.ts.
+  const listingQuery = useMemo(
+    () => buildListingQuery(applied, {
+      query:    searchQuery,
+      currency: currencyFilter,
+      sort:     sortBy,
+      sellerId: sellerIdParam,
+    }),
+    [applied, searchQuery, currencyFilter, sortBy, sellerIdParam],
+  );
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setConnectionFailed(false);
     redirectingRef.current = false;
-    const f = applied;
     listingsService.getListings({
-      limit:        PER_PAGE,
+      ...listingQuery,
+      limit: PER_PAGE,
       page,
-      query:        searchQuery   || undefined,
-      categoryId:   f.categoryId  || undefined,
-      make:         f.make        || undefined,
-      model:        f.model       || undefined,
-      city:         f.city        || undefined,
-      district:     f.district    || undefined,
-      minPrice:     f.minPrice    ? Number(f.minPrice)    : undefined,
-      maxPrice:     f.maxPrice    ? Number(f.maxPrice)    : undefined,
-      currency:     currencyFilter ? (currencyFilter as 'SYP' | 'USD') : undefined,
-      minYear:      f.minYear     ? Number(f.minYear)     : undefined,
-      maxYear:      f.maxYear     ? Number(f.maxYear)     : undefined,
-      minMileage:   f.minMileage  ? Number(f.minMileage)  : undefined,
-      maxMileage:   f.maxMileage  ? Number(f.maxMileage)  : undefined,
-      fuelType:     f.fuelTypes.join(',')     || undefined,
-      transmission: f.transmissions.join(',') || undefined,
-      condition:    f.conditions.join(',')    || undefined,
-      bodyType:     f.bodyType    || undefined,
-      drivetrain:   f.drivetrains.join(',')   || undefined,
-      color:        f.colors.join(',')        || undefined,
-      warranty:     f.warranty    ? f.warranty    === 'true' : undefined,
-      heavyDamage:  f.heavyDamage ? f.heavyDamage === 'true' : undefined,
-      tradeIn:      f.tradeIn     ? f.tradeIn     === 'true' : undefined,
-      fromWho:      f.fromWhos.join(',') || undefined,
-      sort:         sortBy || undefined,
-      sellerId:     sellerIdParam || undefined,
     }).then((result) => {
       if (cancelled) return;
       // Pasted ad number that resolves to exactly one listing → go straight to
@@ -649,7 +651,7 @@ function ListingsContent() {
       if (!cancelled && !redirectingRef.current) setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [applied, page, searchQuery, sortBy, sellerIdParam, retryKey]);
+  }, [listingQuery, page, searchQuery, retryKey]);
 
   // ── Derive category name for result header ──────────────────────────────────
   const categoryName = useMemo(() => {
@@ -994,29 +996,8 @@ function ListingsContent() {
               {/* Opposite end of the SAME row: view toggles + currency + sort.
                   فلاتر moved up beside حفظ البحث in the result header. */}
               <div className="flex items-center gap-1.5 ms-auto shrink-0">
-                {/* Grid / List toggle */}
-                <div className="flex bg-white shadow-pebble rounded-card overflow-hidden">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={cn(
-                      'p-2 transition-colors',
-                      viewMode === 'grid' ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-600',
-                    )}
-                    title="عرض شبكي"
-                  >
-                    <LayoutGrid className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={cn(
-                      'p-2 transition-colors',
-                      viewMode === 'list' ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-600',
-                    )}
-                    title="عرض قائمة"
-                  >
-                    <List className="w-4 h-4" />
-                  </button>
-                </div>
+                {/* Grid / List / Map toggle */}
+                <ViewModeToggle value={activeView} onChange={selectView} />
 
                 {/* Currency filter */}
                 <select
@@ -1093,8 +1074,14 @@ function ListingsContent() {
               </div>
             )}
 
-            {/* Listings */}
-            {loading ? (
+            {/* Listings — or the map, which replaces them entirely. The map runs
+                its OWN unpaginated fetch, so it is deliberately not gated on the
+                list's loading/empty/connection state, and the pager below is not
+                rendered at all in map view: a map shows the whole matched set,
+                so «صفحة 1 / 3» underneath it would be describing nothing. */}
+            {isMap ? (
+              <ListingsMapView query={listingQuery} />
+            ) : loading ? (
               viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                   {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
