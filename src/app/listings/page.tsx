@@ -1084,7 +1084,12 @@ function ListingsContent() {
                 rendered at all in map view: a map shows the whole matched set,
                 so «صفحة 1 / 3» underneath it would be describing nothing. */}
             {isMap ? (
-              <ListingsMapView query={listingQuery} />
+              <ListingsMapView
+                query={listingQuery}
+                // The map's ✕ returns to whichever list view the user was on and
+                // clears ?view=map — the same path the toggle takes.
+                onClose={() => selectView(viewMode)}
+              />
             ) : loading ? (
               viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">

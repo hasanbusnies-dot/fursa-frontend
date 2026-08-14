@@ -27,7 +27,7 @@
 
 import { useCallback } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { LayoutGrid, List, Map as MapIcon } from 'lucide-react';
+import { LayoutGrid, List, MapPinned } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type ViewMode = 'grid' | 'list' | 'map';
@@ -70,12 +70,36 @@ export function useMapViewParam(opts?: { offValue?: string }) {
   return { isMap, setMapView };
 }
 
-const OPTIONS: { value: ViewMode; label: string; Icon: typeof LayoutGrid }[] = [
+/**
+ * Grid and list only — the two DISPLAY preferences, and the reason they are
+ * quiet: swapping cards for rows is a matter of taste, and nobody needs to be
+ * told the option exists. The map is not one of these; see below.
+ */
+const DISPLAY_OPTIONS: { value: ViewMode; label: string; Icon: typeof LayoutGrid }[] = [
   { value: 'grid', label: 'عرض شبكي',  Icon: LayoutGrid },
   { value: 'list', label: 'عرض قائمة', Icon: List },
-  { value: 'map',  label: 'عرض خريطة', Icon: MapIcon },
 ];
 
+/**
+ * ── Why the map segment is loud and the other two are not ────────────────────
+ *
+ * As three identical grey icons, the map was invisible: users browsed past it
+ * without learning the view existed (founder's report). It is not a display
+ * preference like grid/list — it is a FEATURE, and an undiscovered feature is
+ * the same as a missing one. So it gets what the other two deliberately don't:
+ *
+ *   · a written label «خريطة» — the only text in the control, which is exactly
+ *     what makes the eye land on it. Icon-only was the whole problem.
+ *   · brand blue rather than grey, so it reads as an offer instead of as a
+ *     disabled-looking glyph.
+ *   · MapPinned over the plain folded-map glyph — pins on a map say "the ads
+ *     are ON here", which is what the view actually shows.
+ *
+ * Deliberately NOT orange: that is the CTA colour (نشر إعلان, favourites), and
+ * spending it on a view switch would flatten the one signal the page reserves
+ * for actions. Blue is the app's navigational colour and is already the map's
+ * own cluster colour, so the control matches what it opens.
+ */
 export function ViewModeToggle({
   value,
   onChange,
@@ -83,9 +107,11 @@ export function ViewModeToggle({
   value: ViewMode;
   onChange: (value: ViewMode) => void;
 }) {
+  const mapActive = value === 'map';
+
   return (
-    <div className="flex bg-white shadow-pebble rounded-card overflow-hidden">
-      {OPTIONS.map(({ value: v, label, Icon }) => (
+    <div className="flex items-stretch bg-white shadow-pebble rounded-card overflow-hidden">
+      {DISPLAY_OPTIONS.map(({ value: v, label, Icon }) => (
         <button
           key={v}
           onClick={() => onChange(v)}
@@ -100,6 +126,24 @@ export function ViewModeToggle({
           <Icon className="w-4 h-4" />
         </button>
       ))}
+
+      <button
+        onClick={() => onChange('map')}
+        className={cn(
+          // border-s, not border-l: the divider belongs on the edge facing the
+          // list button, which is the RIGHT edge in this RTL layout.
+          'flex items-center gap-1.5 px-2.5 text-xs font-bold border-s transition-colors',
+          mapActive
+            ? 'bg-blue-600 text-white border-blue-600'
+            : 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100',
+        )}
+        title="عرض خريطة"
+        aria-label="عرض خريطة"
+        aria-pressed={mapActive}
+      >
+        <MapPinned className="w-4 h-4 shrink-0" />
+        خريطة
+      </button>
     </div>
   );
 }

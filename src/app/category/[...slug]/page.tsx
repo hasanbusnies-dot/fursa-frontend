@@ -1001,7 +1001,14 @@ export default function CategoryPage() {
                   below is not rendered in map view: the map already shows the
                   whole matched set. */}
               {isMap ? (
-                <ListingsMapView query={listingQuery} />
+                <ListingsMapView
+                  query={listingQuery}
+                  // The map's ✕ returns to whichever list view the user was on.
+                  // `selectView` routes through setMapView(false), so a branch
+                  // node restores ?view=listings instead of dropping the param
+                  // and bouncing the user back into the drill-down box.
+                  onClose={() => selectView(viewMode)}
+                />
               ) : loading ? (
                 viewMode === 'grid' ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
