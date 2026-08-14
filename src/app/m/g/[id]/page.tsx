@@ -7,6 +7,7 @@ import { ChevronRight, SearchX } from 'lucide-react';
 import { catalogService, type CatalogNode } from '@/services/catalog.service';
 import { CURATED_ROOTS } from '@/data/curated-categories';
 import { categoryRootMeta, categorySymbol } from '@/data/category-root-meta';
+import { useSmartBack } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
 
 // Curated umbrella landing (/m/g/<id>) — the screen behind a curated root that
@@ -28,6 +29,11 @@ export default function CuratedUmbrellaPage() {
   const root = CURATED_ROOTS.find((r) => r.id === id && r.group);
 
   const [members, setMembers] = useState<CatalogNode[] | null>(null);
+
+  // Home is the only structural parent this screen has, and also its deep-link
+  // fallback — but a user who tapped through from the home grid goes back by
+  // real history now, like everywhere else.
+  const goBack = useSmartBack('/');
 
   // Desktop never sees this route.
   useEffect(() => {
@@ -58,7 +64,7 @@ export default function CuratedUmbrellaPage() {
           {/* Back button (RTL: start = right, so this is on the right side visually) */}
           <button
             type="button"
-            onClick={() => router.push('/')}
+            onClick={goBack}
             className="p-2 rounded-lg hover:bg-blue-600 active:bg-blue-800 transition-colors shrink-0"
             aria-label="رجوع"
           >

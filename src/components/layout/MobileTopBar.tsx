@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, type ReactNode } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { create } from 'zustand';
-import { notificationOriginBack } from '@/lib/notifications';
+import { useSmartBack } from '@/lib/navigation';
 
 // ── Top-bar store ─────────────────────────────────────────────────────────────
 // Lets dynamic pages (listing detail, category) override what the shared bar
@@ -16,27 +16,42 @@ import { notificationOriginBack } from '@/lib/notifications';
 // one. Blue is now the bar, everywhere it appears (founder's call, 2026-08-10) —
 // so there is no tone to pass and no way for a page to get it wrong.
 
-interface MobileTopBarState {
+interface BarState {
   title: string | null;
   /** Rendered at the inline-END of the bar (the LEFT side in RTL). */
   actions: ReactNode | null;
-  setBar: (s: { title: string | null; actions: ReactNode | null }) => void;
+  /**
+   * Where back goes when this tab has no in-app history (a deep link). Pages
+   * that know their own context supply it — a listing its category, a category
+   * its parent crumb — because the URL alone cannot produce it. Null falls back
+   * to the structural default below.
+   */
+  back: string | null;
+}
+interface MobileTopBarState extends BarState {
+  setBar: (s: BarState) => void;
 }
 const useMobileTitleStore = create<MobileTopBarState>((set) => ({
   title: null,
   actions: null,
+  back: null,
   setBar: (s) => set(s),
 }));
 
-const RESET = { title: null, actions: null };
+const RESET: BarState = { title: null, actions: null, back: null };
 
-/** Set the mobile top-bar title for the current page (cleared on unmount). */
-export function useMobileTitle(title: string | null | undefined) {
+/**
+ * Set the mobile top-bar title for the current page (cleared on unmount).
+ *
+ * `back` is the deep-link fallback described on BarState — pass it whenever the
+ * page can name a better destination than the URL's parent.
+ */
+export function useMobileTitle(title: string | null | undefined, back?: string | null) {
   const setBar = useMobileTitleStore((s) => s.setBar);
   useEffect(() => {
-    setBar({ ...RESET, title: title && title.trim() ? title : null });
+    setBar({ ...RESET, title: title && title.trim() ? title : null, back: back ?? null });
     return () => setBar(RESET);
-  }, [title, setBar]);
+  }, [title, back, setBar]);
 }
 
 /**
@@ -50,13 +65,14 @@ export function useMobileTitle(title: string | null | undefined) {
 export function useMobileTopBar(opts: {
   title?: string | null;
   actions?: ReactNode | null;
+  back?: string | null;
 }) {
-  const { title = null, actions = null } = opts;
+  const { title = null, actions = null, back = null } = opts;
   const setBar = useMobileTitleStore((s) => s.setBar);
   useEffect(() => {
-    setBar({ title: title && title.trim() ? title : null, actions });
+    setBar({ title: title && title.trim() ? title : null, actions, back });
     return () => setBar(RESET);
-  }, [title, actions, setBar]);
+  }, [title, actions, back, setBar]);
 }
 
 // ── Route config ────────────────────────────────────────────────────────────────
@@ -96,8 +112,16 @@ const ROUTE_TITLES: Record<string, string> = {
   '/category/real-estate/projects':  'مشاريع سكنية',
 };
 
-// Parent overrides where stripping the last segment wouldn't land on a real page.
-const PARENT_OVERRIDES: Record<string, string> = {
+// Deep-link fallbacks for routes where stripping the last URL segment lands
+// nowhere real — or lands somewhere the user has never been.
+//
+// Notifications and messages are the second kind. Both are opened from the
+// header, on EVERY page, so their structural parent (/account) is a dashboard
+// the visitor never passed through. Home is the honest answer when there is no
+// history to return to (founder's call, 2026-08-14).
+const FALLBACK_OVERRIDES: Record<string, string> = {
+  '/account/notifications':          '/',
+  '/account/messages':               '/',
   '/messages':                       '/',
   '/compare':                        '/',
   '/account/offers/seller':          '/account',
@@ -106,8 +130,15 @@ const PARENT_OVERRIDES: Record<string, string> = {
   '/account/secure-payment/selling': '/account',
 };
 
-function parentOf(pathname: string): string {
-  if (PARENT_OVERRIDES[pathname]) return PARENT_OVERRIDES[pathname];
+/**
+ * Where back goes on this route when the tab has no in-app history AND the page
+ * itself named no better destination (see BarState.back).
+ *
+ * Structural, and that is its limit: a listing's category cannot be recovered
+ * from `/listings/<id>`, which is exactly why pages can override it.
+ */
+function defaultFallback(pathname: string): string {
+  if (FALLBACK_OVERRIDES[pathname]) return FALLBACK_OVERRIDES[pathname];
   if (pathname.startsWith('/listings/edit/')) return '/account/listings';
   const segs = pathname.split('/').filter(Boolean);
   segs.pop();
@@ -128,9 +159,12 @@ function fallbackTitle(pathname: string): string {
 
 export function MobileTopBar() {
   const pathname = usePathname();
-  const router   = useRouter();
   const ctxTitle = useMobileTitleStore((s) => s.title);
   const actions  = useMobileTitleStore((s) => s.actions);
+  const ctxBack  = useMobileTitleStore((s) => s.back);
+
+  // Real history first, the page's own context second, the URL's parent last.
+  const goBack = useSmartBack(ctxBack ?? defaultFallback(pathname));
 
   if (!shouldShowMobileTopBar(pathname)) return null;
 
@@ -147,9 +181,9 @@ export function MobileTopBar() {
       <div className="flex items-center gap-2 h-14 px-3">
         <button
           type="button"
-          // Resolved on click (not during render): sessionStorage is read here, so
+          // Resolved on click (not during render): sessionStorage is read there, so
           // there is nothing storage-dependent in the server/first-client markup.
-          onClick={() => router.push(notificationOriginBack(pathname) ?? parentOf(pathname))}
+          onClick={goBack}
           aria-label="رجوع"
           className="shrink-0 p-1.5 -ms-1.5 rounded-lg text-white hover:bg-white/15 transition-colors"
         >

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ChevronRight, SearchX } from 'lucide-react';
 import { catalogService, type CatalogNode, type CatalogPathNode } from '@/services/catalog.service';
 import { PROMOTED_SLUGS } from '@/data/curated-categories';
+import { markSyntheticNavigation, useSmartBack } from '@/lib/navigation';
 import { BrandMark } from '@/components/listings/BrandMark';
 import { cn } from '@/lib/utils';
 
@@ -54,7 +55,10 @@ export default function MobileCategoryDrillDown() {
         const visible = kids.filter((k) => !PROMOTED_SLUGS.has(k.slug) || k.slug === slug);
         // A leaf has nothing to drill into — go straight to its listings. Checked
         // against the visible set: hiding every child makes this node a leaf too.
-        if (!visible.length) { router.replace(`/category/${slug}`); return; }
+        // markSyntheticNavigation: this REPLACES the current entry, so it must not
+        // count as a step deeper — otherwise back from the listings page it lands
+        // on would think there is history behind it and leave the app.
+        if (!visible.length) { markSyntheticNavigation(); router.replace(`/category/${slug}`); return; }
         setPath(p);
         setChildren(visible);
         setStatus('ready');
@@ -65,9 +69,11 @@ export default function MobileCategoryDrillDown() {
   }, [slug, router]);
 
   const title = path[path.length - 1]?.nameAr ?? '';
-  // Back target comes from the breadcrumb, not from slicing the URL.
+  // Back target comes from the breadcrumb, not from slicing the URL. It is the
+  // deep-link fallback now — a user who drilled here goes back through real
+  // history, which is the same rung by construction.
   const parent = path.length > 1 ? path[path.length - 2] : null;
-  const backHref = parent ? `/m/categories/${parent.slug}` : '/';
+  const goBack = useSmartBack(parent ? `/m/categories/${parent.slug}` : '/');
 
   return (
     // md:hidden ensures nothing bleeds onto desktop even before the redirect fires
@@ -79,7 +85,7 @@ export default function MobileCategoryDrillDown() {
           {/* Back button (RTL: start = right, so this is on the right side visually) */}
           <button
             type="button"
-            onClick={() => router.push(backHref)}
+            onClick={goBack}
             className="p-2 rounded-lg hover:bg-blue-600 active:bg-blue-800 transition-colors shrink-0"
             aria-label="رجوع"
           >

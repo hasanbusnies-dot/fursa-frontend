@@ -12,6 +12,7 @@ import { SocketManager } from '@/components/providers/SocketManager';
 import { PushPrompt } from '@/components/providers/PushPrompt';
 import { SplashScreen } from '@/components/providers/SplashScreen';
 import { ServiceWorkerRegistrar } from '@/components/providers/ServiceWorkerRegistrar';
+import { NavigationTracker } from '@/components/providers/NavigationTracker';
 
 // Runs synchronously before the splash markup is parsed (top of <body>), so the
 // data-splash attribute exists — or doesn't — before the browser paints anything.
@@ -79,6 +80,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Every visitor, anonymous included — the offline shell depends on it. */}
         <ServiceWorkerRegistrar />
         <SocketManager />
+        {/* Feeds every back button's "is there in-app history" check. */}
+        <NavigationTracker />
         <PushPrompt />
         <StaffRouteLock />
         <Header />

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Bell, BellOff, CheckCheck } from 'lucide-react';
 import { notificationsService, type AppNotification } from '@/services/notifications.service';
 import { useNotificationsStore } from '@/store/notifications.store';
-import { notificationHref, rememberNotificationOrigin, NOTIFICATION_ICONS, timeAgoAr } from '@/lib/notifications';
+import { notificationHref, NOTIFICATION_ICONS, timeAgoAr } from '@/lib/notifications';
 import { cn } from '@/lib/utils';
 
 const PREVIEW_COUNT = 7;
@@ -51,8 +51,8 @@ export function NotificationsBell() {
 
   const onItemClick = (n: AppNotification) => {
     setOpen(false);
-    // Back from the opened page returns to the notifications list (§ lib/notifications).
-    rememberNotificationOrigin(notificationHref(n));
+    // Back from the opened page returns to the page this dropdown was opened
+    // over — real history, via useSmartBack. See lib/notifications.ts.
     if (!n.isRead) {
       // Optimistic: badge + local tint flip now; the PATCH rides behind.
       decrement();

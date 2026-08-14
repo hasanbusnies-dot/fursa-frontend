@@ -1396,10 +1396,13 @@ const norm = (s: string) => s.trim().toLowerCase();
  * Both lookups go through the catalog's session cache, so a page with the sidebar
  * open does not re-fetch what browse already holds.
  */
-function useCatalogTrail(listing: Listing): Crumb[] {
-  const slug  = listing.category?.slug;
-  const vd    = listing.vehicleDetails as any;
-  const raw   = listing as any;
+function useCatalogTrail(listing: Listing | null): Crumb[] {
+  // Nullable so the page can call this WHILE the listing is still loading (the
+  // back button needs the trail, and hooks cannot wait for a fetch). Everything
+  // below no-ops on null and the trail simply stays empty.
+  const slug  = listing?.category?.slug;
+  const vd    = listing?.vehicleDetails as any;
+  const raw   = (listing ?? {}) as any;
   const make  = (vd?.make  ?? raw.make  ?? '') as string;
   const model = (vd?.model ?? raw.model ?? '') as string;
 
@@ -2099,9 +2102,27 @@ export default function ListingDetailClient() {
     );
   }, [listing]);
 
+  // Back's deep-link fallback: the listing's OWN category — the deepest crumb of
+  // the same trail the breadcrumb draws (مركبات › سيارات › «سيارات للبيع»), not
+  // the generic all-listings page the URL's parent would give.
+  //
+  // Walks backwards because the last crumbs may be a brand/model the catalog
+  // could not match, and those carry a label with no href (see useCatalogTrail);
+  // linking «BMW» to a URL that 404s would be worse than landing one rung up.
+  // While the fetch is in flight the trail is empty and this reads /listings —
+  // harmless, since the value is read when the button is TAPPED, long after.
+  const trail = useCatalogTrail(listing);
+  const backFallback = useMemo(() => {
+    for (let i = trail.length - 1; i >= 0; i--) {
+      const href = trail[i].href;
+      if (href) return href;
+    }
+    return '/listings';
+  }, [trail]);
+
   // No title here on purpose: it moved down to sit above the gallery, so the bar
   // falls back to the generic «تفاصيل الإعلان» label and carries the actions instead.
-  useMobileTopBar({ actions: barActions });
+  useMobileTopBar({ actions: barActions, back: backFallback });
 
   if (loading) return <ListingSkeleton />;
   if (loadError === 'connection') {

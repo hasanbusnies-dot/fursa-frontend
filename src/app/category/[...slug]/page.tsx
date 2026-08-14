@@ -421,7 +421,12 @@ export default function CategoryPage() {
   const [childNodes,    setChildNodes]    = useState<CatalogNode[]>([]);
 
   const pageTitle    = catalogPath[catalogPath.length - 1]?.nameAr ?? '';
-  useMobileTitle(pageTitle);
+  // Back's deep-link fallback: one rung UP the catalog, the way /m/categories has
+  // always done it. Slicing the URL cannot do this — category URLs are flat
+  // (`/category/<slug>`, slugs being globally unique), so stripping a segment
+  // lands on `/category`, which is not a page, and the old code sent it home.
+  const parentNode = catalogPath.length > 1 ? catalogPath[catalogPath.length - 2] : null;
+  useMobileTitle(pageTitle, parentNode ? `/category/${parentNode.slug}` : '/');
   const isRealEstate = catalogPath[0]?.slug === 'real-estate';
   const isVehicles   = catalogPath[0]?.slug === VEHICLES_ROOT_SLUG;
   const isRentalSuv  = false;

@@ -13,31 +13,16 @@ export function notificationHref(n: AppNotification): string {
   return '/account/notifications';
 }
 
-// ── "Came from the notifications list" origin ────────────────────────────────
-// A notification opens a page that lives somewhere else in the tree (a listing,
-// a conversation, the wallet), so the structural back target (MobileTopBar's
-// parentOf → e.g. /account for the wallet) drops the user somewhere they never
-// were. Remember the origin at click time, per tab-session, keyed by the target
-// PATHNAME so the override can never leak onto an unrelated page. sessionStorage
-// rather than a query param: the listing URL is what ShareButton hands out.
-export const NOTIFICATIONS_PATH = '/account/notifications';
-const ORIGIN_KEY = 'forsa-notif-origin';
-
-/** Call on a notification click with the href it navigates to. */
-export function rememberNotificationOrigin(href: string): void {
-  try {
-    sessionStorage.setItem(ORIGIN_KEY, new URL(href, window.location.origin).pathname);
-  } catch { /* storage unavailable — back just falls back to the structural parent */ }
-}
-
-/** The notifications list when `pathname` was opened from it, else null. */
-export function notificationOriginBack(pathname: string): string | null {
-  try {
-    return sessionStorage.getItem(ORIGIN_KEY) === pathname ? NOTIFICATIONS_PATH : null;
-  } catch {
-    return null;
-  }
-}
+// ── "Came from the notifications list" origin — RETIRED 2026-08-14 ───────────
+// This file used to remember, per tab-session, that a page had been opened from
+// the notifications list, so its back button could return there instead of to
+// the target's structural parent. lib/navigation.ts generalises that: back now
+// uses real in-app history first, which returns to the notifications list (or to
+// whatever page the header's bell dropdown was opened over — strictly better,
+// since a dropdown click never meant the user had VISITED the list) and falls
+// back to a contextual destination only on deep-link entry. Nothing read the
+// origin any more, so it is gone rather than left to rot alongside its
+// replacement — two competing back mechanisms is how this drifts back apart.
 
 /** Type → icon + accent color for list rendering. */
 export const NOTIFICATION_ICONS: Record<NotificationType, { Icon: LucideIcon; className: string }> = {

@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { listingsService } from '@/services/listings.service';
 import { categoriesService } from '@/services/categories.service';
 import { savedSearchesService } from '@/services/saved-searches.service';
+import { markSyntheticNavigation } from '@/lib/navigation';
 import { ListingCard } from '@/components/listings/ListingCard';
 import { FavoriteButton } from '@/components/listings/FavoriteButton';
 import { CompareButton } from '@/components/listings/CompareButton';
@@ -634,6 +635,9 @@ function ListingsContent() {
       // trap. With replace, Back returns to wherever the search started.
       if (parseAdNumberQuery(searchQuery) && result.total === 1 && result.listings[0]?.id) {
         redirectingRef.current = true;
+        // Replaced, not stacked — so it must not raise the in-app depth either,
+        // or the listing's back button would think this search is still behind it.
+        markSyntheticNavigation();
         router.replace(`/listings/${result.listings[0].id}`);
         return; // keep the loading UI up through navigation (see finally)
       }

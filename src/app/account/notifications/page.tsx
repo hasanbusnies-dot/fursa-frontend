@@ -7,7 +7,7 @@ import { Bell, BellOff, CheckCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { notificationsService, type AppNotification } from '@/services/notifications.service';
 import { useNotificationsStore } from '@/store/notifications.store';
-import { notificationHref, rememberNotificationOrigin, NOTIFICATION_ICONS, timeAgoAr } from '@/lib/notifications';
+import { notificationHref, NOTIFICATION_ICONS, timeAgoAr } from '@/lib/notifications';
 import { PushToggle } from '@/components/notifications/PushToggle';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
@@ -48,8 +48,8 @@ export default function NotificationsPage() {
   }, [isAuthenticated, router, page, unreadOnly, load]);
 
   const onItemClick = (n: AppNotification) => {
-    // Back from the opened page returns HERE, not to the target's structural parent.
-    rememberNotificationOrigin(notificationHref(n));
+    // Back from the opened page returns HERE on its own now — real history, via
+    // useSmartBack. See the retirement note in lib/notifications.ts.
     if (!n.isRead) {
       decrement();
       setItems((prev) => prev.map((x) => (x.id === n.id ? { ...x, isRead: true } : x)));
