@@ -398,3 +398,31 @@ So `locationLine()` keeps both branches: `locationPath` when it has real depth (
 shaped data), else the columns. On card payloads the first branch simply never fires.
 The remaining bare «دمشق» rows are test listings with no neighborhood in the DB — the
 data is genuinely absent, not dropped in transit.
+
+## Catalog endpoint's `stale-while-revalidate=86400` is too long (logged 2026-08-15)
+
+The backend sends `Cache-Control: public, max-age=300, stale-while-revalidate=86400` on
+every `/catalog/*` response. The 24h stale window is what hid a live reseed from the
+homepage sidebar: after `caravans` + `marine-vehicles` landed under `vehicles` (14
+children live on api.fursago.com), the founder's browser kept serving the previous
+12-child copy and refreshing it only in the background — so the new rows, and the
+«عرض المزيد» fold that appears once anything follows the `damaged-vehicles` cut point,
+showed up a page load late. A hard refresh did not help: Chrome's reload bypass covers
+the navigation and its subresources, NOT `fetch()` calls a script makes after load.
+
+**Fixed client-side** (commit `fix(catalog): revalidate catalog fetches`): the three
+catalog GETs in `catalog.service.ts` pass `cache: 'no-cache'`, so the browser always
+revalidates. Cheap — the responses carry an ETag and the API answers conditional
+requests with a headers-only 304, CORS headers included (verified against
+api.fursago.com). The module-level promise cache still collapses a page load to one
+request per key, which is what protects the shared rate-limit bucket; the HTTP cache
+never was that guard.
+
+TO DO (backend/infra, not urgent): reconsider the policy at the source. A catalog that
+changes rarely but must reflect a reseed PROMPTLY wants a short `max-age` with `must-
+revalidate`, or a `stale-while-revalidate` measured in minutes — not a day. Today every
+client that is not this service (and anything sitting between us and the origin) can
+still serve a 24h-old tree. Worth pairing with cache-busting on reseed if the backend
+ever fronts these responses with a CDN — `cf-cache-status` is currently `DYNAMIC`, so
+Cloudflare is not holding a copy, and that is the only reason a client-side fix was
+sufficient here.
