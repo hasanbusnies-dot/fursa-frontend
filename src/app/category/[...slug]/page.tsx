@@ -840,6 +840,7 @@ export default function CategoryPage() {
                   categories={categories}
                   applied={filters}
                   catalogRoot={catalogPath[0]?.slug ?? ''}
+                  catalogBranch={catalogPath[1]?.slug ?? ''}
                   onApply={(f) => { handleApply(f); setSidebarOpen(false); }}
                 />
               </div>
@@ -868,6 +869,7 @@ export default function CategoryPage() {
                       categories={categories}
                       applied={filters}
                       catalogRoot={catalogPath[0]?.slug ?? ''}
+                      catalogBranch={catalogPath[1]?.slug ?? ''}
                       onApply={handleApply}
                     />
                   </div>

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import type { Category } from '@/types';
 import type { ApiResponse } from '@/types';
 import { api } from '@/services/api';
-import { catalogService, VEHICLES_ROOT_SLUG, type CatalogFilterDef } from '@/services/catalog.service';
+import { catalogService, VEHICLES_ROOT_SLUG, NON_MOTOR_VEHICLE_BRANCHES, type CatalogFilterDef } from '@/services/catalog.service';
 import {
   FUEL_TYPE_OPTIONS, TRANSMISSION_OPTIONS, BODY_TYPE_OPTIONS,
   DRIVETRAIN_OPTIONS, FROM_WHO_OPTIONS, CAR_COLORS, SYRIAN_GOVERNORATES,
@@ -2227,9 +2227,12 @@ interface FilterSidebarProps {
    *  the category page. Any root other than 'vehicles' renders the CATEGORY's catalog
    *  filter set instead of the hand-built vehicle facets below. */
   catalogRoot?: string;
+  /** Depth-1 slug under the root (vehicles → <branch> → …), also resolved by the category
+   *  page. Non-motor branches (caravans, marine-vehicles) take the catalog path too. */
+  catalogBranch?: string;
 }
 
-export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }: FilterSidebarProps) {
+export function FilterSidebar({ categories, applied, onApply, catalogRoot = '', catalogBranch = '' }: FilterSidebarProps) {
   const pathname     = usePathname();
   // Current catalog leaf slug — the last segment of /category/<…>/<slug>.
   const currentSlug  = pathname.startsWith('/category/')
@@ -2627,8 +2630,15 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '' }
   // (real-estate, private-lessons, jobs, …), bypassing the hand-built vehicle facets
   // entirely — new backend filter defs show up here with no frontend change. The
   // vehicle tree keeps the rich bespoke sidebar below. `catalogRoot` is resolved by
-  // the page, so there's no flash of vehicle filters while the leaf's defs load. ──
-  if (catalogRoot && catalogRoot !== VEHICLES_ROOT_SLUG && currentSlug) {
+  // the page, so there's no flash of vehicle filters while the leaf's defs load.
+  //
+  // Exception: caravans and marine-vehicles sit under the vehicles ROOT but are not
+  // motor vehicles. Routing them to the car sidebar showed boats a gearbox, a fuel
+  // type and an engine displacement (founder-reported). They have no bespoke facets
+  // to keep, so they follow the catalog path like any other branch. ──
+  const usesCatalogFilters =
+    catalogRoot !== VEHICLES_ROOT_SLUG || NON_MOTOR_VEHICLE_BRANCHES.has(catalogBranch);
+  if (catalogRoot && usesCatalogFilters && currentSlug) {
     return <CatalogFilterView slug={currentSlug} applied={applied} onApply={onApply} />;
   }
 
