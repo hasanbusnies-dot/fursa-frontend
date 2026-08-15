@@ -21,7 +21,11 @@ import { cn } from '@/lib/utils';
 // lookup miss, and the list then renders FULLY OPEN (previous behaviour) rather
 // than truncating at the wrong place or dropping items.
 const COLLAPSE_AFTER: Record<string, string> = {
-  vehicles:   'damaged-vehicles',
+  // Moved up from 'damaged-vehicles' (founder's call): vehicles gained caravans and
+  // marine-vehicles, and cutting after the last one left an 11-row list that folded
+  // nothing. Cutting at motorcycles shows the six passenger-car rows plus bikes, and
+  // folds the six commercial / electric / damaged / caravan / marine rows behind it.
+  vehicles:   'motorcycles',
   industrial: 'industrial-equipment',
   tutors:     'private-lessons-music-instrument',
   jobs:       'job-listings-hospitality-restaurant-customer-relations',
