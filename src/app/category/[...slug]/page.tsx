@@ -506,14 +506,15 @@ export default function CategoryPage() {
   }, [slugResolved, isOffPlanProjects, projectCity, projectDistrict]);
 
   // ── UI state ────────────────────────────────────────────────────────────────
+  // LIST is the default at every width — on both browse pages, and on phones too.
+  //
+  // A mount effect used to force 'grid' below 768px on the stated grounds that
+  // "list/table view is desktop-only". It isn't: the list branch renders CARDS below
+  // md (`md:hidden grid …`) and the table only from md up, so a phone sees cards
+  // either way. All the override actually did was make GRID the selected mode by
+  // default on any narrow viewport — the founder's report — while changing nothing
+  // about what was drawn.
   const [viewMode,       setViewMode]       = useState<'grid' | 'list'>('list');
-
-  // On mobile (<768 px) default to grid — list/table view is desktop-only
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      setViewMode('grid');
-    }
-  }, []);
 
   // Map view rides in the URL so it survives a refresh and can be shared; grid
   // and list stay local. Leaving the map on a BRANCH node restores
@@ -698,14 +699,22 @@ export default function CategoryPage() {
       />
 
       {/* ── Quick-links sub-header ── */}
-      <nav className="w-full bg-white border-b border-gray-200 shadow-sm">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
+      <nav className="w-full bg-white border-b border-gray-200 shadow-sm overflow-visible">
+        <div className="w-full px-4 sm:px-6 lg:px-8 overflow-visible">
           {/* المفضلة then قارن, adjacent — they are the same kind of action ("things
               I've set aside"). قارن used to render LAST, after أبحاثي المحفوظة and
               Recommendations, so the two were never neighbours. Favorites also drops its
               `hidden md:flex` here: ComparePopover has no breakpoint, so on a phone
               Favorites disappeared and قارن was left standing alone. */}
-          <div className="flex items-center overflow-x-auto no-scrollbar pe-2">
+          {/* overflow-visible is LOAD-BEARING, not styling. This row used to be
+              `overflow-x-auto no-scrollbar`, and an ancestor with overflow on ONE axis
+              clips BOTH (CSS resolves the `visible` axis to `auto`), so the popover
+              panels that ComparePopover and RecommendationsPopover hang BELOW this
+              50px strip were clipped away entirely — the buttons toggled open and
+              nothing appeared. z-index cannot escape an ancestor's overflow clip.
+              /listings carries the same fix; keep the two in step. The row does not
+              need to scroll: below md only Favorites + قارن are visible (~190px). */}
+          <div className="flex items-center overflow-visible pe-2">
             <Link
               href="/account/favorites"
               className="group shrink-0 flex items-center gap-2 px-3 md:px-5 py-3.5 text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-orange-500 transition-all whitespace-nowrap"

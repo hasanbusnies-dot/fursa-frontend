@@ -116,8 +116,16 @@ export function ViewModeToggle({
           key={v}
           onClick={() => onChange(v)}
           className={cn(
+            // The selected segment used to be `bg-gray-100 text-gray-900` against an
+            // unselected `text-gray-400` — a near-invisible difference on a white
+            // control, so which view you were on was genuinely unreadable (reported
+            // as "grid is selected by default" while list was in fact active). The
+            // active segment now carries the app's blue, the same signal the map
+            // segment beside it uses for "this is the current view".
             'p-2 transition-colors',
-            value === v ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-600',
+            value === v
+              ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200'
+              : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50',
           )}
           title={label}
           aria-label={label}

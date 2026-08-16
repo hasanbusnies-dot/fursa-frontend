@@ -61,7 +61,7 @@ function CompareRow({
       <Link
         href={`/listings/${listing.id}`}
         onClick={onClose}
-        className="flex-1 min-w-0 flex flex-col gap-0.5 pr-5"
+        className="flex-1 min-w-0 flex flex-col gap-0.5 pe-5"
       >
         <p className="text-[13px] font-semibold text-gray-900 line-clamp-1 leading-snug">
           {listing.title}
@@ -83,8 +83,8 @@ function CompareRow({
       {/* Remove */}
       <button
         onClick={() => onRemove(listing.id)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 rounded-full bg-gray-100 hover:bg-red-100 flex items-center justify-center"
-        title="Listeden çıkar"
+        className="absolute end-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 rounded-full bg-gray-100 hover:bg-red-100 flex items-center justify-center"
+        title="إزالة من المقارنة"
       >
         <X className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" />
       </button>
@@ -139,9 +139,13 @@ export function ComparePopover() {
         قارن
       </button>
 
-      {/* Floating panel */}
+      {/* Floating panel.
+          start-0, not left-0: the app is RTL, so `left-0` pinned this 440px panel's
+          LEFT edge to the trigger and let it run off the right side of the screen —
+          where body{overflow-x:hidden} cut it off. `start-0` is right:0 under RTL, so
+          the panel opens inward from the trigger's start edge and stays on screen. */}
       {isOpen && (
-        <div className="absolute top-full left-0 z-[100] mt-1.5 w-[440px] bg-white rounded-card shadow-pebble shadow-2xl overflow-hidden">
+        <div className="absolute top-full start-0 z-[100] mt-1.5 w-[440px] max-w-[calc(100vw-2rem)] bg-white rounded-card shadow-pebble shadow-2xl overflow-hidden">
 
           {/* Panel header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">

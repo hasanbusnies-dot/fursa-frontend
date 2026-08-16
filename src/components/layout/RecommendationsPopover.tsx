@@ -173,9 +173,14 @@ export function RecommendationsPopover() {
         إعلانات مخصصة لك
       </button>
 
-      {/* Floating panel — rendered outside overflow clipping via z-[100] */}
+      {/* Floating panel.
+          z-[100] does NOT escape overflow clipping — an ancestor with overflow on
+          either axis clips this panel no matter its stacking order, which is exactly
+          what hid it on the category page (see the note on that page's quick-links row).
+          start-0, not left-0: under RTL `left-0` let the 440px panel run off the right
+          edge, where body{overflow-x:hidden} cut it off. */}
       {isOpen && (
-        <div className="absolute top-full left-0 z-[100] mt-1.5 w-[440px] bg-white rounded-card shadow-pebble shadow-2xl overflow-hidden">
+        <div className="absolute top-full start-0 z-[100] mt-1.5 w-[440px] max-w-[calc(100vw-2rem)] bg-white rounded-card shadow-pebble shadow-2xl overflow-hidden">
 
           {/* Tab bar */}
           <div className="flex border-b border-gray-200 bg-gray-50">
