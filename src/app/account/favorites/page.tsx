@@ -1,12 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Star, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { favoritesService } from '@/services/favorites.service';
-import { useAuthStore } from '@/store/auth.store';
+import { useAuthGate } from '@/hooks/use-auth-gate';
 import { ListingCard } from '@/components/listings/ListingCard';
 import type { Listing } from '@/types';
 
@@ -28,22 +27,20 @@ function SkeletonCard() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function FavoritesPage() {
-  const router          = useRouter();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  // Waits for auth hydration before deciding — see useAuthGate. Redirecting on the
+  // first (pre-hydration) false threw logged-in users to /login on every refresh.
+  const ready = useAuthGate('/account/favorites');
 
   const [favorites, setFavorites] = useState<Listing[]>([]);
   const [loading,   setLoading]   = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace(`/login?redirect=${encodeURIComponent('/account/favorites')}`);
-      return;
-    }
+    if (!ready) return;
     favoritesService.getAll()
       .then(setFavorites)
       .catch(() => toast.error('تعذّر تحميل المفضلة.'))
       .finally(() => setLoading(false));
-  }, [isAuthenticated, router]);
+  }, [ready]);
 
   // Remove listing from local list when user un-favorites it via the heart on the card
   const handleFavoriteToggle = (listingId: string, favorited: boolean) => {
@@ -52,7 +49,7 @@ export default function FavoritesPage() {
     }
   };
 
-  if (!isAuthenticated) return null;
+  if (!ready) return null;
 
   return (
     <div>

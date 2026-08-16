@@ -1,13 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Rocket, Zap, ImageOff, ChevronLeft, ChevronRight, Loader2, RefreshCw,
   AlertTriangle, Inbox, Receipt,
 } from 'lucide-react';
-import { useAuthStore } from '@/store/auth.store';
+import { useAuthGate } from '@/hooks/use-auth-gate';
 import { useStoreGate } from '@/store/store-gate.store';
 import { StoreGateBlock } from '@/components/account/StoreGateNotice';
 import {
@@ -185,9 +184,9 @@ function EmptyState({ tab }: { tab: Tab }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function MyDopingsPage() {
-  const router          = useRouter();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const gate            = useStoreGate();
+  // Waits for auth hydration before deciding — see useAuthGate.
+  const ready = useAuthGate('/account/dopings');
+  const gate  = useStoreGate();
 
   const [tab, setTab] = useState<Tab>('active');
 
@@ -204,9 +203,6 @@ export default function MyDopingsPage() {
 
   const [boostTarget, setBoostTarget] = useState<MyActiveDopingRow | null>(null);
 
-  useEffect(() => {
-    if (!isAuthenticated) router.replace('/login');
-  }, [isAuthenticated, router]);
 
   const load = useCallback(() => {
     setLoading(true); setError(false);
@@ -216,9 +212,9 @@ export default function MyDopingsPage() {
     req.catch(() => setError(true)).finally(() => setLoading(false));
   }, [tab, activePage, historyPage]);
 
-  useEffect(() => { if (isAuthenticated) load(); }, [isAuthenticated, load]);
+  useEffect(() => { if (ready) load(); }, [ready, load]);
 
-  if (!isAuthenticated) return null;
+  if (!ready) return null;
 
   // The dopings router is requireApprovedStore'd server-side too.
   if (gate.locked || (gate.gated && gate.loading)) return <StoreGateBlock surface="dopings" />;

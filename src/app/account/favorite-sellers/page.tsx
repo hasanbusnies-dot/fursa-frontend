@@ -1,12 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { UserCheck, Users, Search, Calendar, UserMinus, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { favoriteSellersService } from '@/services/favorite-sellers.service';
-import { useAuthStore } from '@/store/auth.store';
+import { useAuthGate } from '@/hooks/use-auth-gate';
 import type { User } from '@/types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -47,20 +46,20 @@ function SkeletonRow() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function FavoriteSellersPage() {
-  const router          = useRouter();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  // Waits for auth hydration before deciding — see useAuthGate.
+  const ready = useAuthGate('/account/favorite-sellers');
 
   const [sellers,   setSellers]   = useState<User[]>([]);
   const [loading,   setLoading]   = useState(true);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) { router.replace('/login'); return; }
+    if (!ready) return;
     favoriteSellersService.getAll()
       .then(setSellers)
       .catch(() => toast.error('تعذّر تحميل البائعين المفضلين.'))
       .finally(() => setLoading(false));
-  }, [isAuthenticated, router]);
+  }, [ready]);
 
   const handleUnfollow = async (seller: User) => {
     setRemovingId(seller.id);
@@ -75,7 +74,7 @@ export default function FavoriteSellersPage() {
     }
   };
 
-  if (!isAuthenticated) return null;
+  if (!ready) return null;
 
   return (
     <div>

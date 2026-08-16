@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Bell, BellOff, CheckCheck } from 'lucide-react';
 import { toast } from 'sonner';
@@ -9,7 +8,7 @@ import { notificationsService, type AppNotification } from '@/services/notificat
 import { useNotificationsStore } from '@/store/notifications.store';
 import { notificationHref, NOTIFICATION_ICONS, timeAgoAr } from '@/lib/notifications';
 import { PushToggle } from '@/components/notifications/PushToggle';
-import { useAuthStore } from '@/store/auth.store';
+import { useAuthGate } from '@/hooks/use-auth-gate';
 import { cn } from '@/lib/utils';
 
 const PAGE_SIZE = 20;
@@ -17,8 +16,8 @@ const PAGE_SIZE = 20;
 // ── Full notifications page (Phase A4) — the bell dropdown's «عرض الكل» target ──
 
 export default function NotificationsPage() {
-  const router          = useRouter();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  // Waits for auth hydration before deciding — see useAuthGate.
+  const ready = useAuthGate('/account/notifications');
 
   const [items,       setItems]       = useState<AppNotification[]>([]);
   const [page,        setPage]        = useState(1);
@@ -43,9 +42,9 @@ export default function NotificationsPage() {
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) { router.replace('/login'); return; }
+    if (!ready) return;
     load(page, unreadOnly);
-  }, [isAuthenticated, router, page, unreadOnly, load]);
+  }, [ready, page, unreadOnly, load]);
 
   const onItemClick = (n: AppNotification) => {
     // Back from the opened page returns HERE on its own now — real history, via
@@ -63,7 +62,7 @@ export default function NotificationsPage() {
     notificationsService.markAllRead().catch(() => {});
   };
 
-  if (!isAuthenticated) return null;
+  if (!ready) return null;
 
   return (
     <div>

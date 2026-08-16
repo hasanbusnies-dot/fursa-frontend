@@ -1,13 +1,12 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Wallet, Plus, ArrowDownLeft, ArrowUpRight, ArrowLeft, ChevronLeft, ChevronRight,
   Lock, RefreshCw, AlertTriangle, Inbox,
 } from 'lucide-react';
-import { useAuthStore } from '@/store/auth.store';
+import { useAuthGate } from '@/hooks/use-auth-gate';
 import { useStoreGate } from '@/store/store-gate.store';
 import { StoreGateBlock } from '@/components/account/StoreGateNotice';
 import {
@@ -70,9 +69,9 @@ function SkeletonRow() {
 // ── Page ────────────────────────────────────────────────────────────────────────
 
 export default function WalletPage() {
-  const router          = useRouter();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const gate            = useStoreGate();
+  // Waits for auth hydration before deciding — see useAuthGate.
+  const ready = useAuthGate('/account/wallet');
+  const gate  = useStoreGate();
 
   const [wallet, setWallet]         = useState<WalletData | null>(null);
   const [walletError, setWalletErr] = useState(false);
@@ -88,11 +87,6 @@ export default function WalletPage() {
   const [typeFilter, setTF]         = useState<WalletTxType | 'ALL'>('ALL');
   const [transferOpen, setTransferOpen] = useState(false);
   const [transfersKey, setTransfersKey] = useState(0); // bump to reload TransferHistory
-
-  // Auth gate
-  useEffect(() => {
-    if (!isAuthenticated) router.replace('/login');
-  }, [isAuthenticated, router]);
 
   // silent: refresh in place with no spinner flip and no error-state change (focus/socket
   // refetches must never flash the UI or replace good data with an error card).
@@ -120,8 +114,8 @@ export default function WalletPage() {
       .finally(() => { if (!silent) setLT(false); });
   }, [page, currencyFilter, typeFilter]);
 
-  useEffect(() => { if (isAuthenticated) loadWallet(); }, [isAuthenticated, loadWallet]);
-  useEffect(() => { if (isAuthenticated) loadTxns();  }, [isAuthenticated, loadTxns]);
+  useEffect(() => { if (ready) loadWallet(); }, [ready, loadWallet]);
+  useEffect(() => { if (ready) loadTxns();  }, [ready, loadTxns]);
 
   // Freshness (the stale-balance incident): an admin approving a transfer while the user
   // sits on this page must land without a reload. Two triggers, both silent:
@@ -130,7 +124,7 @@ export default function WalletPage() {
   //    forsa:wallet-credited; unthrottled — a real credit always warrants a refetch).
   const lastSilentRef = useRef(0);
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!ready) return;
     const silentReload = (force: boolean) => {
       const now = Date.now();
       if (!force && now - lastSilentRef.current < 5000) return;
@@ -149,13 +143,13 @@ export default function WalletPage() {
       window.removeEventListener('focus', onFocus);
       window.removeEventListener(WALLET_CREDITED_EVENT, onCredited);
     };
-  }, [isAuthenticated, loadWallet, loadTxns]);
+  }, [ready, loadWallet, loadTxns]);
 
   // Reset to page 1 when a filter changes
   const onCurrency = (c: 'ALL' | WalletCurrency) => { setCF(c); setPage(1); };
   const onType     = (t: WalletTxType | 'ALL')   => { setTF(t); setPage(1); };
 
-  if (!isAuthenticated) return null;
+  if (!ready) return null;
 
   // A business awaiting approval has no wallet surface — the whole /wallet router is
   // requireApprovedStore'd server-side, so every call here would 403 anyway.
