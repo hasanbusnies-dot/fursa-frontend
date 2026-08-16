@@ -459,3 +459,23 @@ something to fold into a launch-blocker fix.
 NOT the answer: hoisting the guard into `account/layout.tsx`. It is a server component,
 and converting it would change rendering for all seventeen account pages at once. If
 that is ever wanted it is a deliberate architecture change, not a cleanup.
+
+## ComparePopover still formats money the Turkish way (logged 2026-08-16)
+
+`ComparePopover.tsx`'s local `formatPrice` (top of file) uses `Intl.NumberFormat('tr-TR')`
+and prints `SYP`, and its `infoLine` prints `KM` — a leftover from the Turkish reference
+build. The panel sitting right beside it, `RecommendationsPopover.tsx`, has an
+almost-identical helper that uses `en-US` and prints `ل.س` and `كم`. Same two rows of
+data, two different renderings, in an Arabic-first UI.
+
+Invisible until now, which is why it survived: the compare panel was clipped away by an
+ancestor's overflow and never appeared on screen (fixed in 58501c4). It is visible from
+this commit onward.
+
+TO DO: point it at `formatListingPrice` from `lib/money.ts` — the shared formatter that
+already guarantees the browse map's price labels read identically to the cards — and
+delete the local copy, translating `KM` to `كم` at the same time. Pairs naturally with
+the existing entry above about the three copies of the listing-price formatter
+(ListingCard, FeaturedSection): this is a fourth, and the same one-formatter fix closes
+all of them. Deliberately not folded into 58501c4, which was scoped to making the
+buttons work.
