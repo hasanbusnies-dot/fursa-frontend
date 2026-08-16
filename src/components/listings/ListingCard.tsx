@@ -217,6 +217,18 @@ interface ListingCardProps {
    * (used by the category-page mobile list view so the image stays clean).
    */
   buttonsPlacement?: 'overlay' | 'side';
+  /**
+   * How the card stacks BELOW md. From md up both values render identically —
+   * image on top, text under it — so this never affects desktop.
+   *
+   * 'auto' (default): a horizontal row on a phone (112px thumbnail beside the
+   *   text), becoming the stacked card from md up. This is the shape the list
+   *   view wants — one full-width listing per row.
+   * 'stacked': the card shape at EVERY width. Two of these fit side by side on a
+   *   phone; two row cards do not (a 112px thumbnail in a ~160px column leaves
+   *   nothing for the text). The grid view passes this.
+   */
+  layout?: 'auto' | 'stacked';
 }
 
 export function ListingCard({
@@ -227,9 +239,17 @@ export function ListingCard({
   isHomepageView = false,
   showcaseContext,
   buttonsPlacement = 'overlay',
+  layout = 'auto',
 }: ListingCardProps) {
   const primary = listing.images?.find((img) => img.isPrimary) ?? listing.images?.[0];
   const now     = Date.now();
+
+  // The only difference between the two layouts, and only below md — from that
+  // breakpoint up both resolve to the same stacked card, so desktop is untouched.
+  const shellLayout = layout === 'stacked' ? 'block' : 'flex flex-row md:block';
+  const imageLayout = layout === 'stacked'
+    ? 'h-36 w-full'
+    : 'h-28 w-28 shrink-0 md:h-36 md:w-full';
   // Computed before the homepage branch returns: BOTH layouts render the chips,
   // so a car looks like a car wherever it is shown.
   // Vehicles win the tie — they have bespoke fields (vehicleDetails) rather than
@@ -247,13 +267,14 @@ export function ListingCard({
       <Link
         href={`/listings/${listing.id}`}
         className={cn(
-          'group flex flex-row md:block bg-white rounded-card overflow-hidden transition-all',
+          'group bg-white rounded-card overflow-hidden transition-all',
+        shellLayout,
           isHomepageVitrin
             ? 'ring-2 ring-yellow-400 shadow-pebble hover:ring-yellow-500'
             : 'shadow-pebble hover:shadow-pebble-hover',
         )}
       >
-        <div className="relative h-28 w-28 shrink-0 md:h-36 md:w-full bg-gray-100 overflow-hidden">
+        <div className={cn('relative bg-gray-100 overflow-hidden', imageLayout)}>
           {primary?.url ? (
             <img src={primary.url} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
           ) : (
@@ -345,7 +366,8 @@ export function ListingCard({
     <Link
       href={`/listings/${listing.id}`}
       className={cn(
-        'group flex flex-row md:block bg-white rounded-card overflow-hidden transition-all',
+        'group bg-white rounded-card overflow-hidden transition-all',
+        shellLayout,
         highlight
           ? 'ring-2 ring-amber-400 shadow-lg bg-yellow-400/5 hover:ring-yellow-400'
           : showVitrin
@@ -354,7 +376,7 @@ export function ListingCard({
       )}
     >
       {/* Image */}
-      <div className="relative h-28 w-28 shrink-0 md:h-36 md:w-full bg-gray-100 overflow-hidden">
+      <div className={cn('relative bg-gray-100 overflow-hidden', imageLayout)}>
         {primary?.url ? (
           <img
             src={primary.url}

@@ -1092,13 +1092,13 @@ function ListingsContent() {
               />
             ) : loading ? (
               viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                   {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
                 </div>
               ) : (
                 <>
                   {/* Mobile: card skeletons (matches grid view & category page) */}
-                  <div className="md:hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="md:hidden grid grid-cols-1 gap-3">
                     {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
                   </div>
                   {/* Desktop: table skeleton */}
@@ -1132,7 +1132,7 @@ function ListingsContent() {
               </div>
             ) : viewMode === 'grid' ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                   {[...displayListings].sort((a, b) => {
                     const t = Date.now();
                     // Kategori Vitrini (score 2) only when a category is filtered
@@ -1148,6 +1148,8 @@ function ListingsContent() {
                       listing={listing}
                       showcaseContext={applied.categoryId ? 'category' : undefined}
                       isHomepageView={false}
+                      // Two-up on a phone needs the stacked card; a row card at ~160px wide is unreadable.
+                      layout="stacked"
                     />
                   ))}
                 </div>
@@ -1176,7 +1178,7 @@ function ListingsContent() {
             ) : (
               <>
                 {/* Mobile: card layout (matches grid view & category page) */}
-                <div className="md:hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="md:hidden grid grid-cols-1 gap-3">
                   {[...displayListings].sort((a, b) => {
                     const t = Date.now();
                     const catA = applied.categoryId && !!a.categoryShowcaseUntil && new Date(a.categoryShowcaseUntil).getTime() > t ? 2 : 0;
