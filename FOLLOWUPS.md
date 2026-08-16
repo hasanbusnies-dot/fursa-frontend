@@ -426,3 +426,36 @@ still serve a 24h-old tree. Worth pairing with cache-busting on reseed if the ba
 ever fronts these responses with a CDN — `cf-cache-status` is currently `DYNAMIC`, so
 Cloudflare is not holding a copy, and that is the only reason a client-side fix was
 sufficient here.
+
+## 12 account pages still carry the hand-rolled `mounted` auth gate (logged 2026-08-16)
+
+`hooks/use-auth-gate.ts` now exists precisely because the per-page pattern it replaces
+failed twice. The auth store persists to localStorage, so `isAuthenticated` is false
+until zustand rehydrates; a page that redirects on that first false throws a logged-IN
+user to /login on every hard refresh (client-side nav hides it — the store is already
+in memory by then). Fixed once on saved-searches (65aa2a0) with a copy-pasted `mounted`
+flag, and it recurred on five more pages (f3a371f), including two the founder had not
+yet reported.
+
+Those five now use the hook. TWELVE pages still hold their own `useState(false)` +
+mount effect, each re-implementing the same three-line gate:
+
+  account, listings, listings/inactive, messages, messages/[id], offers/buyer,
+  offers/seller, questions, saved-searches, store, secure-payment/buying,
+  secure-payment/selling
+
+They all WORK — this is not a bug list. It is the copy-paste surface that produced the
+bug twice, and the reason a third recurrence is a matter of when, not whether: the next
+account page someone adds will be copied from one of these twelve, gate and all, or
+from one that forgot it.
+
+TO DO: migrate all twelve to `useAuthGate(<own path>)`, deleting the local `mounted`
+state, and keep the redirect target each page already uses (several redirect to a bare
+/login and would gain a ?redirect= back to themselves — check that against the login
+form's safeRedirect handling before assuming it is an improvement). Mechanical, but it
+touches twelve shipped pages, so it wants its own commit and its own browser pass — not
+something to fold into a launch-blocker fix.
+
+NOT the answer: hoisting the guard into `account/layout.tsx`. It is a server component,
+and converting it would change rendering for all seventeen account pages at once. If
+that is ever wanted it is a deliberate architecture change, not a cleanup.
