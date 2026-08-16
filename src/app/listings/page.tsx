@@ -24,6 +24,7 @@ import ListingsMapView from '@/components/listings/ListingsMapView';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
 import { buildListingQuery } from '@/lib/listing-query';
+import { VEHICLES_ROOT_SLUG } from '@/services/catalog.service';
 import { isConnectionError } from '@/lib/net-error';
 import { ConnectionError } from '@/components/ui/ConnectionError';
 import type { Category, Listing } from '@/types';
@@ -429,11 +430,19 @@ function ListingsPageSkeleton() {
 
 // ── Seller type tabs ──────────────────────────────────────────────────────────
 
+// Values are the BACKEND ENUM, which is exactly 'OWNER' | 'DEALER' | 'RENTAL'.
+// 'AUTHORIZED' («من وكيل معتمد») was never in it: selecting that tab sent
+// ?fromWho=AUTHORIZED and the API answered
+//   400 {"fromWho":["Invalid enum value. Expected 'OWNER' | 'DEALER' | 'RENTAL'"]}
+// so the tab was a broken control on every category, not merely the wrong word for
+// cars and real-estate. Removed. Anything added here must exist in that enum.
+// 'RENTAL' is valid in that enum but deliberately NOT a tab: renting has its own
+// categories (سيارات للإيجار, دفع رباعي للإيجار, …), so a rental seller-tab would
+// duplicate the tree. It stays available in the sidebar's FROM_WHO_OPTIONS.
 const SELLER_TABS = [
-  { value: '',           label: 'الكل' },
-  { value: 'OWNER',      label: 'من المالك' },
-  { value: 'DEALER',     label: 'من معرض' },
-  { value: 'AUTHORIZED', label: 'من وكيل معتمد' },
+  { value: '',       label: 'الكل' },
+  { value: 'OWNER',  label: 'من المالك' },
+  { value: 'DEALER', label: 'من معرض' },
 ] as const;
 
 // ── Showcase filter config (frontend-only, applied after fetch) ───────────────
@@ -669,6 +678,33 @@ function ListingsContent() {
       }
     }
     return '';
+  }, [applied.categoryId, categories]);
+
+  // ── Is this browse scoped to the vehicles tree? ─────────────────────────────
+  // The seller tabs speak car-dealer («من معرض» = showroom), so they belong to the
+  // vehicles tree and nowhere else. /category has always gated them on its resolved
+  // root; /listings rendered them unconditionally, which is how showroom tabs ended
+  // up over private-lessons and real-estate results (founder's report).
+  //
+  // The root is resolved from the category TREE this page already loads — walking up
+  // from the scoped categoryId rather than adding a request. It is recursive on
+  // purpose: the scope can be any depth (vehicles › cars › Toyota › Corolla), and a
+  // two-level walk like categoryName's above would miss everything below a brand.
+  //
+  // No category scope ⇒ not a vehicles browse ⇒ no tabs, matching «show them ONLY
+  // when the browse is scoped to vehicles».
+  const isVehiclesBrowse = useMemo(() => {
+    if (!applied.categoryId || categories.length === 0) return false;
+    const rootSlugOf = (nodes: Category[], inheritedRoot: string): string => {
+      for (const n of nodes) {
+        const root = inheritedRoot || n.slug || '';
+        if (n.id === applied.categoryId) return root;
+        const hit = n.children?.length ? rootSlugOf(n.children, root) : '';
+        if (hit) return hit;
+      }
+      return '';
+    };
+    return rootSlugOf(categories, '') === VEHICLES_ROOT_SLUG;
   }, [applied.categoryId, categories]);
 
   // ── URL helpers ─────────────────────────────────────────────────────────────
@@ -979,7 +1015,10 @@ function ListingsContent() {
                 line. The segment scrolls inside its own min-w-0 box instead, so the
                 sort/currency/view controls stay on the segment's line at any width. */}
             <div className="flex items-center mb-2 gap-2">
-              {/* Seller type tabs — scrolls rather than pushing the row apart */}
+              {/* Seller type tabs — vehicles-scoped browses only (see isVehiclesBrowse),
+                  and scrolling rather than pushing the row apart. The empty <div/> keeps
+                  the controls' `ms-auto` anchored the way /category does it. */}
+              {!isVehiclesBrowse ? <div /> : (
               <div className="flex gap-0 bg-white shadow-pebble rounded-card overflow-x-auto min-w-0 no-scrollbar">
                 {SELLER_TABS.map((tab) => (
                   <button
@@ -996,6 +1035,7 @@ function ListingsContent() {
                   </button>
                 ))}
               </div>
+              )}
 
               {/* Opposite end of the SAME row: view toggles + currency + sort.
                   فلاتر moved up beside حفظ البحث in the result header. */}

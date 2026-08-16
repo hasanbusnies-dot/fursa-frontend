@@ -479,3 +479,37 @@ the existing entry above about the three copies of the listing-price formatter
 (ListingCard, FeaturedSection): this is a fourth, and the same one-formatter fix closes
 all of them. Deliberately not folded into 58501c4, which was scoped to making the
 buttons work.
+
+## Catalog attribute filters are collected but never sent to the API (logged 2026-08-16)
+
+`CatalogFilterView` (FilterSidebar) writes every catalog-driven filter value into
+`FilterValues.attributes` via `setAttr`. Nothing ever reads it: `attributes` appears in
+neither `lib/listing-query.ts` nor `buildListingSearchParams` (listings.service), and
+neither browse page forwards it. `GetListingsParams` has no `attributes` field. So the
+values are collected in the UI, shown as active, and silently dropped.
+
+Every non-vehicle root is affected, because catalog filters are the ONLY filters those
+roots have. The seller-type work is where it surfaced — the catalog already defines
+exactly the right per-category options, and none of them filter anything:
+
+  real-estate / apartment-for-sale   fromWho «الناشر»       شركة بناء | مكتب عقاري | المالك
+  services                           providerType «مقدم الخدمة»  فردي | شركة أو مؤسسة
+  private-lessons                    tutorGender | mode | groupType
+  cars                               seller «المعلن»        المالك | وسيط
+
+So the founder's requirement "real-estate should offer من مكتب عقاري" is already seeded
+backend-side and cannot work until this is wired. The same is true of `classicSeller`
+and `fromWhosRealEstate` in the bespoke vehicle sidebar — also never serialized.
+
+Probed against the live API: `attributes=`, `attrs=`, `attr_fromWho=` and a bare
+`rooms=` all return the full unfiltered set (unknown params are ignored, not rejected),
+so there is no attribute-filtering support to point at yet — CONFIRM in
+`../forsa-backend` rather than trusting that probe.
+
+TO DO, in this order (cross-repo rule — backend lands first):
+  1. backend: accept catalog attributes on GET /listings and filter the JSONB on them.
+  2. frontend: serialize `FilterValues.attributes` in `buildListingSearchParams`, using
+     whatever shape the backend settles on. Values are OPAQUE (§4.3) — pass SELECT
+     options through verbatim, never parse or coerce them.
+  3. then revisit the seller-type UI: once real-estate's «من مكتب عقاري» actually
+     filters, the car seller-tabs can stay vehicles-only for good.

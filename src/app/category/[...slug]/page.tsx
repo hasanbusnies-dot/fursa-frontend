@@ -248,11 +248,19 @@ function ListingRow({ listing, activeCategoryId, cols, isRealEstate }: { listing
 
 const PER_PAGE = 30;
 
+// Values are the BACKEND ENUM, which is exactly 'OWNER' | 'DEALER' | 'RENTAL'.
+// 'AUTHORIZED' («من وكيل معتمد») was never in it: selecting that tab sent
+// ?fromWho=AUTHORIZED and the API answered
+//   400 {"fromWho":["Invalid enum value. Expected 'OWNER' | 'DEALER' | 'RENTAL'"]}
+// so the tab was a broken control on every category, not merely the wrong word for
+// cars and real-estate. Removed. Anything added here must exist in that enum.
+// 'RENTAL' is valid in that enum but deliberately NOT a tab: renting has its own
+// categories (سيارات للإيجار, دفع رباعي للإيجار, …), so a rental seller-tab would
+// duplicate the tree. It stays available in the sidebar's FROM_WHO_OPTIONS.
 const SELLER_TABS = [
-  { value: '',           label: 'الكل' },
-  { value: 'OWNER',      label: 'من المالك' },
-  { value: 'DEALER',     label: 'من معرض' },
-  { value: 'AUTHORIZED', label: 'من وكيل معتمد' },
+  { value: '',       label: 'الكل' },
+  { value: 'OWNER',  label: 'من المالك' },
+  { value: 'DEALER', label: 'من معرض' },
 ] as const;
 
 const SORT_OPTIONS = [
