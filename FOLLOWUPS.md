@@ -513,3 +513,26 @@ TO DO, in this order (cross-repo rule — backend lands first):
      options through verbatim, never parse or coerce them.
   3. then revisit the seller-type UI: once real-estate's «من مكتب عقاري» actually
      filters, the car seller-tabs can stay vehicles-only for good.
+
+## قارن + المفضلة moved to the mobile top bar only — desktop still uses the strip (logged 2026-08-17)
+
+This round moved the two "things I've set aside" controls out of the white quick-links
+sub-header and into the top bar's physical-left corner (founder's ask): on
+`/category/[...slug]` via the shared blue `MobileTopBar`'s `actions` slot, on `/listings`
+via a page-local blue toolbar (that route is a BottomNav root, so `shouldShowMobileTopBar`
+returns false and the shared bar never renders there — and its Header row carries the only
+search field on the page, so it could not be traded away for the bar). Both quick-links
+strips became `hidden md:block`, because below md they held exactly those two items and
+would otherwise have been an empty white band.
+
+WHAT IS NOT DONE: **`MobileTopBar` is `md:hidden`, so there is no blue bar on desktop at
+all.** At md+ قارن and المفضلة therefore still live in the quick-links strip, exactly as
+before. They are never duplicated — no viewport width shows both placements — but the
+founder's new placement is a phone-only change.
+
+TO DO if the founder later wants the same relocation on desktop: that needs a separate
+desktop home, not a tweak here. The desktop pages have no persistent app-chrome bar to put
+them in (the Header is global chrome and must not take page-specific controls), so the
+options are a desktop bar of their own or leaving the strip as the desktop answer. Decide
+the destination first; `BrowseBarActions` is already the shared pair and can be restyled
+for whatever it lands in.

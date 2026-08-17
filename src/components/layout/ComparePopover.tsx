@@ -94,7 +94,20 @@ function CompareRow({
 
 // ── Popover ───────────────────────────────────────────────────────────────────
 
-export function ComparePopover() {
+/**
+ * `tab` — the quick-links sub-header on the browse pages (icon + «قارن» label,
+ * underline on hover). The original and the default; every desktop usage.
+ *
+ * `bar` — the blue mobile top bar: white line-art icon, no label, inverted count
+ * badge (white on blue — a blue badge would vanish against the bar). The panel
+ * also flips its anchor: `tab` opens from the trigger's start edge, but in the
+ * bar this trigger sits in the physical LEFT corner, where a start-anchored
+ * 440px panel would open straight off the side of the screen.
+ */
+type CompareVariant = 'tab' | 'bar';
+
+export function ComparePopover({ variant = 'tab' }: { variant?: CompareVariant } = {}) {
+  const isBar      = variant === 'bar';
   const items      = useCompareStore((s) => s.items);
   const removeItem = useCompareStore((s) => s.removeItem);
   const clearItems = useCompareStore((s) => s.clearItems);
@@ -120,23 +133,36 @@ export function ComparePopover() {
       {/* Trigger */}
       <button
         onClick={() => setIsOpen((o) => !o)}
-        className={[
-          'shrink-0 flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all whitespace-nowrap',
-          isOpen
-            ? 'text-gray-900 border-orange-500'
-            : 'text-gray-500 hover:text-gray-900 border-transparent hover:border-orange-500',
-        ].join(' ')}
+        aria-label="قارن"
+        title="قارن"
+        className={(isBar
+          ? [
+              'shrink-0 flex items-center p-1.5 rounded-lg text-white transition-colors',
+              isOpen ? 'bg-white/20' : 'hover:bg-white/15',
+            ]
+          : [
+              'shrink-0 flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all whitespace-nowrap',
+              isOpen
+                ? 'text-gray-900 border-orange-500'
+                : 'text-gray-500 hover:text-gray-900 border-transparent hover:border-orange-500',
+            ]
+        ).join(' ')}
       >
         {/* Icon with count badge */}
         <span className="relative">
-          <Scale className="w-4 h-4 text-blue-400" />
+          <Scale className={isBar ? 'w-5 h-5' : 'w-4 h-4 text-blue-400'} />
           {items.length > 0 && (
-            <span className="absolute -top-1.5 -right-2 min-w-[14px] h-[14px] rounded-full bg-blue-500 text-white text-[9px] font-bold flex items-center justify-center px-0.5 leading-none">
+            <span
+              className={[
+                'absolute -top-1.5 -right-2 min-w-[14px] h-[14px] rounded-full text-[9px] font-bold flex items-center justify-center px-0.5 leading-none',
+                isBar ? 'bg-white text-blue-700' : 'bg-blue-500 text-white',
+              ].join(' ')}
+            >
               {items.length}
             </span>
           )}
         </span>
-        قارن
+        {!isBar && 'قارن'}
       </button>
 
       {/* Floating panel.
@@ -145,7 +171,12 @@ export function ComparePopover() {
           where body{overflow-x:hidden} cut it off. `start-0` is right:0 under RTL, so
           the panel opens inward from the trigger's start edge and stays on screen. */}
       {isOpen && (
-        <div className="absolute top-full start-0 z-[100] mt-1.5 w-[440px] max-w-[calc(100vw-2rem)] bg-white rounded-card shadow-pebble shadow-2xl overflow-hidden">
+        <div
+          className={[
+            'absolute top-full z-[100] mt-1.5 w-[440px] max-w-[calc(100vw-1.5rem)] bg-white rounded-card shadow-pebble shadow-2xl overflow-hidden',
+            isBar ? 'end-0' : 'start-0',
+          ].join(' ')}
+        >
 
           {/* Panel header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">

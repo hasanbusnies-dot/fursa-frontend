@@ -161,11 +161,30 @@ export function Header() {
             />
           </Link>
 
-          {/* Right-side cluster: [bell][hamburger], hamburger outermost at the far-right
-              edge. ms-auto on the CLUSTER (not the bell) so the pinning holds when the
-              bell is hidden logged-out. In this forced-LTR row ms-auto = margin-left:auto
-              = push to physical right. `relative` lifts it above the decorative band. */}
+          {/* Right-side cluster: [messages][bell][hamburger], hamburger outermost at the
+              far-right edge. ms-auto on the CLUSTER (not the bell) so the pinning holds
+              when both icons are hidden logged-out. In this forced-LTR row ms-auto =
+              margin-left:auto = push to physical right. `relative` lifts it above the
+              decorative band. */}
           <div className="relative ms-auto flex items-center gap-1">
+            {/* Messages → the full inbox. Same metrics and treatment as the bell beside
+                it (w-6 icon, numeric badge) so the pair reads as one control group. */}
+            {isAuthenticated && (
+              <Link
+                href="/account/messages"
+                className="relative p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-gray-100 transition-colors"
+                aria-label="الرسائل"
+                title="الرسائل"
+              >
+                <MessageSquare className="w-6 h-6" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 min-w-4 h-4 px-1 rounded-full bg-blue-600 text-white text-[10px] font-bold leading-none flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </Link>
+            )}
+
             {/* Bell → full-page notifications (better than a cramped dropdown on a
                 narrow screen). Logged-in only — hidden entirely when logged out. */}
             {isAuthenticated && (

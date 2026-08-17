@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, FileText, Star, Bookmark, UserCheck,
   MessageSquare, HelpCircle, ShoppingCart, Shield, CreditCard,
-  Wallet, Bell, Car, Settings, ChevronDown, ChevronUp, Store, Rocket,
+  Wallet, Bell, Car, Settings, ChevronDown, ChevronUp, Store, Rocket, LogOut,
 } from 'lucide-react';
 
 // ── Nav definition ─────────────────────────────────────────────────────────────
@@ -127,9 +127,20 @@ const GATED_HREFS = new Set(['/account/wallet', '/account/dopings']);
 
 export function AccountSidebar() {
   const pathname  = usePathname();
-  const { user }  = useAuthStore();
+  const { user, logout } = useAuthStore();
   const gate      = useStoreGate();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  // Same shape as the Header's handleLogout — keep the two in step. The hard
+  // navigation (not router.push) is deliberate: it drops every client cache and
+  // in-flight authed request along with the session.
+  function handleLogout() {
+    logout();
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('forsa-auth');
+      window.location.href = '/';
+    }
+  }
 
   function toggleExpanded(label: string) {
     setExpanded((prev) => {
@@ -357,6 +368,20 @@ export function AccountSidebar() {
           </div>
         ))}
       </nav>
+
+      {/* ── Logout ────────────────────────────────────────────────────────────
+          Its own card below the nav, not a nav row: it is the one destructive
+          action here and must not read as another place to navigate to. Shows on
+          mobile /account (which renders this whole sidebar as the account menu)
+          and in the desktop sidebar on every account page. */}
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="w-full bg-white rounded-card shadow-pebble flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"
+      >
+        <LogOut className="w-4 h-4 shrink-0" />
+        <span className="flex-1 text-start">تسجيل الخروج</span>
+      </button>
 
     </div>
   );

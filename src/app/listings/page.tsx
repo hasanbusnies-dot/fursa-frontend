@@ -30,6 +30,7 @@ import { ConnectionError } from '@/components/ui/ConnectionError';
 import type { Category, Listing } from '@/types';
 import { RecommendationsPopover } from '@/components/layout/RecommendationsPopover';
 import { ComparePopover } from '@/components/layout/ComparePopover';
+import { BrowseBarActions } from '@/components/layout/BrowseBarActions';
 
 const PER_PAGE = 30;
 
@@ -141,14 +142,10 @@ const ENUM_LABEL: Record<string, string> = {
 };
 const lbl = (v: string) => ENUM_LABEL[v] ?? v;
 
-/** Quick-links sub-header entries that are desktop-only (أبحاثي المحفوظة). */
+/** Quick-links sub-header entries. The whole strip is md+ only now (the phone gets
+ *  the blue toolbar instead), so every entry shares one class. */
 const QUICK_LINK_CLS =
   'group hidden md:flex items-center gap-2 px-5 py-3.5 text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-orange-500 transition-all whitespace-nowrap';
-
-/** Same look, but visible at EVERY width — used by المفضلة so it stays beside قارن
- *  on phones too. Padding tightens on small screens to keep the pair on one line. */
-const QUICK_LINK_PAIR_CLS =
-  'group flex items-center gap-2 px-3 md:px-5 py-3.5 text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-orange-500 transition-all whitespace-nowrap';
 
 interface ChipProps { label: string; onRemove: () => void; }
 function Chip({ label, onRemove }: ChipProps) {
@@ -824,26 +821,40 @@ function ListingsContent() {
         }
       }}
     />
-    {/* ── Quick-links sub-header ── */}
-    <nav className="w-full bg-white border-b border-gray-200 shadow-sm overflow-visible">
-      <div className="w-full px-4 sm:px-6 lg:px-8 overflow-visible">
-        {/* المفضلة and قارن are deliberately glued together — both are "things I've
-            set aside", so they read as one pair.
+    {/* ── Mobile top toolbar (md:hidden) ──
+        /listings is a BottomNav root, so `shouldShowMobileTopBar` returns false for
+        it and the shared blue bar never renders here — the page's top chrome is the
+        Header's own white row, whose physical-left corner is the logo and whose
+        mobile search field is the only one on the page (so it cannot be traded away
+        for the blue bar). This strip is the stand-in: same blue, same white icons,
+        same physical-left placement as the bar gives /category, sitting directly
+        under the Header. Deliberately title-less — the result header below already
+        names the page, and printing it twice is what we just removed.
+        `ms-auto` under RTL = push to the physical LEFT; inside the cluster, DOM
+        order favorites-then-قارن puts قارن in the corner (see BrowseBarActions). */}
+    <div className="md:hidden w-full bg-blue-600 border-b border-blue-700/40 shadow-sm">
+      <div className="flex items-center h-14 px-3">
+        <div className="ms-auto flex items-center gap-1.5 shrink-0">
+          <BrowseBarActions />
+        </div>
+      </div>
+    </div>
 
-            The Favorites link is NOT `hidden md:flex` like the others: it used to be,
-            which meant that below 768px it vanished while ComparePopover (which has no
-            breakpoint) stayed — so قارن appeared to stand alone next to حفظ البحث and
-            the two were never actually adjacent on a phone. Keeping this one visible at
-            every width is what makes the pairing real rather than desktop-only; its
-            label shortens on small screens so the pair still fits. */}
+    {/* ── Quick-links sub-header — DESKTOP ONLY (md+) ──
+        Below md this strip held exactly two visible items, المفضلة + قارن; both moved
+        into the blue toolbar above. MOVED, not copied — the toolbar is md:hidden and
+        this strip is hidden below md, so no width shows both. أبحاثي المحفوظة and the
+        recommendations popover were already md-only and stay here. Keep in step with
+        the identical strip on /category. */}
+    <nav className="hidden md:block w-full bg-white border-b border-gray-200 shadow-sm overflow-visible">
+      <div className="w-full px-4 sm:px-6 lg:px-8 overflow-visible">
         <div className="flex items-center">
           <Link
             href="/account/favorites"
-            className={QUICK_LINK_PAIR_CLS}
+            className={QUICK_LINK_CLS}
           >
             <Star className="w-4 h-4 text-orange-400 transition-colors" />
-            <span className="hidden sm:inline">إعلاناتي المفضلة</span>
-            <span className="sm:hidden">المفضلة</span>
+            إعلاناتي المفضلة
           </Link>
           <ComparePopover />
           <Link
@@ -876,11 +887,11 @@ function ListingsContent() {
           )}
         </nav>
 
-        {/* Mobile header — the فلاتر button used to live here; it now sits beside
-            حفظ البحث in the result header below. */}
-        <div className="flex items-center justify-between mb-3 lg:hidden">
-          <h1 className="text-xl font-bold text-gray-900">الإعلانات</h1>
-        </div>
+        {/* The mobile page title used to sit here (a static «الإعلانات» h1, lg:hidden).
+            Removed: the result header below already names the page — dynamically, next
+            to the count and the حفظ البحث / فلاتر pair — so on a phone the name was
+            printed twice, two rows apart. The فلاتر button had already moved down there
+            for the same reason; this is the rest of that move. */}
 
         {/* Mobile full-screen filter overlay */}
         {sidebarOpen && (

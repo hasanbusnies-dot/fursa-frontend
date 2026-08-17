@@ -14,7 +14,8 @@ import { catalogService, VEHICLES_ROOT_SLUG, type CatalogNode, type CatalogPathN
 import { savedSearchesService } from '@/services/saved-searches.service';
 import { ListingCard } from '@/components/listings/ListingCard';
 import { BrandMark } from '@/components/listings/BrandMark';
-import { useMobileTitle } from '@/components/layout/MobileTopBar';
+import { useMobileTopBar } from '@/components/layout/MobileTopBar';
+import { BrowseBarActions } from '@/components/layout/BrowseBarActions';
 import { FavoriteButton } from '@/components/listings/FavoriteButton';
 import { CompareButton } from '@/components/listings/CompareButton';
 import { FilterSidebar, EMPTY_FILTERS, hasActiveFilters } from '@/components/listings/FilterSidebar';
@@ -434,7 +435,15 @@ export default function CategoryPage() {
   // (`/category/<slug>`, slugs being globally unique), so stripping a segment
   // lands on `/category`, which is not a page, and the old code sent it home.
   const parentNode = catalogPath.length > 1 ? catalogPath[catalogPath.length - 2] : null;
-  useMobileTitle(pageTitle, parentNode ? `/category/${parentNode.slug}` : '/');
+  // قارن + المفضلة ride the bar's actions slot, which renders at the inline-END —
+  // the physical LEFT corner under RTL. Memoised because the store holds this node:
+  // an inline literal would be a new object every render and loop the effect.
+  const barActions = useMemo(() => <BrowseBarActions />, []);
+  useMobileTopBar({
+    title: pageTitle,
+    actions: barActions,
+    back: parentNode ? `/category/${parentNode.slug}` : '/',
+  });
   const isRealEstate = catalogPath[0]?.slug === 'real-estate';
   const isVehicles   = catalogPath[0]?.slug === VEHICLES_ROOT_SLUG;
   const isRentalSuv  = false;
@@ -707,29 +716,29 @@ export default function CategoryPage() {
       />
 
       {/* ── Quick-links sub-header ── */}
-      <nav className="w-full bg-white border-b border-gray-200 shadow-sm overflow-visible">
+      {/* DESKTOP ONLY (md+). Below md this strip held exactly two visible items,
+          المفضلة + قارن, and both now live as white icons in the physical top-left
+          of the blue top bar (see BrowseBarActions / useMobileTopBar above) — so on a
+          phone the strip would be an empty white band. They are MOVED, not copied:
+          the bar is md:hidden and this strip is hidden below md, so no width shows
+          both. أبحاثي المحفوظة and the recommendations popover were already md-only
+          and stay here — they have no room in a 14px-tall bar. */}
+      <nav className="hidden md:block w-full bg-white border-b border-gray-200 shadow-sm overflow-visible">
         <div className="w-full px-4 sm:px-6 lg:px-8 overflow-visible">
-          {/* المفضلة then قارن, adjacent — they are the same kind of action ("things
-              I've set aside"). قارن used to render LAST, after أبحاثي المحفوظة and
-              Recommendations, so the two were never neighbours. Favorites also drops its
-              `hidden md:flex` here: ComparePopover has no breakpoint, so on a phone
-              Favorites disappeared and قارن was left standing alone. */}
           {/* overflow-visible is LOAD-BEARING, not styling. This row used to be
               `overflow-x-auto no-scrollbar`, and an ancestor with overflow on ONE axis
               clips BOTH (CSS resolves the `visible` axis to `auto`), so the popover
               panels that ComparePopover and RecommendationsPopover hang BELOW this
               50px strip were clipped away entirely — the buttons toggled open and
               nothing appeared. z-index cannot escape an ancestor's overflow clip.
-              /listings carries the same fix; keep the two in step. The row does not
-              need to scroll: below md only Favorites + قارن are visible (~190px). */}
+              /listings carries the same fix; keep the two in step. */}
           <div className="flex items-center overflow-visible pe-2">
             <Link
               href="/account/favorites"
-              className="group shrink-0 flex items-center gap-2 px-3 md:px-5 py-3.5 text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-orange-500 transition-all whitespace-nowrap"
+              className="group shrink-0 flex items-center gap-2 px-5 py-3.5 text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-orange-500 transition-all whitespace-nowrap"
             >
               <Star className="w-4 h-4 text-amber-400" />
-              <span className="hidden sm:inline">إعلاناتي المفضلة</span>
-              <span className="sm:hidden">المفضلة</span>
+              إعلاناتي المفضلة
             </Link>
             <ComparePopover />
             <Link
@@ -833,14 +842,11 @@ export default function CategoryPage() {
 
           {(isBranchView || showListings) && (<>
 
-          {/* ── Mobile page title (listings view only) ──
-              The فلاتر button used to sit here; it now lives beside حفظ البحث in the
-              result header below. */}
-          {showListings && (
-            <div className="flex items-center justify-between mb-3 lg:hidden">
-              <h1 className="text-xl font-bold text-gray-900">{pageTitle}</h1>
-            </div>
-          )}
+          {/* The mobile page title used to sit here (an lg:hidden {pageTitle} h1).
+              Removed for the same reason as on /listings: the result header below
+              already names the category beside its count and the حفظ البحث / فلاتر
+              pair. On a phone the blue top bar names it too, so this middle copy was
+              the third printing of one word. */}
 
           {/* ── Mobile full-screen filter overlay (listings view only) ── */}
           {showListings && sidebarOpen && (
