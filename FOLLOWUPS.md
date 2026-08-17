@@ -536,3 +536,35 @@ them in (the Header is global chrome and must not take page-specific controls), 
 options are a desktop bar of their own or leaving the strip as the desktop answer. Decide
 the destination first; `BrowseBarActions` is already the shared pair and can be restyled
 for whatever it lands in.
+
+## Stored attribute values that no filter can match (logged 2026-08-18)
+
+Attribute filtering now works end-to-end (backend 24c9d30 + the frontend serializer in
+`lib/attr-params.ts`), and turning it on exposed a DATA gap it cannot fix: some listings
+hold SELECT values that are no longer in their category's option list, so picking that
+option in the sidebar can never return them. Measured against the live dev DB with the
+same resolver the browse whitelist uses (`../forsa-backend/scripts/_attrStaleValues.ts`,
+untracked): **20 stale values — 15 on SEEDTEST rows, 5 on REAL listings.**
+
+The real five are the ones that matter, and they are NOT a test-data cleanup item —
+`seedCatalogTestListings.ts --cleanup` will not touch them:
+
+    [ACTIVE] apartment-for-sale  rooms = "4"   (×3)
+    [ACTIVE] apartment-for-sale  rooms = "6+"
+    [SOLD]   apartment-for-sale  rooms = "3"
+
+They predate commit 9917f9a, which moved real-estate room counts to X+Y notation
+(«3+1», «2+1»). The catalog now serves only X+Y, so four ACTIVE apartments are invisible
+to the «عدد الغرف» filter — the listings show fine, they just cannot be filtered to.
+
+TO DO (backend, data — cross-repo rule: it lands there, not here): a small guarded
+migration mapping the old notation onto the new option values, deciding what a bare "4"
+means in X+Y terms (4+1? 4+0?) — that is a product call, not a mechanical one, which is
+why this is logged rather than guessed at. The 15 SEEDTEST ones (12 of them `heating`,
+values like «سبليت» / «مدفأة» that the current list dropped) go away with the pre-launch
+cleanup and need nothing.
+
+Also confirmed while measuring: **`services` / `providerType` has zero listings carrying
+it** (0 rows), so the «مقدم الخدمة» filter is untestable end-to-end until the seeder
+grows a services fixture. It is wired and will work — it has simply never been exercised
+against data.

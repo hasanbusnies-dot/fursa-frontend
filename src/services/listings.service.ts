@@ -1,7 +1,23 @@
 import { api } from './api';
+import { appendAttrParams } from '@/lib/attr-params';
 import type { ApiResponse, Listing, ListingImage } from '@/types';
 
 export type { ListingImage };
+
+/**
+ * A catalog attribute filter the backend refused to apply, and why.
+ *
+ * Reported on every browse response so a stale link degrades visibly instead of
+ * silently returning the wrong set. Reasons, per the frozen contract:
+ * `unknown_key` (the category no longer defines it) · `invalid_key` ·
+ * `wrong_operator` · `invalid_value` (a value the catalog dropped) ·
+ * `unsupported_widget` · `use_fixed_param` · `no_data_source` · `no_category` ·
+ * `too_broad`.
+ */
+export interface IgnoredFilter {
+  key: string;
+  reason: string;
+}
 
 export interface CreateListingPayload {
   categoryId:   string;
@@ -92,8 +108,17 @@ export interface GetListingsParams {
   maxYear?: number;
   minMileage?: number;
   maxMileage?: number;
-  minRange?: number;
-  maxRange?: number;
+  /**
+   * Catalog attribute filters, exactly as `CatalogFilterView` collects them
+   * (`FilterValues.attributes`). Serialised to repeated `attr_*` params — see
+   * lib/attr-params.ts for the contract and why they are never comma-joined.
+   *
+   * NOTE there is no `minRange`/`maxRange` here any more. Those were sent for months
+   * and SILENTLY DROPPED: there is no electric-range column on the backend, and never
+   * was — the data is the catalog's `batteryRange` RANGE filter living in
+   * `listings.attributes`. `buildListingQuery` now folds them in here instead.
+   */
+  attributes?: Record<string, unknown>;
   fuelType?: string;
   transmission?: string;
   condition?: string;
@@ -116,6 +141,8 @@ export interface ListingsResult {
   total: number;
   page: number;
   totalPages: number;
+  /** Attribute filters the backend dropped — empty when everything applied. */
+  ignoredFilters: IgnoredFilter[];
 }
 
 // ── Map points ────────────────────────────────────────────────────────────────
@@ -160,6 +187,8 @@ export interface MapPointsMeta {
   unplaceable: number;
   capped: boolean;
   cap: number;
+  /** Same contract as the list feed — the map reports what it could not apply too. */
+  ignoredFilters?: IgnoredFilter[];
 }
 
 export interface MapPointsResult {
@@ -169,7 +198,10 @@ export interface MapPointsResult {
 
 // Backend may return listings directly in data[], or nested under data.listings.
 // Pagination may be at the top level OR inside a nested `meta` object.
-type ListingsMeta = { page?: number; totalPages?: number; total?: number };
+type ListingsMeta = {
+  page?: number; totalPages?: number; total?: number;
+  appliedFilters?: string[]; ignoredFilters?: IgnoredFilter[];
+};
 type ListingsEnvelope =
   | Listing[]
   | { listings: Listing[]; total?: number; page?: number; totalPages?: number; meta?: ListingsMeta };
@@ -185,6 +217,7 @@ function extractResult(
     total:      m?.total      ?? data.total      ?? data.listings.length,
     page:       m?.page       ?? data.page       ?? fallbackPage,
     totalPages: m?.totalPages ?? data.totalPages ?? 1,
+    ignoredFilters: m?.ignoredFilters ?? [],
   };
 }
 
@@ -223,8 +256,6 @@ function buildListingSearchParams(
   if (params?.maxYear)     qs.set('maxYear',      String(params.maxYear));
   if (params?.minMileage)  qs.set('minMileage',   String(params.minMileage));
   if (params?.maxMileage)  qs.set('maxMileage',   String(params.maxMileage));
-  if (params?.minRange)    qs.set('minRange',     String(params.minRange));
-  if (params?.maxRange)    qs.set('maxRange',     String(params.maxRange));
   if (params?.fuelType)    qs.set('fuelType',     params.fuelType);
   if (params?.transmission) qs.set('transmission', params.transmission);
   if (params?.condition)   qs.set('condition',    params.condition);
@@ -239,6 +270,10 @@ function buildListingSearchParams(
   if (params?.model)       qs.set('model',        params.model);
   if (params?.status)      qs.set('status',       params.status);
   if (params?.sellerId)    qs.set('sellerId',     params.sellerId);
+  // Catalog attributes LAST and via append(): every other param above is set() because
+  // it is single-valued, but a repeated attr_* key IS the any-of operator. Using set()
+  // here would keep only the last value of every multi-select.
+  appendAttrParams(qs, params?.attributes);
   return qs;
 }
 
@@ -281,12 +316,13 @@ export const listingsService = {
         total:      meta?.total      ?? data.length,
         page:       meta?.page       ?? params?.page ?? 1,
         totalPages: meta?.totalPages ?? 1,
+        ignoredFilters: meta?.ignoredFilters ?? [],
       };
     }
     if (data && 'listings' in data && Array.isArray(data.listings)) {
       return extractResult(data, params?.page ?? 1);
     }
-    return { listings: [], total: 0, page: 1, totalPages: 0 };
+    return { listings: [], total: 0, page: 1, totalPages: 0, ignoredFilters: [] };
   },
 
   /**
@@ -441,8 +477,9 @@ export const listingsService = {
     const tryFetch = async (path: string): Promise<ListingsResult> => {
       const raw = await api.get<ApiResponse<ListingsEnvelope>>(`${path}?${qs}`);
       const data = raw.data;
+      // Owner dashboard — no attribute filtering on this path, so nothing can be ignored.
       if (Array.isArray(data)) {
-        return { listings: data, total: data.length, page, totalPages: 1 };
+        return { listings: data, total: data.length, page, totalPages: 1, ignoredFilters: [] };
       }
       if (data && 'listings' in data && Array.isArray(data.listings)) {
         return {
@@ -450,9 +487,10 @@ export const listingsService = {
           total:      data.total      ?? data.listings.length,
           page:       data.page       ?? page,
           totalPages: data.totalPages ?? 1,
+          ignoredFilters: [],
         };
       }
-      return { listings: [], total: 0, page, totalPages: 0 };
+      return { listings: [], total: 0, page, totalPages: 0, ignoredFilters: [] };
     };
     try {
       return await tryFetch('/users/me/listings');
@@ -503,13 +541,14 @@ export const listingsService = {
     const query = qs.toString() ? `?${qs}` : '';
     const raw = await api.get<ApiResponse<ListingsEnvelope>>(`/admin/listings${query}`);
     const data = raw.data;
+    // Admin moderation list — the attr_* surface is public browse only.
     if (Array.isArray(data)) {
-      return { listings: data, total: data.length, page: params?.page ?? 1, totalPages: 1 };
+      return { listings: data, total: data.length, page: params?.page ?? 1, totalPages: 1, ignoredFilters: [] };
     }
     if (data && 'listings' in data && Array.isArray(data.listings)) {
       return extractResult(data, params?.page ?? 1);
     }
-    return { listings: [], total: 0, page: 1, totalPages: 0 };
+    return { listings: [], total: 0, page: 1, totalPages: 0, ignoredFilters: [] };
   },
 
   toggleFeatured: async (id: string, isFeatured: boolean): Promise<void> => {

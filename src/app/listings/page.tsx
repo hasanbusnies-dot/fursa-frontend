@@ -10,7 +10,7 @@ import {
   MapPin, ImageOff,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { listingsService } from '@/services/listings.service';
+import { listingsService, type IgnoredFilter } from '@/services/listings.service';
 import { categoriesService } from '@/services/categories.service';
 import { savedSearchesService } from '@/services/saved-searches.service';
 import { markSyntheticNavigation } from '@/lib/navigation';
@@ -24,6 +24,8 @@ import ListingsMapView from '@/components/listings/ListingsMapView';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
 import { buildListingQuery } from '@/lib/listing-query';
+import { attributesToParams, attributesFromSearchParams } from '@/lib/attr-params';
+import { IgnoredFiltersNotice } from '@/components/listings/IgnoredFiltersNotice';
 import { VEHICLES_ROOT_SLUG } from '@/services/catalog.service';
 import { isConnectionError } from '@/lib/net-error';
 import { ConnectionError } from '@/components/ui/ConnectionError';
@@ -51,7 +53,11 @@ const parseAdNumberQuery = (raw: string): string | null => {
 // ── URL ↔ FilterValues helpers ────────────────────────────────────────────────
 
 function parseFiltersFromSearchParams(
-  p: { get: (key: string) => string | null },
+  // `forEach` is required alongside `get` because catalog attributes ride REPEATED
+  // params (`attr_facing=شمال&attr_facing=غرب`) — `get` alone would see only the first
+  // value of every multi-select. Both URLSearchParams and Next's read-only wrapper
+  // satisfy this shape.
+  p: { get: (key: string) => string | null; forEach: (cb: (value: string, key: string) => void) => void },
 ): FilterValues {
   const csv = (key: string): string[] => {
     const v = p.get(key);
@@ -81,6 +87,9 @@ function parseFiltersFromSearchParams(
     heavyDamage:   (p.get('heavyDamage') as '' | 'true' | 'false') ?? '',
     tradeIn:       (p.get('tradeIn')     as '' | 'true' | 'false') ?? '',
     fromWhos:      csv('fromWho'),
+    // Catalog attributes rehydrate from the same attr_* params that were sent to the
+    // API, so a filtered browse is shareable and Back-able like any other.
+    attributes:    attributesFromSearchParams(p),
   };
 }
 
@@ -108,6 +117,10 @@ function filtersToSearch(f: FilterValues, page = 1, extras?: Record<string, stri
   if (f.heavyDamage)          p.set('heavyDamage',   f.heavyDamage);
   if (f.tradeIn)              p.set('tradeIn',       f.tradeIn);
   if (f.fromWhos.length)      p.set('fromWho',       f.fromWhos.join(','));
+  // Catalog attributes: append, never set — a repeated key is the any-of operator, and
+  // set() would collapse every multi-select to its last value. Same params the request
+  // carries, so the URL and the API agree by construction.
+  for (const [name, value] of attributesToParams(f.attributes)) p.append(name, value);
   if (page > 1)               p.set('page',          String(page));
   if (extras) Object.entries(extras).forEach(([k, v]) => { if (v) p.set(k, v); });
   const s = p.toString();
@@ -600,6 +613,7 @@ function ListingsContent() {
   // ── Listings fetch ──────────────────────────────────────────────────────────
   const [listings, setListings] = useState<Listing[]>([]);
   const [total,    setTotal]    = useState(0);
+  const [ignoredFilters, setIgnoredFilters] = useState<IgnoredFilter[]>([]);
   const [meta,     setMeta]     = useState<{ page: number; totalPages: number; total: number } | null>(null);
   const [loading,  setLoading]  = useState(true);
   // A network failure must not render as «لا توجد إعلانات» — that reads as "we
@@ -649,11 +663,12 @@ function ListingsContent() {
       }
       setListings(result.listings);
       setTotal(result.total);
+      setIgnoredFilters(result.ignoredFilters);
       setMeta({ page: result.page, totalPages: result.totalPages, total: result.total });
     }).catch((err) => {
       if (cancelled) return;
       console.error('[ListingsPage] fetch error:', err);
-      setListings([]); setTotal(0); setMeta(null);
+      setListings([]); setTotal(0); setMeta(null); setIgnoredFilters([]);
       setConnectionFailed(isConnectionError(err));
     }).finally(() => {
       // While redirecting, stay in the loading state — clearing it would flash
@@ -941,6 +956,9 @@ function ListingsContent() {
 
           {/* ── Main content ── */}
           <div className="flex-1 min-w-0">
+
+            {/* Sits ABOVE the result header: it explains the count in it. */}
+            <IgnoredFiltersNotice ignored={ignoredFilters} />
 
             {/* ── Result header ── */}
             <div className={cn(

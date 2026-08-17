@@ -8,7 +8,8 @@ import {
   Star, ChevronDown, MapPin, ImageOff, Bookmark,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { listingsService } from '@/services/listings.service';
+import { listingsService, type IgnoredFilter } from '@/services/listings.service';
+import { IgnoredFiltersNotice } from '@/components/listings/IgnoredFiltersNotice';
 import { categoriesService } from '@/services/categories.service';
 import { catalogService, VEHICLES_ROOT_SLUG, type CatalogNode, type CatalogPathNode } from '@/services/catalog.service';
 import { savedSearchesService } from '@/services/saved-searches.service';
@@ -562,6 +563,7 @@ export default function CategoryPage() {
   // ── Listings fetch ──────────────────────────────────────────────────────────
   const [listings, setListings] = useState<Listing[]>([]);
   const [total,    setTotal]    = useState(0);
+  const [ignoredFilters, setIgnoredFilters] = useState<IgnoredFilter[]>([]);
   const [meta,     setMeta]     = useState<{ page: number; totalPages: number; total: number } | null>(null);
   const [loading,  setLoading]  = useState(true);
 
@@ -599,10 +601,11 @@ export default function CategoryPage() {
       if (cancelled) return;
       setListings(result.listings ?? []);
       setTotal(result.total ?? 0);
+      setIgnoredFilters(result.ignoredFilters ?? []);
       setMeta({ page: result.page ?? 1, totalPages: result.totalPages ?? 1, total: result.total ?? 0 });
     }).catch(() => {
       if (cancelled) return;
-      setListings([]); setTotal(0); setMeta(null);
+      setListings([]); setTotal(0); setMeta(null); setIgnoredFilters([]);
     }).finally(() => {
       if (!cancelled) setLoading(false);
     });
@@ -902,6 +905,9 @@ export default function CategoryPage() {
 
             {/* ── Main content ── */}
             <div className="flex-1 min-w-0">
+
+              {/* Sits ABOVE the result header: it explains the count in it. */}
+              <IgnoredFiltersNotice ignored={ignoredFilters} />
 
               {/* ── Result header ── */}
               <div className="rounded-2xl px-5 py-4 mb-3 flex items-center justify-between gap-4 border bg-white border-gray-200">

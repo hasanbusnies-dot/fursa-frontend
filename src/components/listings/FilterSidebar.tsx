@@ -2007,9 +2007,12 @@ function CategoryNode({ cat, depth, selectedId, onSelect }: {
 // Renders the current category's INHERITED catalog filter set (GET /catalog/.../filters)
 // as browse widgets — used for all non-vehicle categories instead of the vehicle facets
 // (e.g. real-estate: rooms/area/floor/heating/deed/الناشر). Price + governorate/
-// district ride the dedicated FilterValues fields (so they narrow today); the remaining
-// category attributes are collected into `attributes` for backend attribute-narrowing
-// (tracked separately) — for now they render, hold state, and survive apply/clear.
+// district ride the dedicated FilterValues fields; every other filter is collected into
+// `attributes` and serialised to repeated attr_* params (lib/attr-params.ts).
+//
+// Option VALUES are passed through untouched — they are opaque strings served by
+// /catalog/.../filters, and byte-identical to what the listing stored. Never map them
+// to invented machine values; the Arabic label IS the identifier here.
 function CatalogFilterView({ slug, applied, onApply }: {
   slug: string;
   applied: FilterValues;
@@ -2051,9 +2054,18 @@ function CatalogFilterView({ slug, applied, onApply }: {
   const apply    = () => onApply(draft);
   const clear    = () => onApply({ ...EMPTY_FILTERS, categoryId: applied.categoryId });
 
-  // Price rides minPrice/maxPrice; a LOCATION widget (if any) is handled by the dedicated
-  // governorate/district fields — both are excluded from the generic attribute loop.
-  const attrDefs = (defs ?? []).filter((f) => f.key !== 'price' && f.widget !== 'LOCATION');
+  // What the generic attribute loop does NOT render, and why each one is excluded.
+  // Every case here is a filter the backend cannot apply, so rendering a control for it
+  // would show the user an "active" filter that silently narrows nothing:
+  //   price       → rides the dedicated minPrice/maxPrice fields above (a column)
+  //   LOCATION    → rides the governorate/district fields above (columns + a region FK)
+  //   hasVideo    → no data source anywhere yet; nothing records whether a listing has one
+  //   TEXT        → display-only in the catalog; the API reports it `unsupported_widget`
+  // The first two move the filter elsewhere; the last two have nowhere to go. When video
+  // support lands, deleting `hasVideo` from this list is the whole frontend change.
+  const attrDefs = (defs ?? []).filter(
+    (f) => f.key !== 'price' && f.key !== 'hasVideo' && f.widget !== 'LOCATION' && f.widget !== 'TEXT',
+  );
 
   const label = (f: CatalogFilterDef) => `${f.labelAr}${f.unit ? ` (${f.unit})` : ''}`;
   const inputCls =
@@ -2120,10 +2132,15 @@ function CatalogFilterView({ slug, applied, onApply }: {
               {f.widget === 'BOOLEAN' ? (
                 <label className="flex items-center justify-between cursor-pointer">
                   <span className="text-[13px] font-medium text-gray-700">{f.labelAr}</span>
+                  {/* Unchecking PRUNES the key rather than writing `false`. A browse
+                      checkbox has two states, not three, so "unchecked" means "don't
+                      care" — writing false would leave a filter that narrows to
+                      explicitly-false listings while looking untouched, and (now that
+                      attributes are actually serialised) would silently do it. */}
                   <input
                     type="checkbox" className="w-4 h-4 accent-blue-600"
                     checked={!!draft.attributes[f.key]}
-                    onChange={(e) => setAttr(f.key, e.target.checked)}
+                    onChange={(e) => setAttr(f.key, e.target.checked ? true : null)}
                   />
                 </label>
               ) : (<>
