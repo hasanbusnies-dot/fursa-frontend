@@ -2,6 +2,7 @@ import { RecentAds } from '@/components/listings/RecentAds';
 import { HomeCategorySidebar } from '@/components/categories/HomeCategorySidebar';
 import { MobileCategoryList } from '@/components/categories/MobileCategoryList';
 import { HeroSection } from '@/components/home/HeroSection';
+import { PersonalizedAds } from '@/components/home/PersonalizedAds';
 
 export default function HomePage() {
   return (
@@ -28,6 +29,9 @@ export default function HomePage() {
           <main className="flex-1 min-w-0">
             <MobileCategoryList />
             <RecentAds sectionClassName="pb-8" />
+            {/* Mobile-only tail section (md:hidden lives inside the component);
+                renders nothing when logged out or when there is nothing to suggest. */}
+            <PersonalizedAds />
           </main>
 
         </div>

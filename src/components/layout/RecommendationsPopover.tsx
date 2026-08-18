@@ -223,17 +223,27 @@ export function RecommendationsPopover() {
             )}
           </div>
 
-          {/* Footer */}
+          {/* Footer.
+              «عرض الكل» is SUGGESTED-ONLY now. Both tabs used to link out — to
+              /account/onerilen and /account/gecmis — and NEITHER route was ever built
+              (no such directories under app/account, no rewrites in next.config), so
+              both were plain 404s. The suggested tab now points at the real
+              /recommendations page; the recent tab has no destination to offer, and
+              loses nothing by it — `getRecent` returns at most 3 items, so the list
+              above IS the whole history the backend will serve. The count stays on
+              both tabs. Build a "recently viewed" page and this becomes a link again. */}
           {!loading && displayed.length > 0 && (
             <div className="border-t border-gray-100 bg-gray-50 px-4 py-2.5 flex items-center justify-between">
               <span className="text-[11px] text-gray-400">{displayed.length} إعلان</span>
-              <Link
-                href={tab === 'suggested' ? '/account/onerilen' : '/account/gecmis'}
-                onClick={() => setIsOpen(false)}
-                className="text-[11px] font-semibold text-blue-500 hover:text-blue-700 transition-colors"
-              >
-                عرض الكل
-              </Link>
+              {tab === 'suggested' && (
+                <Link
+                  href="/recommendations"
+                  onClick={() => setIsOpen(false)}
+                  className="text-[11px] font-semibold text-blue-500 hover:text-blue-700 transition-colors"
+                >
+                  عرض الكل
+                </Link>
+              )}
             </div>
           )}
 

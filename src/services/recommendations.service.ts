@@ -35,8 +35,16 @@ export const recommendationsService = {
     return parseListings(res.data);
   },
 
-  getSuggested: async (): Promise<Listing[]> => {
-    const res = await api.get<ApiResponse<unknown>>('/recommendations/suggested', { realm: 'user' });
+  /**
+   * @param limit 1–20. OMITTED means "don't send the param at all", so the backend's
+   *   own default (3) applies — which is what keeps the header popover and the mobile
+   *   homepage section on 3 without either of them naming a number. Only the "view all"
+   *   page passes one. Values outside 1–20 are rejected by the backend's query schema,
+   *   so don't invent them client-side.
+   */
+  getSuggested: async (limit?: number): Promise<Listing[]> => {
+    const qs = limit != null ? `?limit=${limit}` : '';
+    const res = await api.get<ApiResponse<unknown>>(`/recommendations/suggested${qs}`, { realm: 'user' });
     return parseListings(res.data);
   },
 

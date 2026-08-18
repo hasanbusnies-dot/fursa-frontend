@@ -568,3 +568,28 @@ Also confirmed while measuring: **`services` / `providerType` has zero listings 
 it** (0 rows), so the «مقدم الخدمة» filter is untestable end-to-end until the seeder
 grows a services fixture. It is wired and will work — it has simply never been exercised
 against data.
+
+---
+
+## ~~RecommendationsPopover's footer links point at two routes that don't exist~~ — MOSTLY RESOLVED 2026-08-18, one half remains
+
+Found while wiring the mobile homepage's «إعلانات مخصصة لك» section (which reuses the
+popover's `recommendationsService.getSuggested()`). The popover's "عرض الكل" footer linked
+to `/account/onerilen` (suggested tab) and `/account/gecmis` (recent tab). Neither route
+existed: `src/app/account/` has no `onerilen` or `gecmis` directory, and `next.config.ts`
+declares no rewrites, so both were plain 404s. The names were also leftover Turkish,
+unlike every other Arabic-facing route.
+
+RESOLVED for the suggested half: `/recommendations` now exists (`app/recommendations/
+page.tsx`) and both the popover's suggested tab and the mobile homepage section's
+«عرض الكل» point at it. It asks for `limit=20` — the backend grew that query param the
+same day (`suggestedQuerySchema`, default 3 / max 20), so the popover and the homepage
+section keep their 3 by simply not passing one.
+
+STILL OPEN — the recent tab. Its «عرض الكل» is now hidden rather than pointed somewhere
+wrong, because there is no "recently viewed" page to send it to. That costs nothing
+today: `getRecent` has a hard `take: 3` and no limit param, so the three rows in the
+popover ARE the entire history the backend will serve. Building the page therefore needs
+the BACKEND first (a limit param on `/recommendations/recent`, mirroring the suggested
+one — cross-repo rule: it lands there, not here), and only then is a page worth having.
+Until that happens the hidden link is the honest state, not a regression.
