@@ -17,6 +17,7 @@ import {
   Step0Catalog,
   initialCatalogState,
   catalogStepIncomplete,
+  resolvedMakeModel,
   type CatalogState,
 } from './wizard/Step0Catalog';
 import { Step1VehicleInfo } from './wizard/Step1VehicleInfo';
@@ -110,9 +111,13 @@ export function CreateListingForm({
 
   const isSubmitting = submitPhase !== 'idle';
 
-  // Catalog brand/model nodes (vehicle path) → canonical make/model.
-  const brandNode = catalog.picked.find((p) => p.type === 'BRAND');
-  const modelNode = catalog.picked.find((p) => p.type === 'MODEL');
+  // Catalog selection → canonical make/model (vehicle path). `resolvedMakeModel` PREFERS
+  // what the seller typed over the picked node's name: for the «أخرى» brand node the name
+  // is literally "أخرى", and for a brand with no MODEL children there is no node to read
+  // at all. Derived from `catalog` on every render rather than held in RHF, so typing in
+  // Step 0 flows straight through — nothing here can clobber a typed value, because the
+  // typed value IS the source.
+  const { make: resolvedMake, model: resolvedModel } = resolvedMakeModel(catalog);
 
   // Does the picked chain land on a car BODY? `isVehicle` is true for motorcycles
   // and trucks too, and asking their sellers to mark a bonnet and four doors
@@ -125,14 +130,9 @@ export function CreateListingForm({
   useEffect(() => {
     setValue('categoryId', catalog.categoryId ?? '', { shouldValidate: false });
     setValue('categoryKind', catalog.isVehicle ? 'VEHICLE' : 'GENERIC', { shouldValidate: false });
-    if (catalog.isVehicle) {
-      setValue('make',  brandNode?.name ?? '', { shouldValidate: false });
-      setValue('model', modelNode?.name ?? '', { shouldValidate: false });
-    } else {
-      setValue('make',  '', { shouldValidate: false });
-      setValue('model', '', { shouldValidate: false });
-    }
-  }, [catalog.categoryId, catalog.isVehicle, brandNode?.name, modelNode?.name, setValue]);
+    setValue('make',  resolvedMake,  { shouldValidate: false });
+    setValue('model', resolvedModel, { shouldValidate: false });
+  }, [catalog.categoryId, catalog.isVehicle, resolvedMake, resolvedModel, setValue]);
 
   // ── Step list (depends on whether the chosen category is a vehicle) ────────
   const steps: StepDef[] = [
@@ -148,7 +148,7 @@ export function CreateListingForm({
       node: (
         <Step1VehicleInfo
           form={form}
-          lockedMakeModel={{ make: brandNode?.name ?? '', model: modelNode?.name ?? '' }}
+          lockedMakeModel={{ make: resolvedMake, model: resolvedModel }}
         />
       ),
     }] : []),

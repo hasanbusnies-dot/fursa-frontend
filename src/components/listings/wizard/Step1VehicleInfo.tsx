@@ -12,8 +12,10 @@ import {
 
 interface Props {
   form: UseFormReturn<WizardFormData, any, WizardFormData>;
-  /** When set, make/model come from the catalog selection and are shown read-only
-   *  instead of the static-catalog dropdowns. */
+  /** When set, make/model come from Step 0 — the picked catalog BRAND/MODEL node, or
+   *  what the seller typed there for «أخرى» / a brand with no model nodes — and are shown
+   *  read-only instead of the static-catalog dropdowns. Editing them here would fork the
+   *  value away from the catalog pick that produced it. */
   lockedMakeModel?: { make: string; model: string };
 }
 

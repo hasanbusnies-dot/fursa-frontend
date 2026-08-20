@@ -42,6 +42,10 @@ export interface CatalogState {
   categorySlug: string | null;      // chosen leaf slug
   categoryId: string | null;        // resolved UUID for POST /listings
   isVehicle: boolean;               // vehicles root + a brand was picked
+  /** Brand typed by hand — only when the picked BRAND node is the «أخرى» option. */
+  otherMake: string;
+  /** Model typed by hand — «أخرى» model node, or a brand with no MODEL children. */
+  otherModel: string;
   loading: boolean;                 // fetching children
   resolving: boolean;               // resolving filters + categoryId for a leaf
 }
@@ -49,8 +53,60 @@ export interface CatalogState {
 export const initialCatalogState: CatalogState = {
   levels: [], picked: [], filters: [], attributes: {},
   categorySlug: null, categoryId: null, isVehicle: false,
+  otherMake: '', otherModel: '',
   loading: false, resolving: false,
 };
+
+// ── «أخرى» + manual entry ─────────────────────────────────────────────────────
+// The catalog marks its "not listed" option node with `isOther` (a BACKEND FLAG —
+// never re-derived from the Arabic name or a `-others` slug suffix). Picking it files
+// the listing under the same CATEGORY node as any other brand (resolveCategoryId walks
+// up past BRAND/MODEL either way) and the typed name is what reaches the API, in the
+// free-text `vehicleDetails.make` / `.model`. Same shape as LocationCascade's «أخرى»:
+// the FK stays on the parent, the text rides in a column.
+
+/** VarChar(50) on VehicleDetails.make/.model — the API rejects longer. */
+export const CUSTOM_NAME_MAX = 50;
+
+export const pickedBrand = (s: CatalogState): CatalogNode | null =>
+  s.picked.find((p) => p.type === 'BRAND') ?? null;
+
+export const pickedModel = (s: CatalogState): CatalogNode | null =>
+  s.picked.find((p) => p.type === 'MODEL') ?? null;
+
+/** Seller must type the brand: the «أخرى» brand node is the pick. */
+export function needsCustomMake(s: CatalogState): boolean {
+  return s.isVehicle && pickedBrand(s)?.isOther === true;
+}
+
+/**
+ * Seller must type the model — two cases, one input:
+ *   • the «أخرى» model node was picked, or
+ *   • the picked BRAND is itself the leaf (no MODEL children at all).
+ * The second case is why motorcycles, trucks, buses, minivans and electric cars were
+ * unpublishable: `model` is required on the vehicle path (schema.ts superRefine) and
+ * those branches have no model nodes to supply it, so the wizard could never be satisfied.
+ */
+export function needsCustomModel(s: CatalogState): boolean {
+  if (!s.isVehicle) return false;
+  const brand = pickedBrand(s);
+  if (!brand) return false;
+  const model = pickedModel(s);
+  return model ? model.isOther === true : !brand.hasChildren;
+}
+
+/**
+ * The make/model that go to the API — typed values WIN over the catalog node's name
+ * wherever the seller was asked to type one. `make` for the «أخرى» node would otherwise
+ * literally be "أخرى", which is what every card, breadcrumb and spec table would show.
+ */
+export function resolvedMakeModel(s: CatalogState): { make: string; model: string } {
+  if (!s.isVehicle) return { make: '', model: '' };
+  return {
+    make:  needsCustomMake(s)  ? s.otherMake.trim()  : (pickedBrand(s)?.name ?? ''),
+    model: needsCustomModel(s) ? s.otherModel.trim() : (pickedModel(s)?.name ?? ''),
+  };
+}
 
 // Browse-only filter keys that must NOT appear as add-listing attribute fields:
 //   • price   → the listing's price is a SINGLE value + currency, entered in Step2AdDetails
@@ -69,7 +125,13 @@ function isCreationFilter(f: CatalogFilterDef): boolean {
 // required creation filter must also be filled before the step is complete.
 export function catalogStepIncomplete(s: CatalogState): boolean {
   if (!s.categoryId) return true;
-  if (s.isVehicle) return false; // vehicle attributes are collected in later steps
+  if (s.isVehicle) {
+    // Vehicle attributes are collected in later steps — except the hand-typed brand/model,
+    // which are asked for HERE and are required (the vehicle path's schema demands both).
+    if (needsCustomMake(s)  && !s.otherMake.trim())  return true;
+    if (needsCustomModel(s) && !s.otherModel.trim()) return true;
+    return false;
+  }
   return s.filters.some((f) => f.isRequired && isCreationFilter(f) && isEmpty(s.attributes[f.key]));
 }
 
@@ -186,6 +248,17 @@ export function Step0Catalog({ state, onChange, error }: Props) {
   const visibleFilters = state.filters.filter(isCreationFilter);
   const loadingRoots = state.levels.length === 0 && state.loading;
 
+  // Hand-typed brand/model — see needsCustomMake/needsCustomModel above.
+  const askMake  = needsCustomMake(state);
+  const askModel = needsCustomModel(state);
+  // A brand with no MODEL children (motorcycles, trucks, buses…) vs. the «أخرى» model
+  // node: same input, different reason, so the hint says which.
+  const modelHint = pickedModel(state)?.isOther
+    ? 'اكتب اسم الموديل كما تريد أن يظهر في الإعلان.'
+    : 'لا توجد موديلات مسجّلة لهذه الماركة — اكتب الموديل يدوياً.';
+  const customPending =
+    (askMake && !state.otherMake.trim()) || (askModel && !state.otherModel.trim());
+
   return (
     <div className="space-y-6">
       <div>
@@ -238,6 +311,50 @@ export function Step0Catalog({ state, onChange, error }: Props) {
         </>
       )}
 
+      {/* ── «أخرى» / no-catalog-model → type it here ────────────────────────────
+          Inline under the picker (LocationCascade's pattern) rather than a step later:
+          the seller just told us the list doesn't cover their vehicle, so the place to
+          say what it IS is right where they said it. */}
+      {(askMake || askModel) && !state.resolving && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-5 space-y-4">
+          <h3 className="text-sm font-bold text-gray-800">
+            {askMake ? 'اكتب الماركة والموديل' : 'اكتب الموديل'}
+          </h3>
+          {askMake && (
+            <Field
+              label="الماركة"
+              required
+              hint="اكتب اسم الماركة كما تريد أن تظهر في الإعلان."
+            >
+              <input
+                type="text"
+                value={state.otherMake}
+                onChange={(e) =>
+                  onChange({ ...state, otherMake: e.target.value.slice(0, CUSTOM_NAME_MAX) })
+                }
+                maxLength={CUSTOM_NAME_MAX}
+                placeholder="مثال: شيري"
+                className={inputCls()}
+              />
+            </Field>
+          )}
+          {askModel && (
+            <Field label="الموديل" required hint={modelHint}>
+              <input
+                type="text"
+                value={state.otherModel}
+                onChange={(e) =>
+                  onChange({ ...state, otherModel: e.target.value.slice(0, CUSTOM_NAME_MAX) })
+                }
+                maxLength={CUSTOM_NAME_MAX}
+                placeholder="مثال: تيجو 4"
+                className={inputCls()}
+              />
+            </Field>
+          )}
+        </div>
+      )}
+
       {/* Loading deeper levels / resolving a leaf */}
       {(state.loading || state.resolving) && state.picked.length > 0 && (
         <p className="flex items-center gap-2 text-sm text-gray-400">
@@ -246,7 +363,7 @@ export function Step0Catalog({ state, onChange, error }: Props) {
       )}
 
       {/* Leaf confirmation */}
-      {state.categoryId && !state.resolving && (
+      {state.categoryId && !state.resolving && !customPending && (
         <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-50 text-green-700 text-sm">
           <Check className="w-4 h-4 shrink-0" />
           تم تحديد الفئة
@@ -368,9 +485,12 @@ function LevelPicker({
   }, [open, onClose]);
 
   const query = q.trim().toLowerCase();
+  // «أخرى» always sits at the bottom of the list — it is the escape hatch, not a peer of
+  // the real brands (the catalog returns it in plain sort order, e.g. 2nd for motorcycles).
+  const ordered = [...options].sort((a, b) => Number(!!a.isOther) - Number(!!b.isOther));
   const filtered = query
-    ? options.filter((o) => `${o.nameAr} ${o.name}`.toLowerCase().includes(query))
-    : options;
+    ? ordered.filter((o) => `${o.nameAr} ${o.name}`.toLowerCase().includes(query))
+    : ordered;
 
   return (
     <div ref={ref} className="relative">
