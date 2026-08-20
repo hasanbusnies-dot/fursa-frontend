@@ -165,7 +165,165 @@ function attrText(v: unknown): string | null {
 }
 
 /**
- * The chips for a listing, whatever kind it is: vehicles first, then real-estate.
+ * ── Catalog-attribute spec chips (every other root) ───────────────────────────
+ * The same idea as the real-estate chips above, generalised: a small declarative
+ * table of the 2–3 keys a buyer scans first per family of categories.
+ *
+ * DETECTION — by attribute key, exactly as realEstateSpecs does it and for the
+ * same reason (the list payload carries only the LEAF category, never its root).
+ * Every group's `match` keys were verified against the live catalog across all
+ * 19 roots to be declared under ONE root only, so their presence IS the category
+ * signal. The `match` sets are mutually disjoint, so the array order below is
+ * documentation, not precedence — no group can shadow another.
+ *
+ * Keys that are merely RENDERED may repeat across groups (`experience` belongs to
+ * both jobs and helpers, `color` to both fashion and electronics); only the match
+ * keys must be exclusive, which is why the two lists are separate.
+ *
+ * OPAQUE VALUES — SELECT values print VERBATIM, never parsed or coerced, same
+ * rule as rooms/floor. `screenSize` is why the rule matters here: its live
+ * options are '32', '40-43' and '75+', so a unit is APPENDED to the string
+ * ('40-43 بوصة') rather than a number being read out of it. Only genuine RANGE
+ * widgets (`year`, `workingHours`, `power`) go through numeric formatting.
+ *
+ * DELIBERATELY ABSENT — `condition`. It is the most widely declared key in the
+ * catalog (11 of 18 roots) and looks like the obvious badge, but it DUPLICATES
+ * the top-level `listing.condition` column: the wizard writes the catalog filter
+ * into `attributes` and posts the column separately, so the two can disagree —
+ * and on live data they already do (listing 100000041 is column USED, attribute
+ * 'جديد'). Badging the attribute would surface the wrong one. `warranty` is out
+ * for a different reason: its options are 'نعم' / 'لا', so a faithful chip reads
+ * «نعم», and making it read «كفالة» would mean interpreting an opaque value.
+ */
+type SpecFormat =
+  | { kind: 'text' }                      // opaque SELECT → verbatim
+  | { kind: 'suffix'; unit: string }       // opaque SELECT → verbatim + unit
+  | { kind: 'prefix'; label: string }      // opaque SELECT → label + verbatim
+  // Genuine RANGE → digits. `group: false` for counters that are not quantities:
+  // a year is 2019, never 2,019 — the same bare rendering the vehicle chips use.
+  | { kind: 'number'; unit?: string; group?: boolean }
+  | { kind: 'flag'; label: string };       // BOOLEAN → the label, when true
+
+interface AttributeSpecGroup {
+  id: string;
+  /** Keys declared under this root ALONE — their presence identifies the group. */
+  match: string[];
+  /** Keys to render, in scan order. The first one present takes the gold accent. */
+  keys: { key: string; format: SpecFormat }[];
+}
+
+const ATTRIBUTE_SPEC_GROUPS: AttributeSpecGroup[] = [
+  { id: 'professional-equipment',
+    match: ['workingHours', 'power', 'generatorFuel', 'year'],
+    keys: [
+      { key: 'year',          format: { kind: 'number', group: false } },
+      { key: 'workingHours',  format: { kind: 'number', unit: 'ساعة' } },
+      { key: 'power',         format: { kind: 'number', unit: 'kVA' } },
+      { key: 'generatorFuel', format: { kind: 'text' } },
+    ] },
+  { id: 'electronic-devices',
+    match: ['storage', 'ram', 'processor', 'screenSize', 'smartTv'],
+    keys: [
+      { key: 'storage',    format: { kind: 'text' } },
+      { key: 'ram',        format: { kind: 'text' } },
+      { key: 'screenSize', format: { kind: 'suffix', unit: 'بوصة' } },
+      { key: 'processor',  format: { kind: 'text' } },
+      { key: 'smartTv',    format: { kind: 'flag', label: 'شاشة ذكية' } },
+    ] },
+  { id: 'fashion',
+    match: ['size', 'shoeSize'],
+    keys: [
+      { key: 'size',     format: { kind: 'prefix', label: 'مقاس' } },
+      { key: 'shoeSize', format: { kind: 'prefix', label: 'مقاس' } },
+      { key: 'color',    format: { kind: 'text' } },
+    ] },
+  { id: 'job-listings',
+    match: ['workType', 'postType', 'education'],
+    keys: [
+      { key: 'workType',   format: { kind: 'text' } },
+      { key: 'experience', format: { kind: 'text' } },
+      { key: 'education',  format: { kind: 'text' } },
+    ] },
+  { id: 'helpers',
+    match: ['workTime'],
+    keys: [
+      { key: 'workTime',   format: { kind: 'text' } },
+      { key: 'experience', format: { kind: 'text' } },
+    ] },
+  { id: 'private-lessons',
+    match: ['mode', 'groupType', 'tutorGender', 'subject', 'level', 'instrument'],
+    keys: [
+      { key: 'subject',     format: { kind: 'text' } },
+      { key: 'mode',        format: { kind: 'text' } },
+      { key: 'groupType',   format: { kind: 'text' } },
+      { key: 'tutorGender', format: { kind: 'text' } },
+    ] },
+  { id: 'pets-and-plants',
+    match: ['age', 'gender', 'vaccinated'],
+    keys: [
+      { key: 'age',        format: { kind: 'text' } },
+      { key: 'gender',     format: { kind: 'text' } },
+      { key: 'vaccinated', format: { kind: 'flag', label: 'ملقّح' } },
+    ] },
+  { id: 'services',
+    match: ['providerType', 'priceType'],
+    keys: [
+      { key: 'providerType', format: { kind: 'text' } },
+      { key: 'priceType',    format: { kind: 'text' } },
+    ] },
+];
+
+/** At most three chips, the same ceiling the vehicle and real-estate rows use. */
+const MAX_ATTRIBUTE_CHIPS = 3;
+
+/** A value that would render as a chip. `false` is absence, not a value — a
+ *  cleared BOOLEAN must not identify a group or occupy a slot. */
+function hasRenderableValue(v: unknown): boolean {
+  return v === true || attrText(v) !== null;
+}
+
+function formatSpec(v: unknown, format: SpecFormat): string | null {
+  if (format.kind === 'flag') return v === true ? format.label : null;
+
+  if (format.kind === 'number') {
+    const n = typeof v === 'number' ? v : typeof v === 'string' ? Number(v) : NaN;
+    if (!Number.isFinite(n) || n <= 0) return null;
+    const text = format.group === false
+      ? String(n)
+      : new Intl.NumberFormat('en-US').format(n);
+    return format.unit ? `${text} ${format.unit}` : text;
+  }
+
+  const text = attrText(v);
+  if (!text) return null;
+  if (format.kind === 'suffix') return `${text} ${format.unit}`;
+  if (format.kind === 'prefix') return `${format.label} ${text}`;
+  return text;
+}
+
+function attributeSpecs(listing: Listing): SpecChip[] {
+  const attrs = (listing.attributes ?? {}) as Record<string, unknown>;
+
+  const group = ATTRIBUTE_SPEC_GROUPS.find((g) =>
+    g.match.some((k) => hasRenderableValue(attrs[k])),
+  );
+  if (!group) return [];
+
+  const chips: SpecChip[] = [];
+  for (const { key, format } of group.keys) {
+    if (chips.length >= MAX_ATTRIBUTE_CHIPS) break;
+    const text = formatSpec(attrs[key], format);
+    // Gold marks the most-scanned spec PRESENT, so a TV with no storage still
+    // gets an accent on its screen size. (Real-estate pins gold to `area`
+    // specifically and is left exactly as it was.)
+    if (text) chips.push({ key, text, tone: chips.length === 0 ? 'gold' : 'slate' });
+  }
+  return chips;
+}
+
+/**
+ * The chips for a listing, whatever kind it is: vehicles first, then real-estate,
+ * then the catalog-attribute groups above.
  *
  * Exported because the browse map's cluster sheet lists the same listings in a
  * compact row and must show the SAME specs — extracted as one function rather
@@ -175,7 +333,12 @@ function attrText(v: unknown): string | null {
  */
 export function listingSpecChips(listing: Listing): SpecChip[] {
   const vehicle = vehicleSpecs(listing);
-  return vehicle.length > 0 ? vehicle : realEstateSpecs(listing);
+  if (vehicle.length > 0) return vehicle;
+
+  const realEstate = realEstateSpecs(listing);
+  if (realEstate.length > 0) return realEstate;
+
+  return attributeSpecs(listing);
 }
 
 function timeAgo(dateStr: string) {
