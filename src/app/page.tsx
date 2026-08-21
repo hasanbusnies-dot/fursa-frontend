@@ -13,7 +13,10 @@ export default function HomePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-5">
         <div className="flex gap-6 items-start">
 
-          {/* Left sidebar — hidden on mobile, visible lg+.
+          {/* Left sidebar — visible lg+ only; below that MobileCategoryList (`lg:hidden`)
+              in the main column is the category nav. The two breakpoints are a PAIR —
+              when this was `lg:block` against a `md:hidden` list, the md–lg tablet band
+              fell through the gap and showed neither.
               Deliberately NOT sticky and NOT height-capped: the category list renders
               at its full natural height and the PAGE scroll reveals it. It used to be
               `sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto`, which pinned it

@@ -3,7 +3,11 @@ import { LayoutGrid } from 'lucide-react';
 import { CURATED_ROOTS, curatedHref } from '@/data/curated-categories';
 import { categorySymbol } from '@/data/category-root-meta';
 
-// Mobile homepage category nav (md:hidden). Renders the founder's CURATED 10 roots —
+// Homepage category nav for everything below the desktop sidebar (`lg:hidden`).
+// The breakpoint is `lg`, NOT `md`, and it is paired with the `hidden lg:block`
+// aside in app/page.tsx: at `md` the two used to cancel out and tablets got NO
+// category navigation at all. Move one, move the other.
+// Renders the founder's CURATED 10 roots —
 // his labels, order and grouping — from `curated-categories.ts`.
 //
 // No fetch: labels and subtitles are curated text and every destination is a real
@@ -12,7 +16,7 @@ import { categorySymbol } from '@/data/category-root-meta';
 // the drill-down and every level below it are catalog-driven.
 export function MobileCategoryList() {
   return (
-    <div className="md:hidden mb-4">
+    <div className="lg:hidden mb-4">
       <div className="bg-white rounded-card shadow-pebble overflow-hidden">
 
         {/* Quick links row */}

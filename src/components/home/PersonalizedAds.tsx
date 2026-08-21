@@ -25,8 +25,10 @@ import type { Listing } from '@/types';
  * EMPTY — a signed-in user with no view history gets `[]` from the backend (that check
  * is explicit in recommendations.service.ts). Nothing renders: no orphan heading.
  *
- * MOBILE-ONLY — `md:hidden`, the same breakpoint MobileCategoryList uses to scope the
- * mobile homepage. The founder asked for the app homepage; desktop is untouched.
+ * MOBILE-ONLY — `md:hidden`. The founder asked for the app homepage; desktop is
+ * untouched. NOTE: MobileCategoryList above it is `lg:hidden`, not `md:hidden` —
+ * it has to cover tablets because it is the only category nav below `lg`. This
+ * section has no such pairing, so it stays phone-only.
  */
 
 function SkeletonCard() {
