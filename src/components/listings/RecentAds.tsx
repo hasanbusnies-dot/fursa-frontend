@@ -41,6 +41,22 @@ function ShowcasePlaceholderCard() {
   );
 }
 
+// ── Feed size ─────────────────────────────────────────────────────────────────
+// This feed is a fixed count, not a pager: «عرض الكل ←» is the only way to more, so
+// the number below IS the homepage feed. Desktop lays the grid out 5–6 cards across,
+// where the old 12 ran out after two rows and left the page looking empty; 30 fills
+// about five rows and still costs a single request (the backend caps /listings at
+// 100 and defaults to 30 itself).
+const DESKTOP_FEED_LIMIT = 30;
+// Mobile deliberately keeps the old count. The same grid is ONE column below `sm`, so
+// 30 cards is 30 screens of scrolling to reach PersonalizedAds — and ListingCard
+// renders a plain eager <img>, so every extra card is an image pulled over mobile
+// data whether or not it is ever scrolled to.
+const MOBILE_FEED_LIMIT = 12;
+// Matches Tailwind's `lg` — where this grid widens to 5 columns and app/page.tsx
+// reveals the sidebar. Same query HomeCategorySidebar gates its fetch on.
+const DESKTOP_QUERY = '(min-width: 1024px)';
+
 export function RecentAds({ sectionClassName = 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 pb-16' }: { sectionClassName?: string }) {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,9 +73,20 @@ export function RecentAds({ sectionClassName = 'max-w-7xl mx-auto px-4 sm:px-6 l
   }, [listings]);
 
   useEffect(() => {
+    // The viewport is read HERE rather than kept in state: this effect runs once,
+    // after mount, and the grid it feeds sits behind skeletons until the fetch lands
+    // — so there is no server markup to mismatch and no second request the way a
+    // state-then-refetch would cost every desktop load. The trade is that a
+    // mid-session resize keeps the count it loaded with, which is fine for a feed
+    // whose "more" affordance is a link to /listings.
+    const limit =
+      typeof window !== 'undefined' && window.matchMedia?.(DESKTOP_QUERY)?.matches
+        ? DESKTOP_FEED_LIMIT
+        : MOBILE_FEED_LIMIT;
+
     Promise.allSettled([
       listingsService.getShowcase('HOMEPAGE'),
-      listingsService.getListings({ limit: 12, page: 1 }).then((r) => r.listings),
+      listingsService.getListings({ limit, page: 1 }).then((r) => r.listings),
     ]).then(([showcaseResult, recentResult]) => {
       const showcase = showcaseResult.status === 'fulfilled' ? showcaseResult.value : [];
       const recent   = recentResult.status   === 'fulfilled' ? recentResult.value   : [];
