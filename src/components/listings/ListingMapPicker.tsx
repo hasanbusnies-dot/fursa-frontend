@@ -242,8 +242,11 @@ export default function ListingMapPicker({
     );
   }
 
+  // text-sm, not text-xs: these buttons share one flex row with the coordinate
+  // readout below, and leaving them a step smaller than it made the row read as
+  // two unrelated sizes.
   const btn =
-    'inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-50';
+    'inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors disabled:opacity-50';
 
   return (
     <div className="space-y-2">
@@ -268,7 +271,7 @@ export default function ListingMapPicker({
           disabled={locating}
           className={`${btn} border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100`}
         >
-          <Crosshair className={`h-3.5 w-3.5 ${locating ? 'animate-spin' : ''}`} />
+          <Crosshair className={`h-4 w-4 ${locating ? 'animate-spin' : ''}`} />
           {locating ? 'جارٍ تحديد موقعك…' : 'استخدم موقعي الحالي'}
         </button>
 
@@ -278,21 +281,27 @@ export default function ListingMapPicker({
             onClick={() => onChange(null)}
             className={`${btn} border-gray-200 text-gray-600 hover:bg-gray-50`}
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-4 w-4" />
             إزالة التحديد
           </button>
         )}
 
+        {/* The picked-location readout — what «استخدم موقعي الحالي» produces, and the
+            only confirmation the seller gets that the fix landed. It was the smallest
+            text on the screen (11px beside a 14px pin) for the one thing they need to
+            check, so both are a step up: text-sm on the coordinates, 20px on the pin.
+            The empty state moves with it so the row doesn't resize when a pin is set
+            or cleared. */}
         {value ? (
-          <span className="flex items-center gap-1.5 text-[11px] text-gray-500">
-            <MapPin className="h-3.5 w-3.5 shrink-0 text-orange-500" />
+          <span className="flex items-center gap-1.5 text-sm text-gray-500">
+            <MapPin className="h-5 w-5 shrink-0 text-orange-500" />
             {/* dir=ltr: coordinates are Latin numerals and must not be reordered. */}
             <span dir="ltr" className="font-mono">
               {formatCoord(value.lat)}, {formatCoord(value.lng)}
             </span>
           </span>
         ) : (
-          <span className="text-[11px] text-gray-400">لم يُحدَّد موقع بعد</span>
+          <span className="text-sm text-gray-400">لم يُحدَّد موقع بعد</span>
         )}
       </div>
     </div>
