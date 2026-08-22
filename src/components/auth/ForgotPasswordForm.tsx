@@ -97,7 +97,8 @@ export function ForgotPasswordForm() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">نسيت كلمة المرور؟</h1>
         <p className="mt-1 text-sm text-gray-500">
-          أدخل بريدك الإلكتروني أو رقم هاتفك وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.
+          أدخل بريدك الإلكتروني أو رقم هاتفك، وسنرسل رابط إعادة التعيين إلى البريد
+          الإلكتروني المرتبط بحسابك.
         </p>
       </div>
 
@@ -120,9 +121,6 @@ export function ForgotPasswordForm() {
             {...register('identifier')}
           />
           <FormError message={errors.identifier?.message} />
-          <p className="mt-1.5 text-xs text-gray-400">
-            يُرسَل الرابط دائماً إلى البريد الإلكتروني المسجّل في الحساب.
-          </p>
         </div>
 
         <Button type="submit" className="w-full" size="lg" loading={isSubmitting}>
