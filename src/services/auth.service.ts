@@ -102,4 +102,51 @@ export const authService = {
     const raw = await api.post<RawAuthResponse>('/auth/register/corporate', payload);
     return extractAuth(raw);
   },
+
+  // ── Self-serve password reset (backend 1b30f09) ─────────────────────────────
+  //
+  // These three go through `api` rather than raw fetch — unlike owner-auth.service.ts,
+  // which had to bypass it. The difference is the path: api.ts's `isAuthEndpoint`
+  // exempts everything under `/auth/`, so a 401 here is surfaced to the caller instead
+  // of triggering the refresh-then-redirect-to-login interceptor that would have
+  // destroyed a logged-out page. `/owner/set-password` is not under /auth/, which is
+  // exactly why that module needed its own fetch.
+
+  /**
+   * Step 1 — request a reset link. Accepts a phone OR an email.
+   *
+   * Resolves on every outcome the backend considers normal, because the backend answers
+   * with ONE fixed 200 whether or not the account exists (non-enumeration). The caller
+   * must therefore render the same confirmation regardless — never branch on this
+   * result to say whether an account was found, because this result cannot know.
+   *
+   * Still rejects on 429 (both limiters: 20/h per IP, 5/h per identifier) and on
+   * transport/5xx failures — neither of which reveals account existence, since the
+   * identifier limiter counts requests for unregistered identifiers just the same.
+   */
+  forgotPassword: async (identifier: string): Promise<void> => {
+    await api.post<{ success: boolean; message: string }>('/auth/forgot-password', { identifier });
+  },
+
+  /**
+   * Step 2 — spend the emailed token and set the new password.
+   * Throws ApiError(400) for invalid / expired / already-used — the backend returns all
+   * three identically on purpose, so the UI must not try to tell them apart either.
+   */
+  resetPassword: async (token: string, password: string): Promise<void> => {
+    await api.post<{ success: boolean; message: string }>('/auth/reset-password', { token, password });
+  },
+
+  /**
+   * Read-only probe so the reset page can show "expired" before the user types a new
+   * password twice for nothing. Never throws for a bad token — that is `{ valid: false }`,
+   * not an error. A transport failure is treated as "assume valid" by the caller so a
+   * blip does not hide a working form (the POST is the real gate).
+   */
+  checkResetToken: async (token: string): Promise<boolean> => {
+    const res = await api.get<{ data?: { valid?: boolean } }>(
+      `/auth/reset-password/${encodeURIComponent(token)}`,
+    );
+    return res.data?.valid === true;
+  },
 };

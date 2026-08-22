@@ -593,3 +593,51 @@ popover ARE the entire history the backend will serve. Building the page therefo
 the BACKEND first (a limit param on `/recommendations/recent`, mirroring the suggested
 one — cross-repo rule: it lands there, not here), and only then is a page worth having.
 Until that happens the hidden link is the honest state, not a regression.
+
+
+---
+
+## ~~No self-serve password reset — «نسيت كلمة المرور؟» link removed from login~~ — RESOLVED 2026-08-22
+
+The login form linked to `/forgot-password`; that route was never built, so the link was a
+plain 404 from the most-trafficked logged-out page (the founder caught it as
+`GET /forgot-password?rsc=… → 404` in the console).
+
+It is not a wrong-path link — there is nowhere valid to point it. The whole flow is absent
+on BOTH sides:
+
+- **Backend** (`../forsa-backend`): `auth.routes.ts` exposes only register / login / refresh
+  / logout / logout-all. No request-reset, no verify-token, no consume-token route. No
+  `PasswordResetToken` model in `schema.prisma`, and `email.templates.ts` renders exactly
+  one template (`ownerSetupLinkEmail`). The two password-setting paths that DO exist are
+  neither of them self-serve recovery: `PATCH /users/me/password` needs the CURRENT password
+  and an authenticated session (Account → Settings → security), and `POST /owner/set-password`
+  is store-owner onboarding gated by a single-use emailed `OwnerSetupToken` (AP-M2.3b), issued
+  by admin activation — a user who forgot their password cannot obtain one.
+- **Frontend:** no `app/forgot-password/`, no `app/reset-password/`.
+
+Link removed rather than pointed somewhere wrong (same call as the recent-tab «عرض الكل»
+above), with a comment at the removal site in `LoginForm.tsx` so it is not re-added blind.
+
+Building it is a cross-repo feature and lands BACKEND-FIRST: `PasswordResetToken` model
+(hashed token, expiry, single-use — mirror `OwnerSetupToken`), `POST /auth/forgot-password`
+(rate-limited, and non-enumerating: identical 200 whether or not the email exists),
+`POST /auth/reset-password`, a reset-email template + Resend send, and revoke-all-refresh-tokens
+on success. Only then the two frontend pages. Until that ships, a locked-out user's only
+recovery is support (`/contact`).
+
+**Consequence while it is missing:** anyone who forgets their password is permanently locked
+out with no in-product path back. Worth deciding before launch, not after.
+
+**RESOLVED the same day.** The backend shipped the flow (commit `1b30f09`, live on prod):
+`POST /auth/forgot-password { identifier }` (one fixed 200, two limiters — 20/h per IP,
+5/h per identifier), `POST /auth/reset-password { token, password }`, and a read-only
+`GET /auth/reset-password/:token` → `{ valid }` probe. Tokens are SHA-256-hashed,
+single-use, 60-min TTL, atomically claimed; a successful reset revokes every refresh token.
+
+Frontend built against it: `app/(auth)/forgot-password/` and `app/(auth)/reset-password/`
+(both in the `(auth)` group, so they inherit the split-panel login/register layout), with
+`ForgotPasswordForm` / `ResetPasswordForm` in `components/auth/`. The «نسيت كلمة المرور؟»
+link is back on the consumer LoginForm. Staff logins deliberately still have none — staff
+recover through admin re-provisioning, and `password-reset.service.ts` refuses STAFF_TYPES
+anyway.
