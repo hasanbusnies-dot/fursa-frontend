@@ -139,9 +139,9 @@ export default function NotificationsPage() {
                       <Icon className={cn('w-5 h-5', className)} />
                     </span>
                     <span className="flex-1 min-w-0">
-                      <span className="block text-sm font-semibold text-gray-900">{n.title}</span>
-                      <span className="block text-sm text-gray-500 leading-relaxed">{n.content}</span>
-                      <span className="block text-xs text-gray-400 mt-1">{timeAgoAr(n.createdAt)}</span>
+                      <span className="block text-base font-semibold text-gray-900">{n.title}</span>
+                      <span className="block text-base text-gray-500 leading-relaxed">{n.content}</span>
+                      <span className="block text-sm text-gray-400 mt-1">{timeAgoAr(n.createdAt)}</span>
                     </span>
                     {!n.isRead && <span className="mt-2 w-2 h-2 rounded-full bg-blue-600 shrink-0" />}
                   </Link>
