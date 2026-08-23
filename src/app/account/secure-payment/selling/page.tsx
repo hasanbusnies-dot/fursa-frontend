@@ -15,6 +15,7 @@ import {
 } from '@/services/secure-payment.service';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
+import { partyName } from '@/lib/user';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -29,10 +30,12 @@ function formatDate(dateStr: string) {
   });
 }
 
+// Same wrong-key bug as messaging/listing detail: `profile` is an auth-response
+// key, so a counterparty served as individualProfile/corporateProfile fell through
+// to the «المشتري» literal. The email fallback went with it — the backend does not
+// serve a counterparty's email, and publishing one here would be wrong regardless.
 function buyerName(tx: SecureTransaction): string {
-  const p = tx.buyer?.profile;
-  if (p?.firstName || p?.lastName) return `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim();
-  return tx.buyer?.email?.split('@')[0] ?? 'المشتري';
+  return partyName(tx.buyer, 'المشتري');
 }
 
 // ── Status config ─────────────────────────────────────────────────────────────
