@@ -241,7 +241,7 @@ export function Header() {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="h-10 pl-3 pr-7 text-sm text-gray-600 bg-gray-50 border-r border-gray-300 cursor-pointer appearance-none focus:outline-none"
+                className="h-10 pl-3 pr-7 text-[16px] text-gray-600 bg-gray-50 border-r border-gray-300 cursor-pointer appearance-none focus:outline-none"
               >
                 {CATEGORIES.map((c) => (
                   <option key={c}>{c}</option>
@@ -255,7 +255,7 @@ export function Header() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="flex-1 h-10 px-4 text-sm focus:outline-none bg-white"
+              className="flex-1 h-10 px-4 text-[16px] focus:outline-none bg-white"
             />
             <button
               type="button"
@@ -451,7 +451,7 @@ export function Header() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="flex-1 h-10 px-4 text-sm focus:outline-none bg-white"
+              className="flex-1 h-10 px-4 text-[16px] focus:outline-none bg-white"
             />
             <button
               type="button"
