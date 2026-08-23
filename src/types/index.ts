@@ -11,6 +11,19 @@ export interface UserProfile {
   companyName?: string;
 }
 
+/**
+ * The person block on the NON-AUTH payloads (messaging rooms, listing detail).
+ * Those endpoints serve `individualProfile`; only /me and login serve `profile`.
+ *
+ * Both fields are NOT NULL on the backend, and a deleted/banned party arrives
+ * already masked as firstName «مستخدم محذوف» + lastName '' — so joining the two
+ * reproduces the mask verbatim. See `partyName()` in src/lib/user.ts.
+ */
+export interface IndividualProfile {
+  firstName?: string;
+  lastName?: string;
+}
+
 export interface CorporateProfile {
   companyName?: string;
   logo?: string;
@@ -26,8 +39,14 @@ export interface User {
   email: string;
   phone?: string;
   avatar?: string;
-  userType: 'USER' | 'ADMIN' | 'CORPORATE' | 'FIELD_AGENT' | 'ACCOUNTANT';
+  /** The API sends 'INDIVIDUAL' for a private person; 'USER' is a legacy spelling
+      that no live payload uses — branch on `!!corporateProfile` instead of on
+      either literal, or you get a check that can never be true. */
+  userType: 'INDIVIDUAL' | 'USER' | 'ADMIN' | 'CORPORATE' | 'FIELD_AGENT' | 'ACCOUNTANT';
+  /** Auth responses (/me, login) only. */
   profile: UserProfile;
+  /** Messaging + listing-detail payloads. */
+  individualProfile?: IndividualProfile;
   corporateProfile?: CorporateProfile;
   createdAt?: string;
 }

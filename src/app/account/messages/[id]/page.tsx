@@ -11,6 +11,7 @@ import { messagesService } from '@/services/messages.service';
 import { getSocket, connectSocket } from '@/lib/socket';
 import { useAuthStore } from '@/store/auth.store';
 import { useSmartBack } from '@/lib/navigation';
+import { partyName } from '@/lib/user';
 import type { ChatRoom, Message } from '@/types';
 
 // A message may be an optimistic placeholder that hasn't been confirmed by the server yet.
@@ -98,10 +99,13 @@ function otherUser(room: ChatRoom, currentUserId: string) {
   return room.participants?.find((p) => p.id !== currentUserId);
 }
 
+/** Which side of this conversation the other person is on. */
+function otherRole(room: ChatRoom, currentUserId: string): string {
+  return room.buyerId === currentUserId ? 'البائع' : 'المشتري';
+}
+
 function otherName(room: ChatRoom, currentUserId: string): string {
-  const other = otherUser(room, currentUserId);
-  if (other?.profile) return `${other.profile.firstName} ${other.profile.lastName}`.trim();
-  return other?.email ?? (room.buyerId === currentUserId ? 'البائع' : 'المشتري');
+  return partyName(otherUser(room, currentUserId), otherRole(room, currentUserId));
 }
 
 function initials(name: string): string {
@@ -341,6 +345,7 @@ export default function ChatDetailPage() {
 
   const currentUserId = user!.id;
   const name          = otherName(room, currentUserId);
+  const role          = otherRole(room, currentUserId);
   const listingThumb  = room.listing?.images?.find((i) => i.isPrimary)?.url
     ?? room.listing?.images?.[0]?.url;
   const listingTitle  = room.listing?.title ?? 'الإعلان';
@@ -379,9 +384,10 @@ export default function ChatDetailPage() {
           {initials(name)}
         </div>
 
-        {/* Name + listing pill */}
+        {/* Name + role + listing pill */}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-gray-900 truncate">{name}</p>
+          <p className="text-[11px] text-gray-400 leading-tight">{role}</p>
           <Link
             href={`/listings/${room.listingId}`}
             className="inline-flex items-center gap-1.5 group max-w-full"

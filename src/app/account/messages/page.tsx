@@ -8,6 +8,7 @@ import { messagesService } from '@/services/messages.service';
 import { useAuthStore } from '@/store/auth.store';
 import type { ChatRoom } from '@/types';
 import { cn } from '@/lib/utils';
+import { partyName } from '@/lib/user';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -47,10 +48,10 @@ function SkeletonRow() {
 function ConversationCard({ room, currentUserId }: { room: ChatRoom; currentUserId: string }) {
   const isBuyer   = room.buyerId === currentUserId;
   const other     = isBuyer ? room.seller : room.buyer;
-  // Fallback when the backend doesn't populate buyer/seller objects
-  const otherName = other?.profile
-    ? `${other.profile.firstName} ${other.profile.lastName}`.trim()
-    : other?.email ?? (isBuyer ? 'البائع' : 'المشتري');
+  // Which side of THIS conversation the other person is on — now a secondary
+  // label under their name, and the fallback if the room carried no party object.
+  const otherRole = isBuyer ? 'البائع' : 'المشتري';
+  const otherName = partyName(other, otherRole);
 
   const listingThumb = room.listing?.images?.find((i) => i.isPrimary)?.url
     ?? room.listing?.images?.[0]?.url;
@@ -88,6 +89,10 @@ function ConversationCard({ room, currentUserId }: { room: ChatRoom; currentUser
           </p>
           <span className="text-[11px] text-gray-400 shrink-0">{timeAgo(timestamp)}</span>
         </div>
+
+        {/* Role under the name: the name answers "who", this answers "which side
+            of this deal" — the thing the name used to occupy the slot of. */}
+        <p className="text-[11px] text-gray-400 mb-1">{otherRole}</p>
 
         {/* Listing pill */}
         <div className="flex items-center gap-1.5 mb-1">

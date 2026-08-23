@@ -31,6 +31,7 @@ import { ShareButton } from '@/components/listings/ShareButton';
 import { ReportButton } from '@/components/listings/ReportButton';
 import { isShareable } from '@/lib/share';
 import { isConnectionError } from '@/lib/net-error';
+import { partyName } from '@/lib/user';
 import { ConnectionError } from '@/components/ui/ConnectionError';
 import { recommendationsService } from '@/services/recommendations.service';
 import { useMobileTopBar } from '@/components/layout/MobileTopBar';
@@ -991,12 +992,12 @@ function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 
   const memberBadge = !!listing.user?.corporateProfile?.memberBadge;
   const logoUrl     = isCorporate ? listing.user?.corporateProfile?.logoUrl : null;
 
-  const profile = listing.user?.profile;
-  const name = isCorporate && listing.user?.corporateProfile?.companyName
-    ? listing.user.corporateProfile.companyName
-    : profile
-      ? `${profile.firstName} ${profile.lastName}`
-      : listing.user?.email ?? 'بائع فردي';
+  // The seller block of the detail payload serves individualProfile/corporateProfile —
+  // NOT `profile`, which exists only on the auth responses. Reading `profile` here is
+  // why every private seller rendered as the literal «بائع فردي». partyName() also
+  // carries the backend's deleted-user mask through untouched.
+  const sellerRole = isCorporate ? 'معرض' : 'بائع فردي';
+  const name = partyName(listing.user, sellerRole);
   const initial = name.charAt(0).toUpperCase();
   const phone = listing.phoneNumber ?? listing.user?.phone ?? null;
   const phoneVisible = listing.showPhoneNumber !== false;
@@ -1032,8 +1033,10 @@ function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 
                 <BadgeCheck className="w-4 h-4 text-blue-500 shrink-0" aria-label="معرض موثّق" />
               )}
             </p>
-            {!isCorporate && listing.user?.email && (
-              <p className="text-xs text-gray-400 mt-0.5 truncate">{listing.user.email}</p>
+            {/* Seller type under the name — the slot the name itself used to
+                occupy. (Was the email, which this payload never carries.) */}
+            {!isCorporate && (
+              <p className="text-xs text-gray-400 mt-0.5 truncate">{sellerRole}</p>
             )}
             {isCorporate && listing.user?.id && (
               <Link
@@ -1085,6 +1088,9 @@ function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 
             <FavoriteSellerButton sellerId={listing.user.id} variant="icon" className="w-8 h-8 shrink-0" />
           )}
         </div>
+        {!isCorporate && (
+          <p className="mt-0.5 text-xs text-gray-400">{sellerRole}</p>
+        )}
         {accountDate && (
           <p className="mt-1 text-sm text-gray-500">عضو منذ {accountDate}</p>
         )}
@@ -1164,8 +1170,10 @@ function SellerBox({ listing, variant = 'full' }: { listing: Listing; variant?: 
               <BadgeCheck className="w-4 h-4 text-blue-500 shrink-0" aria-label="معرض موثّق" />
             )}
           </p>
-          {!isCorporate && listing.user?.email && (
-            <p className="text-xs text-gray-400 mt-0.5 truncate">{listing.user.email}</p>
+          {/* Seller type under the name — the slot the name itself used to
+              occupy. (Was the email, which this payload never carries.) */}
+          {!isCorporate && (
+            <p className="text-xs text-gray-400 mt-0.5 truncate">{sellerRole}</p>
           )}
           {isCorporate && listing.user?.id && (
             <Link
