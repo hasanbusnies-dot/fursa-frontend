@@ -136,7 +136,7 @@ export default function OwnerSetPasswordPage() {
                     placeholder="••••••••"
                     dir="ltr"
                     {...register('newPassword')}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 ps-10 text-sm text-start focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-colors"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 ps-10 text-[16px] text-start focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-colors"
                   />
                   <button
                     type="button"
@@ -161,7 +161,7 @@ export default function OwnerSetPasswordPage() {
                   placeholder="••••••••"
                   dir="ltr"
                   {...register('confirm')}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-start focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-colors"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[16px] text-start focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-colors"
                 />
                 {errors.confirm && (
                   <p className="text-red-500 text-xs">{errors.confirm.message}</p>

@@ -326,7 +326,7 @@ export function SearchableCombobox({
                 placeholder={searchPlaceholder}
                 aria-controls={listId}
                 aria-activedescendant={visible[active] ? `${listId}-${active}` : undefined}
-                className="w-full bg-transparent py-2.5 ps-9 pe-3 text-sm focus:outline-none"
+                className="w-full bg-transparent py-2.5 ps-9 pe-3 text-[16px] focus:outline-none"
               />
             </div>
           )}

@@ -467,7 +467,7 @@ export default function ChatDetailPage() {
               if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
             }}
             placeholder="اكتب رسالتك…"
-            className="flex-1 text-sm border border-gray-200 rounded-xl px-4 py-2.5 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-transparent placeholder:text-gray-300 disabled:opacity-60 transition"
+            className="flex-1 text-[16px] border border-gray-200 rounded-xl px-4 py-2.5 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-transparent placeholder:text-gray-300 disabled:opacity-60 transition"
           />
           <button
             onClick={handleSend}

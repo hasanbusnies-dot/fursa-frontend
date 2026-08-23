@@ -82,7 +82,7 @@ function SelectBox({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className={cn(
-          'w-full appearance-none bg-white shadow-pebble rounded-card px-3.5 py-2.5 text-sm pr-8',
+          'w-full appearance-none bg-white shadow-pebble rounded-card px-3.5 py-2.5 text-[16px] pr-8',
           'focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition-colors',
           value ? 'text-gray-900 font-medium' : 'text-gray-400',
         )}
@@ -314,7 +314,7 @@ export default function ProjectsLandingPage() {
                   value={district}
                   onChange={(e) => setDistrict(e.target.value)}
                   placeholder="المنطقة / الحي"
-                  className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition-colors placeholder:text-gray-400"
+                  className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-[16px] focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition-colors placeholder:text-gray-400"
                 />
               </div>
 

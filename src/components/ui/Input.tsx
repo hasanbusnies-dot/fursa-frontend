@@ -12,7 +12,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       className={cn(
         // DESIGN.md inputs: 12px radius, light-gray fill instead of a border;
         // focus = blue border + 4px soft glow.
-        'block w-full px-3.5 py-2.5 rounded-field border bg-input-bg text-sm text-gray-900',
+        'block w-full px-3.5 py-2.5 rounded-field border bg-input-bg text-[16px] text-gray-900',
         'placeholder:text-gray-400 transition-colors',
         'focus:outline-none focus:ring-4 focus:ring-offset-0 focus:bg-white',
         error

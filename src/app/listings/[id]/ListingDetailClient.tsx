@@ -903,7 +903,7 @@ function OfferModal({ listing, onClose }: { listing: Listing; onClose: () => voi
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               placeholder="أدخل عرضك"
               disabled={submitting}
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-300 pe-14 disabled:opacity-60"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[16px] text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-300 pe-14 disabled:opacity-60"
             />
             <span className="absolute end-4 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium pointer-events-none select-none">
               {currencyLabel}
@@ -1876,7 +1876,7 @@ function QASection({
               disabled={!isAuthenticated || submitting}
               rows={3}
               placeholder="اكتب سؤالك للبائع عن هذا الإعلان…"
-              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none disabled:bg-gray-50 disabled:cursor-not-allowed transition"
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-[16px] text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none disabled:bg-gray-50 disabled:cursor-not-allowed transition"
             />
             <div className="flex justify-end">
               <button

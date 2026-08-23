@@ -144,7 +144,7 @@ function ReceivedCard({ question, onAnswered }: { question: Question; onAnswered
                 onChange={(e) => setDraft(e.target.value)}
                 rows={3}
                 placeholder="اكتب إجابتك…"
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-[16px] text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
               />
               <button
                 onClick={handleAnswer}

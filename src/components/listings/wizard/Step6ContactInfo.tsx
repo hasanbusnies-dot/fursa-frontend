@@ -34,7 +34,7 @@ export function Step6ContactInfo({ form }: Props) {
             {...register('phoneNumber')}
             type="tel"
             placeholder="مثال: 0911234567"
-            className="w-full pe-10 ps-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pe-10 ps-4 py-2.5 rounded-xl border border-gray-300 text-[16px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
         <p className="text-xs text-gray-400">اتركه فارغاً لاستخدام رقم حسابك الافتراضي.</p>

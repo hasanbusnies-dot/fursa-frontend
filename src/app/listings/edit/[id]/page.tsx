@@ -225,7 +225,7 @@ export default function EditListingPage() {
               onChange={(e) => setTitle(e.target.value)}
               required
               maxLength={200}
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/30 transition"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-[16px] focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/30 transition"
             />
           </div>
 
@@ -238,7 +238,7 @@ export default function EditListingPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={6}
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/30 transition resize-none"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-[16px] focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/30 transition resize-none"
             />
           </div>
 
@@ -255,7 +255,7 @@ export default function EditListingPage() {
                 required
                 min="0"
                 step="any"
-                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/30 transition"
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-[16px] focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/30 transition"
               />
             </div>
             <div>
@@ -265,7 +265,7 @@ export default function EditListingPage() {
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value as 'SYP' | 'USD')}
-                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/30 transition"
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-[16px] bg-white focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/30 transition"
               >
                 <option value="USD">USD ($)</option>
                 <option value="SYP">SYP (ل.س)</option>

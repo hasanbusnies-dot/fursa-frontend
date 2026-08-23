@@ -270,7 +270,7 @@ export function RegisterForm() {
                   id="companyType"
                   defaultValue=""
                   className={cn(
-                    'block w-full px-3.5 py-2.5 rounded-field border bg-input-bg text-sm',
+                    'block w-full px-3.5 py-2.5 rounded-field border bg-input-bg text-[16px]',
                     'transition-colors focus:outline-none focus:ring-4 focus:bg-white',
                     errors.companyType
                       ? 'border-red-400 focus:border-red-500 focus:ring-red-100'

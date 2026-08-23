@@ -253,7 +253,7 @@ export default function WalletPage() {
             <select
               value={typeFilter}
               onChange={(e) => onType(e.target.value as WalletTxType | 'ALL')}
-              className="ms-auto text-xs font-semibold text-gray-600 bg-gray-100 border-0 rounded-full px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-200 cursor-pointer"
+              className="ms-auto text-[16px] font-semibold text-gray-600 bg-gray-100 border-0 rounded-full px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-200 cursor-pointer"
             >
               {TYPE_FILTERS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
             </select>

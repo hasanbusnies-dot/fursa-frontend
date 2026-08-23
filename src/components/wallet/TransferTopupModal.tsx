@@ -232,7 +232,7 @@ export function TransferTopupModal({ onClose }: { onClose: () => void }) {
                       onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, ''))}
                       placeholder="0.00"
                       dir="ltr"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-lg font-bold text-gray-900 text-start focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[16px] font-bold text-gray-900 text-start focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                     />
                     {amount !== '' && !amountValid && (
                       <p className="text-xs text-red-500 mt-1.5">أدخل مبلغاً صحيحاً (حتى منزلتين عشريتين).</p>
@@ -367,7 +367,7 @@ export function TransferTopupModal({ onClose }: { onClose: () => void }) {
                   onChange={(e) => setNote(e.target.value)}
                   rows={2}
                   placeholder="أي تفاصيل تساعدنا في مطابقة تحويلك"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400 resize-none"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[16px] focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400 resize-none"
                 />
               </div>
 

@@ -29,7 +29,7 @@ const COMPANY_TYPES: { value: CompanyType | ''; label: string }[] = [
 ];
 
 const inputCls =
-  'w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold text-slate-900 ' +
+  'w-full px-4 py-3 rounded-xl border border-slate-200 text-[16px] font-semibold text-slate-900 ' +
   'text-start focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100';
 
 export default function AgentStoreRegisterPage() {

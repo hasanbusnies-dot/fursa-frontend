@@ -335,7 +335,7 @@ function SaveSearchModal({
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="block w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition-colors"
+            className="block w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-[16px] focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition-colors"
             placeholder="مثال: سيارات SUV في دمشق"
             autoFocus
           />

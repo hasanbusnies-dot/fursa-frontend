@@ -210,7 +210,7 @@ function OfferCard({
                   onChange={(e) => setCounterInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && submitCounter()}
                   placeholder="السعر المقترح"
-                  className="w-full border border-blue-200 bg-white rounded-xl px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-300 pe-12"
+                  className="w-full border border-blue-200 bg-white rounded-xl px-3 py-2 text-[16px] text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-300 pe-12"
                 />
                 <span className="absolute end-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none font-medium">
                   {currLabel}

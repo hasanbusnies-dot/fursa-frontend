@@ -535,7 +535,7 @@ function SaveSearchModal({
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="block w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition-colors"
+            className="block w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-[16px] focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition-colors"
             placeholder="مثال: سيارات SUV في دمشق"
             autoFocus
           />
@@ -1076,7 +1076,7 @@ function ListingsContent() {
                 <select
                   value={currencyFilter}
                   onChange={(e) => setCurrency(e.target.value)}
-                  className="h-9 border border-gray-200 rounded-xl pl-2.5 pr-7 text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer focus:outline-none focus:ring-1 focus:ring-orange-300 appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 fill=%22none%22 viewBox=%220 0 24 24%22><path stroke=%22%236b7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22 d=%22m6 9 6 6 6-6%22/></svg>')] bg-no-repeat bg-[right_8px_center]"
+                  className="h-9 border border-gray-200 rounded-xl pl-2.5 pr-7 text-[16px] font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer focus:outline-none focus:ring-1 focus:ring-orange-300 appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 fill=%22none%22 viewBox=%220 0 24 24%22><path stroke=%22%236b7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22 d=%22m6 9 6 6 6-6%22/></svg>')] bg-no-repeat bg-[right_8px_center]"
                 >
                   <option value="">جميع العملات</option>
                   <option value="SYP">SYP</option>

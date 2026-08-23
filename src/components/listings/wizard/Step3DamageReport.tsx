@@ -70,7 +70,7 @@ function PanelList({
               onChange={(e) => onDetail(panel.key, e.target.value)}
               placeholder={status === 'ORIGINAL' ? 'لا توجد ملاحظة' : 'صف الضرر أو الإصلاح…'}
               disabled={status === 'ORIGINAL'}
-              className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded-md focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="w-full px-2.5 py-1.5 text-[16px] border border-gray-200 rounded-md focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
             />
           </div>
         );

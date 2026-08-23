@@ -201,7 +201,7 @@ export function PhoneField({
           dir="ltr"
           value={value}
           onChange={(e) => onValueChange(e.target.value.replace(/\D/g, ''))}
-          className="w-full border-none outline-none py-2.5 px-3 text-sm bg-transparent text-gray-900 placeholder-gray-400"
+          className="w-full border-none outline-none py-2.5 px-3 text-[16px] bg-transparent text-gray-900 placeholder-gray-400"
         />
       </div>
 
@@ -219,7 +219,7 @@ export function PhoneField({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="ابحث عن دولة أو رمز…"
-                className="w-full ps-8 pe-3 py-2 text-sm rounded-lg bg-gray-50 border border-transparent focus:bg-white focus:border-blue-400 focus:outline-none"
+                className="w-full ps-8 pe-3 py-2 text-[16px] rounded-lg bg-gray-50 border border-transparent focus:bg-white focus:border-blue-400 focus:outline-none"
               />
             </div>
           </div>
