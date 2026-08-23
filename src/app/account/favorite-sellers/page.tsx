@@ -6,6 +6,7 @@ import { UserCheck, Users, Search, Calendar, UserMinus, Mail } from 'lucide-reac
 import { toast } from 'sonner';
 import { favoriteSellersService } from '@/services/favorite-sellers.service';
 import { useAuthGate } from '@/hooks/use-auth-gate';
+import { partyName } from '@/lib/user';
 import type { User } from '@/types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -17,11 +18,20 @@ function formatDate(dateStr?: string) {
   });
 }
 
+/**
+ * A followed seller is a counterparty, not the logged-in account, so it arrives as
+ * individualProfile/corporateProfile — reading `profile` (an auth-response key) is
+ * why this list rendered «مستخدم» for everyone.
+ *
+ * The name is safe to show as of backend 4b3c96e: GET /favorite-sellers now runs its
+ * sellers through maskHiddenParty, so a deleted/banned seller arrives already masked
+ * to «مستخدم محذوف» and partyName renders that verbatim. Do NOT reconstruct a name
+ * from anywhere else here — the mask is the API's to apply, and this list is the one
+ * seller surface that used to route around it.
+ */
 function sellerName(user: User | null | undefined): string {
   if (!user) return 'بائع غير معروف';
-  const p = user.profile;
-  if (p?.firstName || p?.lastName) return `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim();
-  return user.email?.split('@')[0] || 'مستخدم';
+  return partyName(user, 'مستخدم');
 }
 
 function sellerInitial(user: User | null | undefined): string {
@@ -140,9 +150,9 @@ export default function FavoriteSellersPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="font-semibold text-gray-900 text-sm leading-snug">{sellerName(seller)}</p>
-                    {seller.email && (
-                      <p className="text-xs text-gray-400 truncate mt-0.5">{seller.email}</p>
-                    )}
+                    {/* The email line that sat here is gone: SELLER_SELECT deliberately
+                        omits email so a seller's address can't be harvested by following
+                        them, so this never rendered. «عضو منذ» is the card's secondary. */}
                     {seller.createdAt && (
                       <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
                         <Calendar className="w-3 h-3" />
