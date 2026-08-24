@@ -1043,7 +1043,15 @@ function ListingsContent() {
                 phone's width, and wrapping dropped everything after it onto a second
                 line. The segment scrolls inside its own min-w-0 box instead, so the
                 sort/currency/view controls stay on the segment's line at any width. */}
-            <div className="flex items-center mb-2 gap-2">
+            {/* `flex-wrap` here and on the controls cluster below is load-bearing on a
+                phone, not cosmetic. This row carries one control more than /category's
+                twin does — the currency select — and the cluster used to be `shrink-0`,
+                giving it a min-content width of ~352px against the 328px a 360px phone
+                leaves after px-4. Nothing could compress, so the browser widened the
+                layout viewport to ~385px: the whole page rendered zoomed out and pushed
+                out of bounds (founder-reported, and only on this page). Wrapping drops
+                the cluster's floor to its widest single control, so any phone fits. */}
+            <div className="flex flex-wrap items-center mb-2 gap-2">
               {/* Seller type tabs — vehicles-scoped browses only (see isVehiclesBrowse),
                   and scrolling rather than pushing the row apart. The empty <div/> keeps
                   the controls' `ms-auto` anchored the way /category does it. */}
@@ -1068,7 +1076,7 @@ function ListingsContent() {
 
               {/* Opposite end of the SAME row: view toggles + currency + sort.
                   فلاتر moved up beside حفظ البحث in the result header. */}
-              <div className="flex items-center gap-1.5 ms-auto shrink-0">
+              <div className="flex flex-wrap items-center justify-end gap-1.5 ms-auto min-w-0">
                 {/* Grid / List / Map toggle */}
                 <ViewModeToggle value={activeView} onChange={selectView} />
 
