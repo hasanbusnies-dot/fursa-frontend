@@ -2013,10 +2013,23 @@ function CategoryNode({ cat, depth, selectedId, onSelect }: {
 // Option VALUES are passed through untouched — they are opaque strings served by
 // /catalog/.../filters, and byte-identical to what the listing stored. Never map them
 // to invented machine values; the Arabic label IS the identifier here.
-function CatalogFilterView({ slug, applied, onApply }: {
+function CatalogFilterView({ slug, applied, onApply, categories }: {
   slug: string;
   applied: FilterValues;
   onApply: (f: FilterValues) => void;
+  /**
+   * ALL-BROWSE mode (/listings) — pass the category tree and the view grows a
+   * category picker, resolving its own slug from the DRAFTED categoryId instead
+   * of from the URL. `/category` is the URL-scoped mode and passes nothing here,
+   * so its behaviour is untouched.
+   *
+   * Why the draft and not the applied filters: the whole point of the picker is
+   * "choose a category, then see its filters", and going through `onApply` would
+   * navigate — which on a phone closes the filter overlay the user is still
+   * filling in. Drafting keeps the pick, the defs and the widgets in one pass,
+   * committed together by بحث.
+   */
+  categories?: Category[];
 }) {
   const [defs, setDefs]   = useState<CatalogFilterDef[] | null>(null);
   const [draft, setDraft] = useState<FilterValues>(applied);
@@ -2024,15 +2037,38 @@ function CatalogFilterView({ slug, applied, onApply }: {
   // Resync the draft if the parent pushes a new applied set (e.g. chip removal / clear).
   useEffect(() => { setDraft(applied); }, [applied]);
 
-  // Load the leaf's inherited filter defs.
+  const allBrowse      = categories !== undefined;
+  const draftCategory  = allBrowse && draft.categoryId
+    ? findCategoryById(categories, draft.categoryId)
+    : undefined;
+  // Tree slugs ARE catalog slugs (both globally unique, one namespace — verified
+  // against GET /catalog/categories/:slug/filters), so the drafted category can
+  // address the filter endpoint directly.
+  const activeSlug = allBrowse ? (draftCategory?.slug ?? '') : slug;
+
+  // Load the leaf's inherited filter defs. No category (all-browse, nothing picked)
+  // means there is nothing to inherit FROM — and the API ignores every attr_* filter
+  // sent without a category (`reason: 'no_category'`), so an empty set is the honest
+  // answer rather than a request worth making.
   useEffect(() => {
     let cancelled = false;
+    if (!activeSlug) { setDefs([]); return; }
     setDefs(null);
-    catalogService.getFilters(slug)
+    catalogService.getFilters(activeSlug)
       .then((d) => { if (!cancelled) setDefs(d); })
       .catch(() => { if (!cancelled) setDefs([]); });
     return () => { cancelled = true; };
-  }, [slug]);
+  }, [activeSlug]);
+
+  /**
+   * Switching category in all-browse mode wipes what belonged to the OLD one:
+   * attribute keys the new category never defines (the API would report them
+   * `unknown_key`), the vehicle make/model pair, and the native NEW/USED condition
+   * — whose control only exists while no category is picked, and would otherwise
+   * keep narrowing the results from behind a widget that is no longer on screen.
+   */
+  const pickCategory = (id: string) =>
+    setDraft((d) => ({ ...d, categoryId: id, attributes: {}, make: '', model: '', conditions: [] }));
 
   const setField = <K extends keyof FilterValues>(key: K, value: FilterValues[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
@@ -2074,6 +2110,60 @@ function CatalogFilterView({ slug, applied, onApply }: {
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
+
+        {/* ── Category picker (all-browse only) ── */}
+        {allBrowse && (
+          <div className="px-3 pt-4 pb-1">
+            {/* The hint sits ABOVE the tree, not under it: with nothing picked the tree
+                opens to ~19 roots, so anything below it is a phone-screen away. */}
+            {!activeSlug && (
+              <p className="mb-2 rounded-xl bg-gray-50 px-3 py-2.5 text-[13px] leading-relaxed text-gray-500">
+                اختر فئة لعرض فلاترها الخاصة (الغرف، الماركة، السنة…).
+                بدون فئة تعمل فلاتر السعر والموقع والحالة فقط.
+              </p>
+            )}
+            {/* Keyed on "is something picked": picking a category REMOUNTS the list so it
+                collapses to its `defaultOpen={false}`, putting that category's own filters
+                on screen instead of leaving them below a 19-root tree. Expanding a node
+                inside the tree doesn't touch categoryId, so browsing never collapses it. */}
+            <CollapsibleList
+              key={draft.categoryId ? 'picked' : 'none'}
+              title="الفئة"
+              defaultOpen={!draft.categoryId}
+            >
+              <ul className="space-y-0.5">
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => pickCategory('')}
+                    className={cn(
+                      'w-full text-start text-[15px] px-3 py-1.5 rounded-lg font-semibold transition-colors',
+                      draft.categoryId
+                        ? 'text-gray-600 hover:bg-gray-50'
+                        : 'bg-orange-50 text-orange-600',
+                    )}
+                  >
+                    جميع الإعلانات
+                  </button>
+                </li>
+                {categories.map((cat) => (
+                  <CategoryNode
+                    key={cat.id}
+                    cat={cat}
+                    depth={0}
+                    selectedId={draft.categoryId}
+                    onSelect={pickCategory}
+                  />
+                ))}
+              </ul>
+            </CollapsibleList>
+            {draftCategory && (
+              <p className="mt-1 text-[13px] text-gray-500">
+                فلاتر <span className="font-bold text-gray-700">{draftCategory.name}</span>
+              </p>
+            )}
+          </div>
+        )}
 
         {/* ── Price ── */}
         <div className="px-3 pt-4 pb-2 space-y-2">
@@ -2120,6 +2210,42 @@ function CatalogFilterView({ slug, applied, onApply }: {
             value={draft.district} onChange={(e) => setField('district', e.target.value)} className={inputCls}
           />
         </div>
+
+        {/* ── Condition — all-browse, NO category ──
+            The universal stand-in for the category's own «الحالة»: with no category
+            the API ignores attr_* entirely, so the NEW/USED column is the only
+            condition filter that can actually narrow anything here. Once a category
+            is picked its catalog `condition` def renders below instead, in that
+            category's own wording — two controls for one idea is what this avoids. */}
+        {allBrowse && !activeSlug && (
+          <div className="px-3 pt-2 pb-2 space-y-2 border-t border-gray-100">
+            <p className="text-[13px] font-bold text-gray-400 uppercase tracking-wider">الحالة</p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {([['NEW', 'جديد'], ['USED', 'مستعمل']] as const).map(([value, labelAr]) => {
+                const on = draft.conditions.includes(value);
+                return (
+                  <label
+                    key={value}
+                    className={cn(
+                      'flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-[14px] cursor-pointer transition-colors',
+                      on ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:border-gray-300',
+                    )}
+                  >
+                    <input
+                      type="checkbox" className="accent-blue-600"
+                      checked={on}
+                      onChange={() => setField(
+                        'conditions',
+                        on ? draft.conditions.filter((c) => c !== value) : [...draft.conditions, value],
+                      )}
+                    />
+                    {labelAr}
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* ── Category filters (from the catalog) ── */}
         {defs === null ? (
@@ -2247,9 +2373,13 @@ interface FilterSidebarProps {
   /** Depth-1 slug under the root (vehicles → <branch> → …), also resolved by the category
    *  page. Non-motor branches (caravans, marine-vehicles) take the catalog path too. */
   catalogBranch?: string;
+  /** The ALL-CATEGORIES browse (/listings), which is scoped to no category at all.
+   *  Renders the catalog-driven view with a category picker instead of the vehicle
+   *  facets below — see the early return. */
+  allBrowse?: boolean;
 }
 
-export function FilterSidebar({ categories, applied, onApply, catalogRoot = '', catalogBranch = '' }: FilterSidebarProps) {
+export function FilterSidebar({ categories, applied, onApply, catalogRoot = '', catalogBranch = '', allBrowse = false }: FilterSidebarProps) {
   const pathname     = usePathname();
   // Current catalog leaf slug — the last segment of /category/<…>/<slug>.
   const currentSlug  = pathname.startsWith('/category/')
@@ -2657,6 +2787,22 @@ export function FilterSidebar({ categories, applied, onApply, catalogRoot = '', 
     catalogRoot !== VEHICLES_ROOT_SLUG || NON_MOTOR_VEHICLE_BRANCHES.has(catalogBranch);
   if (catalogRoot && usesCatalogFilters && currentSlug) {
     return <CatalogFilterView slug={currentSlug} applied={applied} onApply={onApply} />;
+  }
+
+  // ── /listings: the ALL-CATEGORIES browse ──
+  // Everything below this line is the vehicles tree's bespoke UI, gated on `pathname`
+  // checks that are ALL false off /category — so /listings used to fall straight through
+  // to it and show car facets (السنة، المسافة، نوع الوقود، ناقل الحركة) on a page that is
+  // scoped to no category at all (founder-reported). It is the catalog's job to say which
+  // filters a category has, and with no category there is nothing to ask: the API ignores
+  // every attr_* filter sent without one. So this surface renders the universal columns
+  // (price · location · condition) plus a category picker, and the moment a category is
+  // picked that category's own inherited set replaces them — vehicles included, whose rich
+  // facets stay where the URL names them, on /category/vehicles/….
+  if (allBrowse) {
+    return (
+      <CatalogFilterView slug="" categories={categories} applied={applied} onApply={onApply} />
+    );
   }
 
   return (

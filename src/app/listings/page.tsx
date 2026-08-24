@@ -922,6 +922,7 @@ function ListingsContent() {
                 key={searchParams.toString()}
                 categories={categories}
                 applied={applied}
+                allBrowse
                 onApply={(f) => { handleApply(f); setSidebarOpen(false); }}
               />
             </div>
@@ -948,6 +949,7 @@ function ListingsContent() {
                   key={searchParams.toString()}
                   categories={categories}
                   applied={applied}
+                  allBrowse
                   onApply={handleApply}
                 />
               </div>
