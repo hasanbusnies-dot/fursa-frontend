@@ -283,7 +283,8 @@ export default function AdminListingsPage() {
     if (!deleteTarget) return;
     setDeleteBusy(true);
     try {
-      await listingsService.deleteListing(deleteTarget.id);
+      // ADMIN route — the consumer deleteListing is owner-scoped and 403s here.
+      await listingsService.adminDeleteListing(deleteTarget.id);
       setListings((prev) => prev.filter((l) => l.id !== deleteTarget.id));
       toast.success('تم حذف الإعلان.');
       setDeleteTarget(null);
@@ -520,7 +521,9 @@ export default function AdminListingsPage() {
 
                           {/* Edit */}
                           <Link
-                            href={`/listings/edit/${listing.id}`}
+                            // Admin-realm edit page: the consumer /listings/edit/:id runs in
+                            // the user realm, so the admin token doesn't apply there → 401 → logout.
+                            href={`/admin/listings/${listing.id}/edit`}
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100 font-medium transition-colors text-xs"
                           >
                             <Pencil className="w-3 h-3" />

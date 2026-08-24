@@ -530,6 +530,37 @@ export const listingsService = {
     await api.delete<unknown>(`/listings/${id}`);
   },
 
+  /**
+   * Admin edit — PATCH /admin/listings/:id (admin-authed, no ownership check).
+   *
+   * NOT `updateListing`: the owner route above resolves the listing against
+   * `req.user.id` and 403s for anybody else, and an admin owns none of the rows
+   * they moderate. Same Zod schema on both routes (`updateListingSchema`), which
+   * is why `status` here is only ACTIVE | SOLD — the wider moderation vocabulary
+   * (PENDING_REVIEW / REJECTED / …) lives on `updateListingStatus`, which also
+   * fires the approved/rejected notification this route deliberately does not.
+   */
+  adminUpdateListing: async (
+    id: string,
+    payload: Partial<
+      Pick<
+        CreateListingPayload,
+        | 'title' | 'description' | 'price' | 'currency' | 'latitude' | 'longitude'
+        | 'regionSlug' | 'neighborhood' | 'condition'
+      >
+    > & { status?: 'ACTIVE' | 'SOLD' },
+  ): Promise<void> => {
+    await api.patch<unknown>(`/admin/listings/${id}`, payload);
+  },
+
+  /**
+   * Admin delete — DELETE /admin/listings/:id (soft-delete: status → DELETED).
+   * The consumer `deleteListing` above is owner-scoped and 403s for an admin.
+   */
+  adminDeleteListing: async (id: string): Promise<void> => {
+    await api.delete<unknown>(`/admin/listings/${id}`);
+  },
+
   getAdminListings: async (params?: GetListingsParams): Promise<ListingsResult> => {
     const qs = new URLSearchParams();
     if (params?.limit)       qs.set('limit',       String(params.limit));
